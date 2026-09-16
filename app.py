@@ -1,5 +1,6 @@
 
 import streamlit as st
+from google import genai
 
 # ---------------------------------------------------------
 # PAGE CONFIG
@@ -10,7 +11,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
+if "GEMINI_API_KEY" in st.secrets:
+    st.success("Gemini secret loaded successfully")
+else:
+    st.error("Gemini secret not found")
 # ---------------------------------------------------------
 # CUSTOM CSS
 # ---------------------------------------------------------

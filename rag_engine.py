@@ -5,9 +5,7 @@ from urllib.parse import urljoin
 from google.genai import types
 
 BASE_GUIDE_URL = "https://preapproval-guide.imda.gov.sg"
-SUMMARY_URL = f"{BASE_GUIDE_URL}/SUMMARY.md"
 
-# Curated core policy pages with their public website URLs
 PRIMARY_PAGES = [
     {
         "title": "Eligibility Criteria (Vendor & Solution)",
@@ -38,7 +36,7 @@ PRIMARY_PAGES = [
 
 @st.cache_data(ttl=3600)
 def fetch_url_content(url: str) -> str:
-    """Fetches text with persistent caching to eliminate repetitive network wait times."""
+    """Fetches text with persistent caching to eliminate repetitive network delays."""
     try:
         resp = requests.get(url, timeout=6)
         if resp.status_code == 200:
@@ -49,10 +47,7 @@ def fetch_url_content(url: str) -> str:
 
 @st.cache_data(ttl=3600)
 def get_consolidated_knowledge_base() -> list[dict]:
-    """
-    Downloads and caches primary guide pages in memory.
-    Subsequent searches run instantly from memory without outbound network latency.
-    """
+    """Downloads and caches primary guide pages in memory for near-instant access."""
     kb = []
     for item in PRIMARY_PAGES:
         content = fetch_url_content(item["md_url"])
@@ -65,9 +60,9 @@ def get_consolidated_knowledge_base() -> list[dict]:
             })
     return kb
 
-def query_live_guide_rag(client, user_query: str, model_name: str = "gemini-3.8-flash") -> str:
+def query_live_guide_rag(client, user_query: str, chat_history: list = None, model_name: str = "gemini-3.8-flash") -> str:
     """
-    Fast RAG execution with deterministic official URL citation.
+    Executes fast RAG grounded in live IMDA guide with multi-turn conversation awareness.
     """
     kb = get_consolidated_knowledge_base()
     if not kb:
@@ -86,16 +81,13 @@ def query_live_guide_rag(client, user_query: str, model_name: str = "gemini-3.8-
         for token in query_tokens:
             score += haystack.count(token)
             
-        # Boost eligibility document for track-record or qualification queries
-        if any(term in user_query.lower() for term in ["customer", "track record", "eligib", "criteria", "requirement", "incorporat"]):
+        if any(term in user_query.lower() for term in ["customer", "track record", "eligib", "criteria", "requirement", "incorporat", "invoice"]):
             if "eligibility" in doc["title"].lower():
                 score += 50
                 
         scored_docs.append((score, doc))
 
     scored_docs.sort(key=lambda x: x[0], reverse=True)
-    
-    # Take top 2 most relevant documents
     selected = [item[1] for item in scored_docs[:2]]
     primary_source_url = selected[0]["web_url"] if selected else "https://preapproval-guide.imda.gov.sg/"
 
@@ -107,6 +99,13 @@ def query_live_guide_rag(client, user_query: str, model_name: str = "gemini-3.8-
             f"CONTENT:\n{doc['content'][:4500]}\n"
         )
     full_context = "\n---\n".join(context_blocks)
+
+    # Build concise multi-turn conversation snippet if provided
+    history_snippet = ""
+    if chat_history:
+        recent_turns = chat_history[-4:]
+        formatted_turns = [f"{t['role'].capitalize()}: {t['content']}" for t in recent_turns]
+        history_snippet = f"\n<conversation_history>\n" + "\n".join(formatted_turns) + "\n</conversation_history>\n"
 
     system_instruction = f"""
 Pre-Approved Solutions Assistant System Prompt
@@ -143,7 +142,7 @@ Strict Guardrails:
 <official_knowledge_base>
 {full_context}
 </official_knowledge_base>
-
+{history_snippet}
 <user_query>
 {user_query}
 </user_query>
@@ -158,11 +157,8 @@ Strict Guardrails:
             )
         )
         answer = response.text
-
-        # Programmatic safeguard: ensure the exact link is present
         if primary_source_url not in answer:
             answer += f"\n\n🔗 **Official Reference:** [{primary_source_url}]({primary_source_url})"
-
         return answer
     except Exception as e:
         return f"Unable to retrieve details at this moment: {e}. Please visit {primary_source_url}."

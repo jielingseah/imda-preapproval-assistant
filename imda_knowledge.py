@@ -164,28 +164,92 @@ def load_knowledge():
     return payload.get("chunks", [])
 
 
-def search_knowledge(query, top_k=4):
-    """Find relevant local guide sections."""
+
+def search_knowledge(query, top_k=5):
+    """Retrieve relevant official guide sections with topic routing."""
+
     chunks = load_knowledge()
-    tokens = set(re.findall(r"[a-z0-9]+", query.lower()))
-    tokens = {t for t in tokens if len(t) > 2}
+
+    if not chunks:
+        return []
+
+    query_lower = query.lower()
+
+    tokens = set(
+        re.findall(r"[a-z0-9]+", query_lower)
+    )
+
+    stopwords = {
+        "the", "and", "for", "can", "have", "has",
+        "are", "my", "our", "with", "only", "than",
+        "what", "how", "does", "your", "you", "been"
+    }
+
+    tokens = {
+        t for t in tokens
+        if len(t) > 2 and t not in stopwords
+    }
+
+    eligibility_terms = (
+        "eligible", "eligibility", "incorporat",
+        "months", "customers", "track record",
+        "financial", "current ratio", "invoice",
+        "apply", "application"
+    )
+
+    is_eligibility = any(
+        term in query_lower
+        for term in eligibility_terms
+    )
 
     scored = []
-    for chunk in chunks:
-        heading = chunk["title"].lower()
-        body = chunk["content"].lower()
 
-        score = sum(
-            (5 if token in heading else 0) +
-            (1 if token in body else 0)
-            for token in tokens
-        )
+    for chunk in chunks:
+
+        title = chunk["title"].lower()
+        body = chunk["content"].lower()
+        url = chunk["url"].lower()
+
+        score = 0
+
+        for token in tokens:
+            if token in title:
+                score += 5
+
+            if token in body:
+                score += 1
+
+        # Strongly prioritise official eligibility criteria.
+        if is_eligibility:
+            if "/eligibility-criteria" in url:
+                score += 30
+
+            if "eligibility" in title:
+                score += 15
+
+            if "18 months" in body:
+                score += 15
+
+            if "5 singapore" in body or "five" in body:
+                score += 10
+
+            # Reduce irrelevant application-document results.
+            if "preparing-submission" in url:
+                score -= 15
 
         if score > 0:
             scored.append((score, chunk))
 
-    scored.sort(key=lambda item: item[0], reverse=True)
-    return [item[1] for item in scored[:top_k]]
+    scored.sort(
+        key=lambda item: item[0],
+        reverse=True
+    )
+
+    return [
+        item[1]
+        for item in scored[:top_k]
+    ]
+
 
 
 def query_live_guide_rag(

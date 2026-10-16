@@ -14,7 +14,7 @@ from google.genai import types
 
 
 BASE_URL = "https://preapproval-guide.imda.gov.sg"
-INDEX_PATH = Path(__file__).resolve().parents[1] / "data" / "knowledge_index.json"
+INDEX_PATH = Path(__file__).resolve().parent / "data" / "knowledge_index.json"
 MODEL_NAME = "gemini-3.8-flash"
 
 START_PAGES = [

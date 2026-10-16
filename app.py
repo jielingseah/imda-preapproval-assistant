@@ -79,7 +79,7 @@ CATEGORY_DIRECTORY_URL = (
     + "identify-suitable-solution-category.md"
 )
 GUIDE_HOME_URL = BASE_URL
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3.8-flash"
 
 
 # =========================================================

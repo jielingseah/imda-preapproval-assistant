@@ -7,7 +7,7 @@ from google import genai
 from google.genai import types
 
 # Import the multi-turn RAG engine
-from rag_engine import query_live_guide_rag
+from imda_knowledge import query_live_guide_rag
 
 
 # =========================================================

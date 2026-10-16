@@ -24,7 +24,7 @@ jobs:
         run: pip install requests streamlit google-genai
 
       - name: Refresh knowledge index
-        run: python services/imda_knowledge.py
+        run: python imda_knowledge.py
 
       - name: Commit changes
         run: |

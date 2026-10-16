@@ -1,9 +1,13 @@
 import streamlit as st
 import requests
 import re
+import time
 from urllib.parse import urljoin
 from google import genai
 from google.genai import types
+
+# Import the dedicated real-time RAG engine
+from rag_engine import query_live_guide_rag
 
 
 # =========================================================
@@ -23,7 +27,7 @@ st.set_page_config(
 # =========================================================
 
 def check_password():
-    """Returns True if user enters the correct password stored in st.secrets."""
+    """Gives access if correct password is provided."""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
 
@@ -116,34 +120,29 @@ def sanitize_and_check_injection(user_input: str) -> tuple[bool, str]:
 
 def lookup_official_grant_caps(solution_type: str) -> dict:
     """
-    Retrieves official SMEs Go Digital support parameters and PSG grant support caps.
-    Args:
-        solution_type: Generic type or sector of the solution (e.g. retail, accounting, erp).
+    Retrieves official SMEs Go Digital support parameters and PSG grant caps.
     """
     return {
         "grant_scheme": "Productivity Solutions Grant (PSG) via SMEs Go Digital",
-        "maximum_support_level": "Up to 50% for pre-approved digital solutions (subject to prevailing budget caps)",
+        "maximum_support_level": "Up to 50% support for pre-approved digital solutions (subject to budget caps)",
         "annual_grant_cap": "SGD $30,000 per SME per financial year across approved packages",
         "key_condition": "Deployment must be with Singapore-registered and operating SMEs."
     }
 
 def evaluate_vendor_compliance_status(unmet_criteria_count: int, in_progress_count: int) -> dict:
     """
-    Computes programmatic readiness tier for pre-approval based on self-assessment gap count.
-    Args:
-        unmet_criteria_count: Total count of 'No' responses in assessment.
-        in_progress_count: Total count of 'in development' responses.
+    Computes programmatic readiness tier for pre-approval based on assessment gap count.
     """
     if unmet_criteria_count > 0:
         return {
             "tier": "HIGH_RISK_GAPS_PRESENT",
-            "recommendation": "Address all mandatory prerequisites (e.g. InvoiceNow, 18 months operation) prior to submission.",
-            "eligibility_outlook": "Stage 1 rejection likely until mandatory items turn Yes."
+            "recommendation": "Address all mandatory prerequisites (e.g., InvoiceNow, 18 months operation) prior to submission.",
+            "eligibility_outlook": "Stage 1 rejection likely until mandatory items are fulfilled."
         }
     elif in_progress_count > 0:
         return {
             "tier": "CONDITIONAL_READINESS",
-            "recommendation": "Finalize ongoing items (e.g. website, DPA alignment) before submitting Stage 1 application.",
+            "recommendation": "Finalize ongoing items (e.g., website, DPA compliance) before submitting Stage 1 application.",
             "eligibility_outlook": "Viable once developments are formally completed."
         }
     return {
@@ -180,36 +179,11 @@ for key, value in defaults.items():
 st.markdown(
     """
     <style>
-    .main-title {
-        font-size: 38px;
-        font-weight: 700;
-        margin-bottom: 5px;
-        color: #17365d;
-    }
-    .sub-title {
-        font-size: 18px;
-        color: #666;
-        margin-bottom: 25px;
-    }
-    .hero {
-        padding: 30px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, #eef4ff, #f8fbff);
-        border: 1px solid #d8e4f5;
-        margin-bottom: 25px;
-    }
-    .feature-card {
-        padding: 22px;
-        border-radius: 12px;
-        border: 1px solid #dedede;
-        background: white;
-        min-height: 180px;
-    }
-    .feature-title {
-        font-size: 21px;
-        font-weight: 650;
-        margin-bottom: 10px;
-    }
+    .main-title { font-size: 38px; font-weight: 700; margin-bottom: 5px; color: #17365d; }
+    .sub-title { font-size: 18px; color: #666; margin-bottom: 25px; }
+    .hero { padding: 30px; border-radius: 14px; background: linear-gradient(135deg, #eef4ff, #f8fbff); border: 1px solid #d8e4f5; margin-bottom: 25px; }
+    .feature-card { padding: 22px; border-radius: 12px; border: 1px solid #dedede; background: white; min-height: 180px; }
+    .feature-title { font-size: 21px; font-weight: 650; margin-bottom: 10px; }
     </style>
     """,
     unsafe_allow_html=True
@@ -222,14 +196,12 @@ st.markdown(
 
 @st.cache_data(ttl=3600)
 def fetch_text(url):
-    """Fetch text or markdown from the IMDA pre-approval guide."""
     response = requests.get(url, timeout=30)
     response.raise_for_status()
     return response.text
 
 @st.cache_data(ttl=3600)
 def get_category_catalogue():
-    """Parse official IMDA solution-category directory."""
     markdown = fetch_text(CATEGORY_DIRECTORY_URL)
     categories = {}
     current_sector = "Unknown"
@@ -275,7 +247,6 @@ def get_category_catalogue():
 
 @st.cache_data(ttl=3600)
 def get_category_requirements(category_url):
-    """Retrieve selected category requirements."""
     markdown = fetch_text(category_url)
     questions = []
     lines = markdown.splitlines()
@@ -313,14 +284,12 @@ def get_category_requirements(category_url):
 # =========================================================
 
 def get_gemini_client():
-    """Get Gemini client safely from Streamlit Cloud Secrets."""
     api_key = st.secrets.get("GEMINI_API_KEY")
     if not api_key:
         return None
     return genai.Client(api_key=api_key)
 
 def recommend_categories(vendor_description):
-    """Match vendor description against official catalogue with prompt injection bounds."""
     client = get_gemini_client()
     if client is None:
         return {"error": "GEMINI_API_KEY is not configured in Secrets."}
@@ -356,21 +325,24 @@ WHY: <one or two sentence explanation>
 {vendor_description}
 </vendor_description>
 """
-    try:
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.1
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=0.1
+                )
             )
-        )
-        return {"answer": response.text, "catalogue": catalogue}
-    except Exception as e:
-        return {"error": str(e)}
+            return {"answer": response.text, "catalogue": catalogue}
+        except Exception as e:
+            if "503" in str(e) and attempt < 2:
+                time.sleep(2 * (attempt + 1))
+                continue
+            return {"error": str(e)}
 
 def parse_category_matches(answer, catalogue):
-    """Parse Gemini output into structured categories."""
     results = []
     blocks = answer.split("MATCH")
 
@@ -410,7 +382,7 @@ def parse_category_matches(answer, catalogue):
 
 
 # =========================================================
-# NAVIGATION
+# NAVIGATION & PERSISTENT SIDEBAR RAG
 # =========================================================
 
 pages = [
@@ -424,7 +396,7 @@ pages = [
 ]
 
 st.sidebar.title("IMDA Pre-Approval")
-st.sidebar.caption("Vendor Copilot (Agentic Edition)")
+st.sidebar.caption("Vendor Copilot")
 
 selected_page = st.sidebar.radio(
     "Navigate",
@@ -432,6 +404,33 @@ selected_page = st.sidebar.radio(
     index=pages.index(st.session_state.page)
 )
 st.session_state.page = selected_page
+
+st.sidebar.markdown("---")
+
+# OMNIPRESENT RAG COPILOT (ACCESSIBLE ACROSS ALL PAGES)
+with st.sidebar.expander("📖 Live Guide Search (RAG)", expanded=True):
+    st.caption("Live grounded retrieval from `preapproval-guide.imda.gov.sg`")
+    rag_query = st.text_input("Ask a policy question:", key="sidebar_rag_input", placeholder="e.g. Can foreign firms apply?")
+    if st.button("Search Guide", key="sidebar_rag_btn", use_container_width=True):
+        is_safe, clean_q = sanitize_and_check_injection(rag_query)
+        if not is_safe:
+            st.error(clean_q)
+        else:
+            client = get_gemini_client()
+            if client:
+                with st.spinner("Querying official guide..."):
+                    rag_res = query_live_guide_rag(client, clean_q, model_name=MODEL_NAME)
+                    st.session_state["sidebar_rag_res"] = rag_res
+            else:
+                st.error("Gemini API key not configured.")
+
+    if "sidebar_rag_res" in st.session_state:
+        st.markdown("**Official Guide Answer:**")
+        st.markdown(st.session_state["sidebar_rag_res"])
+        if st.button("Clear Search", key="clear_rag_btn"):
+            del st.session_state["sidebar_rag_res"]
+            st.rerun()
+
 st.sidebar.markdown("---")
 st.sidebar.caption("Proof-of-Concept Prototype")
 
@@ -453,7 +452,7 @@ if st.session_state.page == "Home":
             <h2>Accelerate Your Pre-Approval Readiness</h2>
             <p>
             Assess operational eligibility, discover official solution categories with AI,
-            and query requirement criteria via an intelligent tool-equipped agent.
+            and query requirement criteria via an intelligent tool-equipped agent or live RAG search.
             </p>
         </div>
         """,
@@ -671,8 +670,6 @@ elif st.session_state.page == "AI Assistant":
         total_eval = len(st.session_state.assessment)
 
         readiness_pct = int((len(passed) / total_eval) * 100) if total_eval > 0 else 0
-
-        # Visual Readiness Bar
         st.progress(readiness_pct / 100, text=f"Readiness Score: {readiness_pct}%")
 
         col1, col2, col3 = st.columns(3)
@@ -710,7 +707,6 @@ elif st.session_state.page == "AI Assistant":
     st.markdown("---")
     st.subheader("Interactive Inquiry")
 
-    # Render Chat History
     for message in st.session_state.chat_history:
         with st.chat_message(message["role"]):
             st.write(message["content"])
@@ -756,7 +752,6 @@ In Progress Count: {len([k for k, v in st.session_state.assessment.items() if 'd
 </user_query>
 """
                 try:
-                    # Multi-tool agent configuration
                     response = client.models.generate_content(
                         model=MODEL_NAME,
                         contents=chained_prompt,
@@ -796,6 +791,7 @@ elif st.session_state.page == "About Us":
     st.markdown("""
     - **Empower Vendor Self-Discovery:** Provide instant, semantic category recommendations from plain English descriptions.
     - **Upfront Gap Remediation:** Highlight operational roadblocks prior to formal submission.
+    - **Real-Time Knowledge Access:** Equip vendors with an omnipresent live RAG copilot grounded in the official online guide.
     - **Automate Operational Guidance:** Leverage agentic LLM tools to clarify grant support parameters deterministically.
     """)
 
@@ -813,6 +809,7 @@ elif st.session_state.page == "About Us":
     | **Self-Assessment Matrix** | Validates baseline financial, track record, and operational criteria | Tech Vendors / SMEs |
     | **AI Category Finder (Use Case 1)** | Zero-shot semantic mapping of solution capabilities to official categories | Solution Architects |
     | **Agentic Assistant (Use Case 2)** | Grounded conversational Q&A augmented with automated Python lookup tools | Compliance Leads |
+    | **Omnipresent RAG Copilot** | Live Markdown retrieval across all pages grounded in `preapproval-guide.imda.gov.sg` | All Users |
     | **Audit Report Export** | One-click downloadable markdown audit summary for internal team reviews | Project Managers |
     """)
 
@@ -824,14 +821,15 @@ elif st.session_state.page == "About Us":
 elif st.session_state.page == "Methodology":
     st.title("Methodology & System Architecture")
     st.write("""
-    This section outlines the prompt engineering pipelines, security controls, and agentic workflows powering both primary use cases.
+    This section outlines the prompt engineering pipelines, security controls, and agentic workflows powering the application.
     """)
 
     st.subheader("1. Technical Guardrails & Prompt Engineering")
     st.markdown("""
     - **Adversarial Heuristic Defense:** User inputs pass through a regex validation gate to block instruction override attacks and prompt leaks.
     - **XML Boundary Delimitation:** Untrusted text is strictly separated from system logic using `<user_query>` and `<context>` envelopes.
-    - **Agent Tool Calling (Function Calling):** Gemini autonomously selects and invokes deterministic Python functions (`lookup_official_grant_caps` and `evaluate_vendor_compliance_status`) to prevent hallucinations on numerical caps and compliance tiers.
+    - **Agent Tool Calling (Function Calling):** Gemini autonomously invokes deterministic Python functions (`lookup_official_grant_caps` and `evaluate_vendor_compliance_status`) to prevent hallucinations on numerical caps and compliance tiers.
+    - **Real-Time Live Guide RAG Pipeline:** Live Markdown documents from `preapproval-guide.imda.gov.sg` are ingested with a 1-hour cache and synthesized using the official knowledge hierarchy.
     """)
 
     st.markdown("---")
@@ -863,6 +861,20 @@ elif st.session_state.page == "Methodology":
         G2 --> E2
         F2 -- No --> H2[Generate Synthesized Advisory Response]
         H2 --> I2[Stream to Chat UI & Update Audit Index]
+    ```
+    """)
+
+    st.markdown("---")
+    st.subheader("4. Omnipresent Live Guide RAG Flowchart")
+    st.markdown("""
+    ```mermaid
+    graph TD
+        R1[User Query from Sidebar on Any Page] --> R2{Sanitization Check}
+        R2 -- Passed --> R3[Fetch Markdown from preapproval-guide.imda.gov.sg]
+        R3 --> R4[Check 1-Hour Streamlit Cache]
+        R4 --> R5[Assemble RAG Envelope with Pre-Approved Assistant System Prompt]
+        R5 --> R6[Gemini Flash Synthesis with Fallback to go.gov.sg/sgdpaguide]
+        R6 --> R7[Render Direct Answer in Persistent Sidebar]
     ```
     """)
 

@@ -560,7 +560,6 @@ elif st.session_state.page == "Category Requirements":
         if not mandatory:
             st.warning("Requirements could not be extracted automatically. Please verify via the link above.")
         else:
-            # 1. Checklist Questions in Cards
             st.subheader("1. Mandatory Functional Checklist")
             st.caption("Indicate your solution's current compliance status for each item below.")
 
@@ -662,7 +661,7 @@ elif st.session_state.page == "Category Requirements":
 
                     submit_button = st.form_submit_button("Submit Assessment & Send Summary →", type="primary", use_container_width=True)
 
-            # 4. Submission Summary Dossier
+            # 4. Submission Summary Dossier & Chatbot Recommendation
             if submit_button:
                 if not company_name or not contact_person or not contact_email:
                     st.error("Please fill in all mandatory contact fields (Company Name, Contact Person, and Email).")
@@ -695,6 +694,16 @@ elif st.session_state.page == "Category Requirements":
                         "Live SMTP servers and automated email dispatch are intentionally not configured for this prototype session, "
                         "and external emails will not be transmitted."
                     )
+
+                    # --- Chatbot Recommendation Callout ---
+                    st.markdown("---")
+                    with st.container(border=True):
+                        st.markdown("### 🤖 Want guidance on how to address your identified gaps?")
+                        st.write("You can chat with our AI Pre-Approval Copilot right now for instant, grounded recommendations on how to fulfill official IMDA policy requirements.")
+                        
+                        if st.button("💬 Open AI Assistant & Get Guidance →", type="primary", use_container_width=True):
+                            st.session_state.page = "AI Assistant (RAG Chatbot)"
+                            st.rerun()
 
 # =========================================================
 # AI ASSISTANT (RAG CHATBOT)

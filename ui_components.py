@@ -1,193 +1,301 @@
 """
 UI/UX Component & Style Library for IMDA Pre-Approval Assistant.
-Matched to the SMEs Go Digital portal design guidelines.
+Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.sg) portal.
 """
 
 import streamlit as st
 
 def inject_custom_css():
-    """Injects SMEs Go Digital theme styling."""
+    """Injects SMEs Go Digital official portal theme styling."""
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
         html, body, [class*="css"] {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: #212529;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+            color: #1a1a24;
         }
 
-        /* Top Application Bar & Main Headers */
-        .brand-header {
+        /* Top Government Masthead */
+        .sg-masthead {
+            background-color: #f0f0f2;
+            padding: 5px 16px;
+            font-size: 11.5px;
+            color: #4b4b5a;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e3e8ee;
-            margin-bottom: 20px;
+            gap: 8px;
+            border-bottom: 1px solid #e2e2e8;
+            margin: -6rem -5rem 1.5rem -5rem;
         }
-        .brand-title {
-            font-size: 26px;
+        .sg-masthead-crest {
+            color: #d8232a;
             font-weight: 700;
-            color: #1b365d;
-            margin: 0;
+            font-size: 13px;
+        }
+        .sg-masthead a {
+            color: #2b5cb8;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* SMEs Go Digital Brand Logo Header */
+        .brand-logo-container {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            padding: 8px 0 16px 0;
+            border-bottom: 1px solid #ebebf0;
+            margin-bottom: 22px;
+        }
+        .logo-smes {
+            font-size: 26px;
+            font-weight: 800;
+            color: #581845;
             letter-spacing: -0.5px;
+            line-height: 1;
+        }
+        .logo-godigital {
+            font-size: 26px;
+            font-weight: 800;
+            color: #d8232a;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+        .logo-subtitle {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6c6c7d;
+            border-left: 2px solid #d0d0dc;
+            padding-left: 12px;
+            margin-left: 4px;
         }
         .brand-badge {
-            background-color: #fce8e8;
-            color: #d8232a;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border: 1px solid #f8b4b4;
-        }
-
-        /* SMEs Go Digital Hero Container */
-        .sgds-hero {
-            background: linear-gradient(135deg, #182f59 0%, #1b365d 60%, #224270 100%);
+            background: linear-gradient(135deg, #581845 0%, #d8232a 100%);
             color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 14px rgba(24, 47, 89, 0.15);
-        }
-        .sgds-hero h2 {
-            font-size: 24px;
+            font-size: 10px;
             font-weight: 700;
-            margin-bottom: 8px;
-            color: #ffffff !important;
-        }
-        .sgds-hero p {
-            font-size: 14.5px;
-            color: #e3e8ee;
-            margin: 0;
-            max-width: 90%;
-            line-height: 1.5;
+            padding: 3px 9px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-left: auto;
         }
 
-        /* Feature Cards */
-        .feature-card {
+        /* SMEs Go Digital Signature Purple/Magenta Mesh Banner */
+        .smes-banner {
+            background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%);
+            color: #ffffff;
+            padding: 36px 36px;
+            border-radius: 18px;
+            margin-bottom: 28px;
+            box-shadow: 0 12px 28px -6px rgba(61, 12, 63, 0.28);
+            position: relative;
+            overflow: hidden;
+        }
+        .smes-banner::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(216, 35, 42, 0.25) 0%, rgba(255,255,255,0) 70%);
+            pointer-events: none;
+        }
+        .smes-banner h2 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff !important;
+            margin: 0 0 10px 0;
+            letter-spacing: -0.5px;
+        }
+        .smes-banner p {
+            font-size: 15px;
+            color: #f3d7e8;
+            margin: 0;
+            max-width: 85%;
+            line-height: 1.55;
+            font-weight: 400;
+        }
+
+        /* Pill Search Box simulation on home banner */
+        .smes-search-pill {
+            margin-top: 20px;
+            background: #ffffff;
+            border-radius: 999px;
+            padding: 6px 8px 6px 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            width: 90%;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+        }
+        .smes-search-pill input-text {
+            color: #888899;
+            font-size: 13.5px;
+            flex-grow: 1;
+        }
+        .smes-search-btn {
+            background-color: #5d1a58;
+            color: #ffffff;
+            padding: 7px 20px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* Portal Cards */
+        .portal-card {
             background-color: #ffffff;
-            border: 1px solid #e3e8ee;
-            border-radius: 8px;
-            padding: 22px;
-            min-height: 170px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-            transition: all 0.2s ease-in-out;
+            border: 1px solid #ebebf2;
+            border-radius: 14px;
+            padding: 24px;
+            min-height: 195px;
+            box-shadow: 0 4px 12px rgba(26, 26, 36, 0.04);
+            transition: all 0.25s ease-in-out;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
-        .feature-card:hover {
-            border-color: #1b365d;
-            box-shadow: 0 6px 16px rgba(27, 54, 93, 0.08);
-            transform: translateY(-2px);
+        .portal-card:hover {
+            border-color: #7a1d5a;
+            box-shadow: 0 12px 24px rgba(93, 26, 88, 0.12);
+            transform: translateY(-3px);
         }
-        .feature-icon {
-            font-size: 24px;
-            margin-bottom: 10px;
+        .portal-card-tag {
+            font-size: 11px;
+            font-weight: 700;
+            color: #7a1d5a;
+            background-color: #f7eaf3;
+            padding: 3px 8px;
+            border-radius: 6px;
+            width: fit-content;
+            margin-bottom: 12px;
+            text-transform: uppercase;
         }
-        .feature-title {
-            font-size: 17px;
-            font-weight: 650;
-            color: #1b365d;
-            margin-bottom: 6px;
+        .portal-card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2b0b2e;
+            margin-bottom: 8px;
         }
-        .feature-desc {
+        .portal-card-desc {
             font-size: 13px;
-            color: #556575;
+            color: #636375;
             line-height: 1.5;
             margin-bottom: 12px;
         }
 
-        /* Readiness Audit KPI Tiles */
+        /* Readiness Audit Metric Tiles */
         .metric-tile {
-            background: #f8fafc;
-            border: 1px solid #e3e8ee;
-            border-radius: 8px;
-            padding: 16px;
+            background: #faf7f9;
+            border: 1px solid #ebdbe5;
+            border-radius: 12px;
+            padding: 18px;
             text-align: center;
         }
         .metric-number {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1b365d;
+            font-size: 30px;
+            font-weight: 800;
+            color: #5d1a58;
         }
         .metric-label {
             font-size: 12px;
-            font-weight: 600;
-            color: #556575;
+            font-weight: 700;
+            color: #6c6c7d;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* Streamlit Primary Button Override (SMEs Go Digital Red) */
+        /* Buttons matching the portal */
         button[kind="primary"] {
-            background-color: #d8232a !important;
-            border-color: #d8232a !important;
+            background: linear-gradient(135deg, #581845 0%, #7a1d5a 100%) !important;
+            border: none !important;
             color: #ffffff !important;
-            border-radius: 6px !important;
-            font-weight: 600 !important;
+            border-radius: 999px !important;
+            font-weight: 700 !important;
+            padding: 8px 24px !important;
+            box-shadow: 0 4px 12px rgba(88, 24, 69, 0.25) !important;
+            transition: all 0.2s ease !important;
         }
         button[kind="primary"]:hover {
-            background-color: #b51c22 !important;
-            border-color: #b51c22 !important;
+            background: linear-gradient(135deg, #7a1d5a 0%, #d8232a 100%) !important;
+            box-shadow: 0 6px 16px rgba(216, 35, 42, 0.3) !important;
+            transform: translateY(-1px);
         }
 
-        /* Streamlit Secondary Button Override */
         button[kind="secondary"] {
-            border-color: #ccd5df !important;
-            color: #1b365d !important;
-            border-radius: 6px !important;
-            font-weight: 500 !important;
+            border: 1.5px solid #d0c0cc !important;
+            color: #5d1a58 !important;
+            border-radius: 999px !important;
+            font-weight: 600 !important;
+            background-color: #ffffff !important;
         }
         button[kind="secondary"]:hover {
-            border-color: #1b365d !important;
-            color: #182f59 !important;
+            border-color: #5d1a58 !important;
+            background-color: #faf2f7 !important;
+            color: #3d0c3f !important;
+        }
+
+        /* Sidebar Styling */
+        [data-testid="stSidebar"] {
+            background-color: #fbf9fa;
+            border-right: 1px solid #ebdbe5;
         }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-def render_brand_header(title: str, subtitle: str = None, badge: str = "Live Pilot"):
-    """Renders a consistent top header matching the portal theme."""
+def render_brand_header(title: str, subtitle: str = None, badge: str = "Prototype"):
+    """Renders the top Singapore Government Masthead & SMEs Go Digital logo header."""
     badge_html = f'<span class="brand-badge">{badge}</span>' if badge else ""
     st.markdown(
         f"""
-        <div class="brand-header">
-            <h1 class="brand-title">{title}</h1>
+        <div class="sg-masthead">
+            <span class="sg-masthead-crest">🇸🇬</span> A Singapore Government Agency Website &nbsp;<a href="#">How to identify</a>
+        </div>
+        <div class="brand-logo-container">
+            <div>
+                <span class="logo-smes">SMEs</span> <span class="logo-godigital">godigital ↗</span>
+                <span class="logo-subtitle">Pre-Approval Assistant</span>
+            </div>
             {badge_html}
         </div>
         """,
         unsafe_allow_html=True
     )
     if subtitle:
-        st.caption(subtitle)
+        st.markdown(f"<p style='color:#636375; font-size:14px; margin-top:-12px; margin-bottom:18px;'>{subtitle}</p>", unsafe_allow_html=True)
 
 def render_hero_banner(heading: str, description: str):
-    """Renders the top banner container."""
+    """Renders the official purple-magenta mesh banner seen on smesgodigital.gov.sg."""
     st.markdown(
         f"""
-        <div class="sgds-hero">
+        <div class="smes-banner">
             <h2>{heading}</h2>
             <p>{description}</p>
+            <div class="smes-search-pill">
+                <span style="color:#7a1d5a; font-weight:700;">🔍</span>
+                <span style="color:#777788; font-size:13.5px; flex-grow:1;">Search pre-approved categories, eligibility criteria, grants...</span>
+                <span class="smes-search-btn">Search</span>
+            </div>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-def render_feature_card(icon: str, title: str, description: str):
-    """Renders feature card containers."""
+def render_feature_card(tag: str, title: str, description: str):
+    """Renders sleek portal cards with rounded corners and hover glow."""
     st.markdown(
         f"""
-        <div class="feature-card">
+        <div class="portal-card">
             <div>
-                <div class="feature-icon">{icon}</div>
-                <div class="feature-title">{title}</div>
-                <div class="feature-desc">{description}</div>
+                <div class="portal-card-tag">{tag}</div>
+                <div class="portal-card-title">{title}</div>
+                <div class="portal-card-desc">{description}</div>
             </div>
         </div>
         """,
@@ -195,13 +303,13 @@ def render_feature_card(icon: str, title: str, description: str):
     )
 
 def render_kpi_dashboard(readiness_pct: int, gaps: int, in_progress: int):
-    """Renders readiness indicator tiles."""
+    """Renders the readiness indicator tiles using the portal palette."""
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown(
             f"""
             <div class="metric-tile">
-                <div class="metric-number" style="color: {'#16a34a' if readiness_pct >= 80 else '#d97706'};">{readiness_pct}%</div>
+                <div class="metric-number" style="color: {'#16a34a' if readiness_pct >= 80 else '#c2410c'};">{readiness_pct}%</div>
                 <div class="metric-label">Readiness Score</div>
             </div>
             """,
@@ -221,7 +329,7 @@ def render_kpi_dashboard(readiness_pct: int, gaps: int, in_progress: int):
         st.markdown(
             f"""
             <div class="metric-tile">
-                <div class="metric-number" style="color: #1b365d;">{in_progress}</div>
+                <div class="metric-number" style="color: #5d1a58;">{in_progress}</div>
                 <div class="metric-label">In-Progress Items</div>
             </div>
             """,

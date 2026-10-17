@@ -23,7 +23,7 @@ from ui_components import (
 # =========================================================
 
 st.set_page_config(
-    page_title="IMDA Pre-Approval Assistant",
+    page_title="IMDA Pre-Approval Assistant | SMEs Go Digital",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -42,7 +42,7 @@ def check_password():
         return True
 
     st.title("🔒 IMDA Pre-Approval Assistant")
-    st.caption("Proof-of-Concept Prototype — Restricted Access")
+    st.caption("SMEs Go Digital — Proof-of-Concept Prototype")
     st.info("This is an authorized demonstration prototype. Please enter the passcode provided in LaunchPad.")
 
     col1, _ = st.columns([1, 1])
@@ -63,11 +63,11 @@ def check_password():
                 st.error("Incorrect passcode. Please check credentials.")
     return False
 
-# Enforce access gate before doing anything else
+# Enforce access gate before rendering the rest of the application
 if not check_password():
     st.stop()
 
-# Inject SMEs Go Digital CSS only after authentication succeeds
+# Inject SMEs Go Digital portal CSS only after authentication succeeds
 inject_custom_css()
 
 # =========================================================
@@ -328,8 +328,8 @@ pages = [
     "Methodology"
 ]
 
-st.sidebar.markdown("### IMDA Pre-Approval")
-st.sidebar.caption("Vendor Acceleration Copilot")
+st.sidebar.markdown("### SMEs Go Digital")
+st.sidebar.caption("IMDA Pre-Approval Copilot")
 
 current_page = st.session_state.get("page", "Home")
 default_idx = pages.index(current_page) if current_page in pages else 0
@@ -361,7 +361,7 @@ st.sidebar.caption("IMDA SMEs Go Digital POC")
 if st.session_state.page == "Home":
     render_brand_header(
         "IMDA Pre-Approval Assistant",
-        subtitle="A smarter way for tech vendors to navigate the SMEs Go Digital pre-approval journey.",
+        subtitle="Accelerate your pre-approval journey with self-assessment checks, AI category discovery, and grounded guidance.",
         badge="Official Prototype"
     )
 
@@ -372,21 +372,21 @@ if st.session_state.page == "Home":
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        render_feature_card("✅", "Self-Assessment", "Verify financial viability, track record benchmarks, and SME readiness.")
+        render_feature_card("Eligibility", "Vendor Self-Assessment", "Verify financial viability, track record benchmarks, and SME readiness.")
         st.write("")
         if st.button("Start Assessment →", use_container_width=True):
             st.session_state.page = "Self-Assessment"
             st.rerun()
 
     with col2:
-        render_feature_card("🤖", "AI Category Finder", "Zero-shot semantic matching against the live IMDA directory using Gemini.")
+        render_feature_card("AI Tool", "Category Finder", "Zero-shot semantic matching against the live IMDA directory using Gemini.")
         st.write("")
         if st.button("Find Category →", use_container_width=True):
             st.session_state.page = "AI Category Finder"
             st.rerun()
 
     with col3:
-        render_feature_card("💬", "AI Copilot (RAG)", "Full multi-turn conversational agent with real-time official guide citations.")
+        render_feature_card("Copilot", "Pre-Approval Assistant", "Full multi-turn conversational agent with real-time official guide citations.")
         st.write("")
         if st.button("Open AI Chatbot →", type="primary", use_container_width=True):
             st.session_state.page = "AI Assistant (RAG Chatbot)"
@@ -672,7 +672,7 @@ elif st.session_state.page == "Category Requirements":
 # =========================================================
 
 elif st.session_state.page == "AI Assistant (RAG Chatbot)":
-    render_brand_header("💬 Pre-Approved Solutions Assistant & Copilot", subtitle="Multi-turn conversation grounded in official IMDA documentation.")
+    render_brand_header("Pre-Approved Solutions Assistant & Copilot", subtitle="Multi-turn conversation grounded in official IMDA documentation.")
 
     col_info, col_btn = st.columns([4, 1])
     with col_info:

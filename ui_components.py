@@ -6,7 +6,7 @@ Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.s
 import streamlit as st
 
 def inject_custom_css():
-    """Injects SMEs Go Digital official portal theme styling."""
+    """Injects SMEs Go Digital official portal theme styling, including sidebar upgrades."""
     st.markdown(
         """
         <style>
@@ -223,21 +223,65 @@ def inject_custom_css():
 
         button[kind="secondary"] {
             border: 1.5px solid #d0c0cc !important;
-            color: #5d1a58 !important;
+            color: #581845 !important;
             border-radius: 999px !important;
             font-weight: 600 !important;
             background-color: #ffffff !important;
         }
         button[kind="secondary"]:hover {
-            border-color: #5d1a58 !important;
+            border-color: #581845 !important;
             background-color: #faf2f7 !important;
             color: #3d0c3f !important;
         }
 
-        /* Sidebar Styling */
+        /* =========================================================
+           SIDEBAR STYLING UPGRADES (SMEs Go Digital Theme)
+           ========================================================= */
         [data-testid="stSidebar"] {
-            background-color: #fbf9fa;
+            background: linear-gradient(180deg, #faf7f9 0%, #f4eff3 100%);
             border-right: 1px solid #ebdbe5;
+            padding-top: 1rem;
+        }
+        
+        /* Sidebar headers & captions */
+        [data-testid="stSidebar"] h3 {
+            color: #581845 !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.3px;
+        }
+        [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {
+            color: #636375;
+        }
+
+        /* Sidebar Radio Navigation Options */
+        [data-testid="stSidebar"] .stRadio label {
+            background-color: #ffffff;
+            border: 1px solid #ebdbe5;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            transition: all 0.2s ease;
+            width: 100%;
+            font-weight: 600;
+            color: #4a154b !important;
+        }
+        [data-testid="stSidebar"] .stRadio label:hover {
+            background-color: #f7eaf3;
+            border-color: #7a1d5a;
+        }
+
+        /* Logout / Lock Button inside Sidebar */
+        [data-testid="stSidebar"] button {
+            border-radius: 999px !important;
+            border: 1.5px solid #d8232a !important;
+            color: #d8232a !important;
+            font-weight: 700 !important;
+            background-color: #ffffff !important;
+            transition: all 0.2s ease !important;
+        }
+        [data-testid="stSidebar"] button:hover {
+            background-color: #fce8e8 !important;
+            color: #b51c22 !important;
         }
         </style>
         """,

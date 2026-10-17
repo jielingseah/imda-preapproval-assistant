@@ -30,7 +30,7 @@ st.set_page_config(
 )
 
 # =========================================================
-# ACCESS CONTROL (Password Gate - Native, Self-Contained)
+# ACCESS CONTROL (Password Gate)
 # =========================================================
 
 def check_password():
@@ -63,11 +63,9 @@ def check_password():
                 st.error("Incorrect passcode. Please check credentials.")
     return False
 
-# Enforce access gate before rendering the rest of the application
 if not check_password():
     st.stop()
 
-# Inject SMEs Go Digital portal CSS only after authentication succeeds
 inject_custom_css()
 
 # =========================================================
@@ -482,33 +480,34 @@ elif st.session_state.page == "Self-Assessment":
             st.rerun()
 
 # =========================================================
-# AI CATEGORY FINDER
+# AI CATEGORY FINDER (CARD LAYOUT)
 # =========================================================
 
 elif st.session_state.page == "AI Category Finder":
     render_brand_header("AI Category Finder", subtitle="Describe your capabilities to find matching official categories.")
 
-    description = st.text_area(
-        "Tell us about your solution",
-        height=160,
-        value=st.session_state.assessment.get("solution_description", ""),
-        placeholder="Example: We provide a cloud inventory management system with automated POS reconciliation and e-invoicing for retail SMEs."
-    )
-    st.session_state.assessment["solution_description"] = description
+    with st.container(border=True):
+        description = st.text_area(
+            "Tell us about your solution",
+            height=140,
+            value=st.session_state.assessment.get("solution_description", ""),
+            placeholder="Example: We provide a cloud inventory management system with automated POS reconciliation and e-invoicing for retail SMEs."
+        )
+        st.session_state.assessment["solution_description"] = description
 
-    if st.button("Find Relevant Categories →", type="primary", use_container_width=True):
-        is_safe, sanitized_text = sanitize_and_check_injection(description)
-        if not is_safe:
-            st.error(sanitized_text)
-        else:
-            with st.spinner("Analyzing against official IMDA categories..."):
-                result = recommend_categories(sanitized_text)
-
-            if "error" in result:
-                st.error(result["error"])
+        if st.button("Find Relevant Categories →", type="primary", use_container_width=True):
+            is_safe, sanitized_text = sanitize_and_check_injection(description)
+            if not is_safe:
+                st.error(sanitized_text)
             else:
-                matches = parse_category_matches(result["answer"], result["catalogue"])
-                st.session_state.category_suggestions = matches
+                with st.spinner("Analyzing against official IMDA categories..."):
+                    result = recommend_categories(sanitized_text)
+
+                if "error" in result:
+                    st.error(result["error"])
+                else:
+                    matches = parse_category_matches(result["answer"], result["catalogue"])
+                    st.session_state.category_suggestions = matches
 
     if st.session_state.category_suggestions:
         st.markdown("---")
@@ -527,7 +526,7 @@ elif st.session_state.page == "AI Category Finder":
                     st.rerun()
 
 # =========================================================
-# CATEGORY REQUIREMENTS & GAP AUDIT / SUBMISSION
+# CATEGORY REQUIREMENTS & GAP AUDIT / SUBMISSION (CARD LAYOUT)
 # =========================================================
 
 elif st.session_state.page == "Category Requirements":
@@ -538,15 +537,18 @@ elif st.session_state.page == "Category Requirements":
     selected = st.session_state.selected_category
 
     if not selected:
-        st.info("Please select a solution category first.")
-        if st.button("← Back to Category Finder"):
-            st.session_state.page = "AI Category Finder"
-            st.rerun()
+        with st.container(border=True):
+            st.info("Please select a solution category first.")
+            if st.button("← Back to Category Finder", type="primary"):
+                st.session_state.page = "AI Category Finder"
+                st.rerun()
     else:
         category = get_category_catalogue()[selected]
-        st.success(f"Selected category: **{selected}**")
-        st.write(category["description"])
-        st.link_button("Open official IMDA requirements page", category["url"])
+        
+        with st.container(border=True):
+            st.success(f"Selected Category: **{selected}**")
+            st.write(category["description"])
+            st.link_button("Open official IMDA requirements page", category["url"])
 
         st.markdown("---")
         with st.spinner("Loading official checklist..."):
@@ -558,7 +560,7 @@ elif st.session_state.page == "Category Requirements":
         if not mandatory:
             st.warning("Requirements could not be extracted automatically. Please verify via the link above.")
         else:
-            # 1. Checklist Questions
+            # 1. Checklist Questions in Cards
             st.subheader("1. Mandatory Functional Checklist")
             st.caption("Indicate your solution's current compliance status for each item below.")
 
@@ -568,17 +570,19 @@ elif st.session_state.page == "Category Requirements":
                 ans_opts = ["Yes", "No", "Not sure"]
                 ans_idx = ans_opts.index(existing_ans) if existing_ans in ans_opts else 0
 
-                st.session_state.category_answers[question["number"]] = st.radio(
-                    f"Q{question['number']} — {question['question']}",
-                    ans_opts,
-                    index=ans_idx,
-                    key=key
-                )
+                with st.container(border=True):
+                    st.session_state.category_answers[question["number"]] = st.radio(
+                        f"Q{question['number']} — {question['question']}",
+                        ans_opts,
+                        index=ans_idx,
+                        key=key
+                    )
 
             if preferred:
                 with st.expander(f"View {len(preferred)} Preferred Requirements"):
                     for question in preferred:
-                        st.write(f"**Q{question['number']}** — {question['question']}")
+                        with st.container(border=True):
+                            st.write(f"**Q{question['number']}** — {question['question']}")
 
             st.markdown("---")
 
@@ -619,42 +623,44 @@ elif st.session_state.page == "Category Requirements":
 
             total_gaps_count = len(front_gaps) + len(unmet_cat_questions)
 
-            if total_gaps_count > 0:
-                st.warning(f"⚠️ System detected **{total_gaps_count}** requirement gap(s) across your assessment:")
-                if front_gaps:
-                    st.markdown("**Core Baseline & Track Record Gaps:**")
-                    for fg in front_gaps:
-                        st.markdown(f"- 🔴 **{fg['item']}** (Status: *{fg['status']}*)")
+            with st.container(border=True):
+                if total_gaps_count > 0:
+                    st.warning(f"⚠️ System detected **{total_gaps_count}** requirement gap(s) across your assessment:")
+                    if front_gaps:
+                        st.markdown("**Core Baseline & Track Record Gaps:**")
+                        for fg in front_gaps:
+                            st.markdown(f"- 🔴 **{fg['item']}** (Status: *{fg['status']}*)")
 
-                if unmet_cat_questions:
-                    st.markdown(f"**Specific Category Requirements for {selected}:**")
-                    for uq in unmet_cat_questions:
-                        st.markdown(f"- ⚠️ **Q{uq['number']} ({uq['status']}):** {uq['question']}")
-            else:
-                st.success("✅ Excellent! Your solution declared full compliance with both Baseline Eligibility and Category Specifications.")
+                    if unmet_cat_questions:
+                        st.markdown(f"**Specific Category Requirements for {selected}:**")
+                        for uq in unmet_cat_questions:
+                            st.markdown(f"- ⚠️ **Q{uq['number']} ({uq['status']}):** {uq['question']}")
+                else:
+                    st.success("✅ Excellent! Your solution declared full compliance with both Baseline Eligibility and Category Specifications.")
 
             st.markdown("---")
 
-            # 3. Contact Details & Vendor Enquiries Form
+            # 3. Contact Details & Vendor Enquiries Form in Card
             st.subheader("3. Contact Details & Vendor Enquiries")
             st.caption("Provide your company contact information and any specific questions regarding unmet criteria or general onboarding.")
 
-            with st.form("vendor_submission_form"):
-                col_c1, col_c2 = st.columns(2)
-                with col_c1:
-                    company_name = st.text_input("Company Registered Name *", placeholder="e.g. Acme Tech Solutions Pte Ltd")
-                    contact_person = st.text_input("Contact Person Name *", placeholder="e.g. John Tan")
-                with col_c2:
-                    contact_email = st.text_input("Corporate Email Address *", placeholder="e.g. john.tan@acme.com")
-                    contact_phone = st.text_input("Contact Number *", placeholder="e.g. +65 9123 4567")
+            with st.container(border=True):
+                with st.form("vendor_submission_form"):
+                    col_c1, col_c2 = st.columns(2)
+                    with col_c1:
+                        company_name = st.text_input("Company Registered Name *", placeholder="e.g. Acme Tech Solutions Pte Ltd")
+                        contact_person = st.text_input("Contact Person Name *", placeholder="e.g. John Tan")
+                    with col_c2:
+                        contact_email = st.text_input("Corporate Email Address *", placeholder="e.g. john.tan@acme.com")
+                        contact_phone = st.text_input("Contact Number *", placeholder="e.g. +65 9123 4567")
 
-                vendor_inquiry = st.text_area(
-                    "Questions / Notes on Unmet Requirements",
-                    placeholder="If you marked 'No' or 'Not sure' above, specify your planned roadmap, alternative workarounds, or questions for IMDA officers here.",
-                    height=130
-                )
+                    vendor_inquiry = st.text_area(
+                        "Questions / Notes on Unmet Requirements",
+                        placeholder="If you marked 'No' or 'Not sure' above, specify your planned roadmap, alternative workarounds, or questions for IMDA officers here.",
+                        height=120
+                    )
 
-                submit_button = st.form_submit_button("Submit Assessment & Send Summary →", type="primary", use_container_width=True)
+                    submit_button = st.form_submit_button("Submit Assessment & Send Summary →", type="primary", use_container_width=True)
 
             # 4. Submission Summary Dossier
             if submit_button:
@@ -711,7 +717,6 @@ elif st.session_state.page == "AI Assistant (RAG Chatbot)":
             ]
             st.rerun()
 
-    # Visual KPI Tiles if Self-Assessment was completed
     if st.session_state.assessment:
         with st.expander("📊 View Your Readiness Audit Summary", expanded=False):
             blockers = [k.replace("_", " ").title() for k, v in st.session_state.assessment.items() if v == "No"]
@@ -759,29 +764,33 @@ elif st.session_state.page == "AI Assistant (RAG Chatbot)":
                 st.session_state.chat_messages.append({"role": "assistant", "content": assistant_response})
 
 # =========================================================
-# ABOUT US & METHODOLOGY
+# ABOUT US & METHODOLOGY (CARD LAYOUTS)
 # =========================================================
 
 elif st.session_state.page == "About Us":
     render_brand_header("About This Project", subtitle="Background, problem statement, and scope.")
-    st.markdown("""
-    The **IMDA Pre-Approval Assistant** is an agentic self-service copilot designed to bridge the operational gap between digital solution vendors and IMDA's Pre-Approval framework under the SMEs Go Digital programme.
-    """)
+    with st.container(border=True):
+        st.markdown("""
+        The **IMDA Pre-Approval Assistant** is an agentic self-service copilot designed to bridge the operational gap between digital solution vendors and IMDA's Pre-Approval framework under the SMEs Go Digital programme.
+        """)
 
     st.subheader("1. Problem Statement")
-    st.write("Vendors seeking pre-approval frequently encounter difficulties interpreting domain qualification criteria, identifying appropriate solution categories, and validating baseline prerequisites. This creates unnecessary manual back-and-forth for both vendors and officers.")
+    with st.container(border=True):
+        st.write("Vendors seeking pre-approval frequently encounter difficulties interpreting domain qualification criteria, identifying appropriate solution categories, and validating baseline prerequisites. This creates unnecessary manual back-and-forth for both vendors and officers.")
 
     st.subheader("2. Project Objectives")
-    st.markdown("""
-    - **Empower Vendor Self-Discovery:** Provide instant, semantic category recommendations from plain English descriptions.
-    - **Upfront Gap Remediation:** Highlight operational roadblocks prior to formal submission.
-    - **Real-Time Grounded Knowledge:** Equip vendors with a full multi-turn conversational copilot grounded in the official online guide.
-    """)
+    with st.container(border=True):
+        st.markdown("""
+        - **Empower Vendor Self-Discovery:** Provide instant, semantic category recommendations from plain English descriptions.
+        - **Upfront Gap Remediation:** Highlight operational roadblocks prior to formal submission.
+        - **Real-Time Grounded Knowledge:** Equip vendors with a full multi-turn conversational copilot grounded in the official online guide.
+        """)
 
 elif st.session_state.page == "Methodology":
     render_brand_header("Methodology & System Architecture", subtitle="Prompt engineering pipelines and security controls.")
-    st.markdown("""
-    - **Adversarial Heuristic Defense:** User inputs pass through regex pattern matching to block instruction override attacks and prompt leaks.
-    - **XML Boundary Delimitation:** Untrusted text is strictly separated from system directives using `<user_query>` and `<context>` envelopes.
-    - **Multi-Turn Context Awareness:** Conversations retain prior turns within `<conversation_history>` blocks to handle sequential follow-ups.
-    """)
+    with st.container(border=True):
+        st.markdown("""
+        - **Adversarial Heuristic Defense:** User inputs pass through regex pattern matching to block instruction override attacks and prompt leaks.
+        - **XML Boundary Delimitation:** Untrusted text is strictly separated from system directives using `<user_query>` and `<context>` envelopes.
+        - **Multi-Turn Context Awareness:** Conversations retain prior turns within `<conversation_history>` blocks to handle sequential follow-ups.
+        """)

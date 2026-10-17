@@ -118,6 +118,12 @@ defaults = {
     "selected_category_url": None,
     "category_requirements": [],
     "category_answers": {},
+    "form_submitted": False,
+    "sub_company": "",
+    "sub_person": "",
+    "sub_email": "",
+    "sub_phone": "",
+    "sub_inquiry": "",
     "chat_messages": [
         {
             "role": "assistant",
@@ -661,49 +667,57 @@ elif st.session_state.page == "Category Requirements":
 
                     submit_button = st.form_submit_button("Submit Assessment & Send Summary →", type="primary", use_container_width=True)
 
-            # 4. Submission Summary Dossier & Chatbot Recommendation
             if submit_button:
                 if not company_name or not contact_person or not contact_email:
                     st.error("Please fill in all mandatory contact fields (Company Name, Contact Person, and Email).")
+                    st.session_state.form_submitted = False
                 else:
-                    st.success("🎉 Assessment & Enquiries Submitted Successfully!")
+                    st.session_state.form_submitted = True
+                    st.session_state.sub_company = company_name
+                    st.session_state.sub_person = contact_person
+                    st.session_state.sub_email = contact_email
+                    st.session_state.sub_phone = contact_phone
+                    st.session_state.sub_inquiry = vendor_inquiry
 
-                    with st.container(border=True):
-                        st.markdown("### 📋 Submission Summary Dossier")
-                        st.markdown(f"**Target Pre-Approval Category:** {selected}")
-                        st.markdown(f"**Company:** {company_name} | **Contact:** {contact_person} ({contact_email}, {contact_phone})")
+            # 4. Submission Summary Dossier & Chatbot Recommendation (Rendered OUTSIDE form)
+            if st.session_state.get("form_submitted", False):
+                st.success("🎉 Assessment & Enquiries Submitted Successfully!")
 
-                        if front_gaps or unmet_cat_questions:
-                            st.markdown("#### Detected Gaps for Officer Review:")
-                            for fg in front_gaps:
-                                st.markdown(f"- **Baseline Prerequisite ({fg['status']}):** {fg['item']}")
-                            for uq in unmet_cat_questions:
-                                st.markdown(f"- **Category Spec Q{uq['number']} ({uq['status']}):** {uq['question']}")
-                        else:
-                            st.markdown("✅ **Status:** 100% compliant across all evaluated criteria.")
+                with st.container(border=True):
+                    st.markdown("### 📋 Submission Summary Dossier")
+                    st.markdown(f"**Target Pre-Approval Category:** {selected}")
+                    st.markdown(f"**Company:** {st.session_state.sub_company} | **Contact:** {st.session_state.sub_person} ({st.session_state.sub_email}, {st.session_state.sub_phone})")
 
-                        if vendor_inquiry.strip():
-                            st.markdown("#### Applicant Inquiries:")
-                            st.write(vendor_inquiry)
+                    if front_gaps or unmet_cat_questions:
+                        st.markdown("#### Detected Gaps for Officer Review:")
+                        for fg in front_gaps:
+                            st.markdown(f"- **Baseline Prerequisite ({fg['status']}):** {fg['item']}")
+                        for uq in unmet_cat_questions:
+                            st.markdown(f"- **Category Spec Q{uq['number']} ({uq['status']}):** {uq['question']}")
+                    else:
+                        st.markdown("✅ **Status:** 100% compliant across all evaluated criteria.")
 
-                    st.info(
-                        "📧 **Notification Routing:** This summary report and inquiry record have been prepared for dispatch to **`seah_jie_ling@imda.gov.sg`** for officer review."
-                    )
-                    st.warning(
-                        "ℹ️ **Prototype Notice:** Please note that this is a proof-of-concept demonstration environment. "
-                        "Live SMTP servers and automated email dispatch are intentionally not configured for this prototype session, "
-                        "and external emails will not be transmitted."
-                    )
+                    if st.session_state.sub_inquiry.strip():
+                        st.markdown("#### Applicant Inquiries:")
+                        st.write(st.session_state.sub_inquiry)
 
-                    # --- Chatbot Recommendation Callout ---
-                    st.markdown("---")
-                    with st.container(border=True):
-                        st.markdown("### 🤖 Want guidance on how to address your identified gaps?")
-                        st.write("You can chat with our AI Pre-Approval Copilot right now for instant, grounded recommendations on how to fulfill official IMDA policy requirements.")
-                        
-                        if st.button("💬 Open AI Assistant & Get Guidance →", type="primary", use_container_width=True):
-                            st.session_state.page = "AI Assistant (RAG Chatbot)"
-                            st.rerun()
+                st.info(
+                    "📧 **Notification Routing:** This summary report and inquiry record have been prepared for dispatch to **`seah_jie_ling@imda.gov.sg`** for officer review."
+                )
+                st.warning(
+                    "ℹ️ **Prototype Notice:** Please note that this is a proof-of-concept demonstration environment. "
+                    "Live SMTP servers and automated email dispatch are intentionally not configured for this prototype session, "
+                    "and external emails will not be transmitted."
+                )
+
+                st.markdown("---")
+                with st.container(border=True):
+                    st.markdown("### 🤖 Want guidance on how to address your identified gaps?")
+                    st.write("You can chat with our AI Pre-Approval Copilot right now for instant, grounded recommendations on how to fulfill official IMDA policy requirements.")
+                    
+                    if st.button("💬 Open AI Assistant & Get Guidance →", type="primary", use_container_width=True):
+                        st.session_state.page = "AI Assistant (RAG Chatbot)"
+                        st.rerun()
 
 # =========================================================
 # AI ASSISTANT (RAG CHATBOT)

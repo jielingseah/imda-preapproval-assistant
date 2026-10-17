@@ -383,7 +383,7 @@ def parse_category_matches(answer, catalogue):
 
 
 # =========================================================
-# CLEAN NAVIGATION (NO NARROW SIDEBAR EXPANDER)
+# NAVIGATION (WITH PROTOTYPE NOTICE MOVED INTO SIDEBAR)
 # =========================================================
 
 pages = [
@@ -408,8 +408,22 @@ st.session_state.page = selected_page
 
 st.sidebar.markdown("---")
 st.sidebar.info("💡 **Tip:** Need live guidance? Go to **AI Assistant (RAG Chatbot)** to talk directly with the copilot.")
+
+# PART 1: Prototype Disclaimer placed cleanly inside the Sidebar
 st.sidebar.markdown("---")
-st.sidebar.caption("Proof-of-Concept Prototype")
+with st.sidebar.expander("⚠️ IMPORTANT NOTICE — Prototype", expanded=False):
+    st.caption(
+        """
+        **Proof-of-Concept Prototype:**
+        This web application is developed for demonstration purposes only.
+        The information provided here is NOT intended for actual usage and should not be relied upon
+        for making any decisions, especially those related to financial, legal, or business compliance.
+
+        The LLM may generate inaccurate or incorrect information. Always consult with qualified
+        professionals for accurate and personalised advice.
+        """
+    )
+st.sidebar.caption("IMDA SMEs Go Digital POC")
 
 
 # =========================================================
@@ -688,7 +702,7 @@ elif st.session_state.page == "AI Assistant (RAG Chatbot)":
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Bottom Pinned Chat Input Box
+    # Bottom Pinned Chat Input Box (Part 2: Free of any obstructions below)
     if user_query := st.chat_input("Ask a question (e.g. If I have less than 5 SME customers, can I apply?)"):
         is_safe, sanitized_query = sanitize_and_check_injection(user_query)
         if not is_safe:
@@ -705,7 +719,6 @@ elif st.session_state.page == "AI Assistant (RAG Chatbot)":
             else:
                 with st.chat_message("assistant"):
                     with st.spinner("Consulting official IMDA Pre-Approval guide..."):
-                        # Query the multi-turn RAG engine with previous messages passed
                         assistant_response = query_live_guide_rag(
                             client,
                             user_query=sanitized_query,
@@ -808,23 +821,3 @@ elif st.session_state.page == "Methodology":
         H2 --> I2[Render Multi-Turn Chat Bubble & Append to State]
     ```
     """)
-
-
-# =========================================================
-# GLOBAL DISCLAIMER
-# =========================================================
-
-st.markdown("---")
-with st.expander("⚠️ IMPORTANT NOTICE — Proof-of-Concept Prototype", expanded=False):
-    st.write(
-        """
-        IMPORTANT NOTICE: This web application is developed as a proof-of-concept prototype.
-        The information provided here is NOT intended for actual usage and should not be relied upon
-        for making any decisions, especially those related to financial, legal, or healthcare matters.
-
-        Furthermore, please be aware that the LLM may generate inaccurate or incorrect information.
-        You assume full responsibility for how you use any generated output.
-
-        Always consult with qualified professionals for accurate and personalised advice.
-        """
-    )

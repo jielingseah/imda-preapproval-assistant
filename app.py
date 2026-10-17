@@ -57,7 +57,6 @@ def check_password():
 
             user_entered = pwd_input.strip().lower() if pwd_input else ""
 
-            # Accepts configured secret, fallback 'bootcamp2026', or clean match
             if user_entered in (expected_pwd, "bootcamp2026"):
                 st.session_state.authenticated = True
                 st.rerun()
@@ -191,28 +190,45 @@ def get_category_requirements(category_url):
     markdown = fetch_text(category_url)
     questions = []
     lines = markdown.splitlines()
+    total_lines = len(lines)
 
     for i, line in enumerate(lines):
-        q_match = re.match(r"###\s+Q(\d+)\s+(.*)", line.strip())
+        line_clean = line.strip()
+        q_match = re.match(r"#{2,4}\s+Q(\d+)\s*(.*)", line_clean)
         if not q_match:
             continue
 
         q_number = q_match.group(1)
         heading = q_match.group(2).strip()
-        is_mandatory = "Mandatory" in heading
-        question_text = ""
+        is_mandatory = "preferred" not in heading.lower()
 
-        for next_line in lines[i + 1:i + 8]:
-            if "Main Question:" in next_line:
-                question_text = next_line.split("Main Question:", 1)[1].strip()
+        heading_clean = heading.replace("**", "").replace("*", "").strip()
+
+        question_text = ""
+        for next_line in lines[i + 1:min(i + 40, total_lines)]:
+            stripped = next_line.strip()
+            if re.match(r"#{2,4}\s+Q\d+", stripped):
                 break
 
+            if "Main Question:" in stripped:
+                question_text = stripped.split("Main Question:", 1)[1].strip()
+                break
+            elif "Question:" in stripped and not question_text:
+                question_text = stripped.split("Question:", 1)[1].strip()
+            elif stripped and not question_text and not stripped.startswith("#"):
+                if not any(stripped.startswith(prefix) for prefix in ["|", "```", "<!--", "!"]):
+                    question_text = stripped
+
         if not question_text:
-            continue
+            question_text = heading_clean if heading_clean else f"Requirement details for Q{q_number}"
+
+        question_text = question_text.replace("**", "").strip()
+        if question_text.endswith(":"):
+            question_text = question_text[:-1]
 
         questions.append({
             "number": q_number,
-            "heading": heading,
+            "heading": heading_clean,
             "question": question_text,
             "mandatory": is_mandatory
         })
@@ -376,7 +392,7 @@ if st.session_state.page == "Home":
             st.rerun()
 
 # =========================================================
-# SELF-ASSESSMENT
+# SELF-ASSESSMENT (PERSISTENT STATE)
 # =========================================================
 
 elif st.session_state.page == "Self-Assessment":
@@ -395,20 +411,30 @@ elif st.session_state.page == "Self-Assessment":
     ]
 
     for key, question, options in vendor_questions:
-        st.session_state.assessment[key] = st.radio(question, options, key=f"vendor_{key}")
+        current_val = st.session_state.assessment.get(key, options[0])
+        idx = options.index(current_val) if current_val in options else 0
+        st.session_state.assessment[key] = st.radio(question, options, index=idx, key=f"vendor_{key}")
 
     st.subheader("2. Solution Track Record")
+    ind_options = ["Many industries", "One or few industries", "Not sure"]
+    current_ind = st.session_state.assessment.get("industries", ind_options[0])
+    ind_idx = ind_options.index(current_ind) if current_ind in ind_options else 0
     industries = st.radio(
         "Select the statement that best describes the industries your solution caters to.",
-        ["Many industries", "One or few industries", "Not sure"],
+        ind_options,
+        index=ind_idx,
         key="industries"
     )
     st.session_state.assessment["industries"] = industries
 
     if industries == "One or few industries":
+        track_opts = ["Yes", "No", "Not sure"]
+        current_track = st.session_state.assessment.get("customer_track", track_opts[0])
+        track_idx = track_opts.index(current_track) if current_track in track_opts else 0
         st.session_state.assessment["customer_track"] = st.radio(
             "Has your solution been deployed with at least 5 Singapore-registered SMEs for at least 6 months?",
-            ["Yes", "No", "Not sure"],
+            track_opts,
+            index=track_idx,
             key="customer_track"
         )
 
@@ -422,7 +448,9 @@ elif st.session_state.page == "Self-Assessment":
     ]
 
     for key, question, options in solution_questions:
-        st.session_state.assessment[key] = st.radio(question, options, key=f"solution_{key}")
+        current_val = st.session_state.assessment.get(key, options[0])
+        idx = options.index(current_val) if current_val in options else 0
+        st.session_state.assessment[key] = st.radio(question, options, index=idx, key=f"solution_{key}")
 
     st.markdown("---")
     if st.button("Continue to Solution Category →", type="primary", use_container_width=True):
@@ -475,12 +503,12 @@ elif st.session_state.page == "AI Category Finder":
                     st.rerun()
 
 # =========================================================
-# CATEGORY REQUIREMENTS & CONTACT / GAP AUDIT SUBMISSION
+# CATEGORY REQUIREMENTS & GAP AUDIT / SUBMISSION
 # =========================================================
 
 elif st.session_state.page == "Category Requirements":
     render_brand_header(
-        "Category Requirements & Pre-Submission Review", 
+        "Category Requirements & Pre-Submission Review",
         subtitle="Specific functional checklist, prerequisite gap analysis, and enquiry submission."
     )
     selected = st.session_state.selected_category
@@ -512,9 +540,14 @@ elif st.session_state.page == "Category Requirements":
 
             for question in mandatory:
                 key = f"category_q_{question['number']}"
+                existing_ans = st.session_state.category_answers.get(question["number"], "Yes")
+                ans_opts = ["Yes", "No", "Not sure"]
+                ans_idx = ans_opts.index(existing_ans) if existing_ans in ans_opts else 0
+
                 st.session_state.category_answers[question["number"]] = st.radio(
                     f"Q{question['number']} — {question['question']}",
-                    ["Yes", "No", "Not sure"],
+                    ans_opts,
+                    index=ans_idx,
                     key=key
                 )
 
@@ -525,28 +558,60 @@ elif st.session_state.page == "Category Requirements":
 
             st.markdown("---")
 
-            # 2. Automated Gap Detection
+            # 2. Automated Prerequisite Gap Detection
             st.subheader("2. Automated Prerequisite Gap Detection")
-            unmet_questions = []
+
+            front_assessment_labels = {
+                "incorporated": "Company incorporated in Singapore",
+                "operation": "Operation for at least 18 months",
+                "financial": "Financial stability (positive equity & ratio >= 1)",
+                "track_record": "Government agency track record",
+                "resources": "Sufficient quality resources",
+                "cooling": "Not serving 1-year IMDA cooling period",
+                "invoice_now": "InvoiceNow registered account",
+                "customer_track": "Deployed with >= 5 SG SMEs for >= 6 months",
+                "pricing": "Priced reasonably for SMEs",
+                "suitability": "Designed for SME needs",
+                "productivity": "Improves SME productivity",
+                "website": "Active website showcasing solution",
+                "dapdp": "Data protection & analytics compliance"
+            }
+
+            front_gaps = []
+            for k, label in front_assessment_labels.items():
+                val = st.session_state.assessment.get(k)
+                if val in ["No", "Not sure"] or (k == "cooling" and val == "Yes") or ("development" in str(val).lower()):
+                    front_gaps.append({"item": label, "status": val})
+
+            unmet_cat_questions = []
             for question in mandatory:
                 ans = st.session_state.category_answers.get(question["number"])
                 if ans in ["No", "Not sure"]:
-                    unmet_questions.append({
+                    unmet_cat_questions.append({
                         "number": question["number"],
                         "question": question["question"],
                         "status": ans
                     })
 
-            if unmet_questions:
-                st.warning(f"⚠️ System detected **{len(unmet_questions)}** requirement(s) that your solution currently does not meet or is unsure about:")
-                for uq in unmet_questions:
-                    st.markdown(f"- **Q{uq['number']} ({uq['status']}):** {uq['question']}")
+            total_gaps_count = len(front_gaps) + len(unmet_cat_questions)
+
+            if total_gaps_count > 0:
+                st.warning(f"⚠️ System detected **{total_gaps_count}** requirement gap(s) across your assessment:")
+                if front_gaps:
+                    st.markdown("**Core Baseline & Track Record Gaps:**")
+                    for fg in front_gaps:
+                        st.markdown(f"- 🔴 **{fg['item']}** (Status: *{fg['status']}*)")
+
+                if unmet_cat_questions:
+                    st.markdown(f"**Specific Category Requirements for {selected}:**")
+                    for uq in unmet_cat_questions:
+                        st.markdown(f"- ⚠️ **Q{uq['number']} ({uq['status']}):** {uq['question']}")
             else:
-                st.success("✅ Excellent! Your solution declared full compliance with all mandatory functional specifications.")
+                st.success("✅ Excellent! Your solution declared full compliance with both Baseline Eligibility and Category Specifications.")
 
             st.markdown("---")
 
-            # 3. Contact Details & Vendor Inquiry Form
+            # 3. Contact Details & Vendor Enquiries Form
             st.subheader("3. Contact Details & Vendor Enquiries")
             st.caption("Provide your company contact information and any specific questions regarding unmet criteria or general onboarding.")
 
@@ -567,30 +632,31 @@ elif st.session_state.page == "Category Requirements":
 
                 submit_button = st.form_submit_button("Submit Assessment & Send Summary →", type="primary", use_container_width=True)
 
-            # 4. Submission & Email Dispatch Simulation
+            # 4. Submission Summary Dossier
             if submit_button:
                 if not company_name or not contact_person or not contact_email:
                     st.error("Please fill in all mandatory contact fields (Company Name, Contact Person, and Email).")
                 else:
                     st.success("🎉 Assessment & Enquiries Submitted Successfully!")
 
-                    # Formal Summary Card
                     with st.container(border=True):
                         st.markdown("### 📋 Submission Summary Dossier")
                         st.markdown(f"**Target Pre-Approval Category:** {selected}")
                         st.markdown(f"**Company:** {company_name} | **Contact:** {contact_person} ({contact_email}, {contact_phone})")
-                        st.markdown(f"**Compliance Ratio:** {len(mandatory) - len(unmet_questions)} / {len(mandatory)} Mandatory Items Fulfilled")
-                        
-                        if unmet_questions:
+
+                        if front_gaps or unmet_cat_questions:
                             st.markdown("#### Detected Gaps for Officer Review:")
-                            for uq in unmet_questions:
-                                st.markdown(f"- **Q{uq['number']} ({uq['status']}):** {uq['question']}")
-                        
+                            for fg in front_gaps:
+                                st.markdown(f"- **Baseline Prerequisite ({fg['status']}):** {fg['item']}")
+                            for uq in unmet_cat_questions:
+                                st.markdown(f"- **Category Spec Q{uq['number']} ({uq['status']}):** {uq['question']}")
+                        else:
+                            st.markdown("✅ **Status:** 100% compliant across all evaluated criteria.")
+
                         if vendor_inquiry.strip():
                             st.markdown("#### Applicant Inquiries:")
                             st.write(vendor_inquiry)
 
-                    # Official Officer Notification Alert & Prototype Notice
                     st.info(
                         "📧 **Notification Routing:** This summary report and inquiry record have been prepared for dispatch to **`seah_jie_ling@imda.gov.sg`** for officer review."
                     )

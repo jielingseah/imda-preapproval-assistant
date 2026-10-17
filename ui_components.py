@@ -1,12 +1,12 @@
 """
 UI/UX Component & Style Library for IMDA Pre-Approval Assistant.
-Emulates Singapore Government Design System (SGDS) patterns.
+Matched to the SMEs Go Digital portal design guidelines.
 """
 
 import streamlit as st
 
 def inject_custom_css():
-    """Injects modern, corporate-grade styling."""
+    """Injects SMEs Go Digital theme styling."""
     st.markdown(
         """
         <style>
@@ -14,7 +14,7 @@ def inject_custom_css():
 
         html, body, [class*="css"] {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: #1e293b;
+            color: #212529;
         }
 
         /* Top Application Bar & Main Headers */
@@ -23,35 +23,36 @@ def inject_custom_css():
             align-items: center;
             gap: 12px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid #e3e8ee;
             margin-bottom: 20px;
         }
         .brand-title {
             font-size: 26px;
             font-weight: 700;
-            color: #0f172a;
+            color: #1b365d;
             margin: 0;
             letter-spacing: -0.5px;
         }
         .brand-badge {
-            background-color: #e0f2fe;
-            color: #0284c7;
+            background-color: #fce8e8;
+            color: #d8232a;
             font-size: 11px;
             font-weight: 700;
             padding: 3px 8px;
-            border-radius: 9999px;
+            border-radius: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            border: 1px solid #f8b4b4;
         }
 
-        /* Modern Hero Container */
+        /* SMEs Go Digital Hero Container */
         .sgds-hero {
-            background: linear-gradient(135deg, #0f385a 0%, #1e40af 100%);
+            background: linear-gradient(135deg, #182f59 0%, #1b365d 60%, #224270 100%);
             color: #ffffff;
             padding: 30px;
-            border-radius: 12px;
+            border-radius: 8px;
             margin-bottom: 24px;
-            box-shadow: 0 10px 20px -5px rgba(15, 56, 90, 0.2);
+            box-shadow: 0 4px 14px rgba(24, 47, 89, 0.15);
         }
         .sgds-hero h2 {
             font-size: 24px;
@@ -60,44 +61,44 @@ def inject_custom_css():
             color: #ffffff !important;
         }
         .sgds-hero p {
-            font-size: 15px;
-            color: #e2e8f0;
+            font-size: 14.5px;
+            color: #e3e8ee;
             margin: 0;
             max-width: 90%;
             line-height: 1.5;
         }
 
-        /* Interactive Dashboard Feature Cards */
+        /* Feature Cards */
         .feature-card {
             background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            min-height: 180px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 22px;
+            min-height: 170px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
             transition: all 0.2s ease-in-out;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
         .feature-card:hover {
-            border-color: #3b82f6;
-            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);
+            border-color: #1b365d;
+            box-shadow: 0 6px 16px rgba(27, 54, 93, 0.08);
             transform: translateY(-2px);
         }
         .feature-icon {
             font-size: 24px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .feature-title {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 650;
-            color: #0f172a;
-            margin-bottom: 8px;
+            color: #1b365d;
+            margin-bottom: 6px;
         }
         .feature-desc {
             font-size: 13px;
-            color: #64748b;
+            color: #556575;
             line-height: 1.5;
             margin-bottom: 12px;
         }
@@ -105,36 +106,46 @@ def inject_custom_css():
         /* Readiness Audit KPI Tiles */
         .metric-tile {
             background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
             padding: 16px;
             text-align: center;
         }
         .metric-number {
             font-size: 28px;
             font-weight: 700;
-            color: #0f172a;
+            color: #1b365d;
         }
         .metric-label {
             font-size: 12px;
             font-weight: 600;
-            color: #64748b;
+            color: #556575;
             text-transform: uppercase;
         }
 
-        /* Chat Layout & Polish */
-        .stChatMessage {
-            border-radius: 10px !important;
-            padding: 14px 18px !important;
-            margin-bottom: 12px !important;
+        /* Streamlit Primary Button Override (SMEs Go Digital Red) */
+        button[kind="primary"] {
+            background-color: #d8232a !important;
+            border-color: #d8232a !important;
+            color: #ffffff !important;
+            border-radius: 6px !important;
+            font-weight: 600 !important;
         }
-        div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarIcon-user"]) {
-            background-color: #f1f5f9;
+        button[kind="primary"]:hover {
+            background-color: #b51c22 !important;
+            border-color: #b51c22 !important;
         }
-        div[data-testid="stChatMessage"]:has(div[data-testid="chatAvatarIcon-assistant"]) {
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+
+        /* Streamlit Secondary Button Override */
+        button[kind="secondary"] {
+            border-color: #ccd5df !important;
+            color: #1b365d !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+        }
+        button[kind="secondary"]:hover {
+            border-color: #1b365d !important;
+            color: #182f59 !important;
         }
         </style>
         """,
@@ -142,7 +153,7 @@ def inject_custom_css():
     )
 
 def render_brand_header(title: str, subtitle: str = None, badge: str = "Live Pilot"):
-    """Renders a consistent top header across pages."""
+    """Renders a consistent top header matching the portal theme."""
     badge_html = f'<span class="brand-badge">{badge}</span>' if badge else ""
     st.markdown(
         f"""
@@ -157,7 +168,7 @@ def render_brand_header(title: str, subtitle: str = None, badge: str = "Live Pil
         st.caption(subtitle)
 
 def render_hero_banner(heading: str, description: str):
-    """Renders an executive hero card."""
+    """Renders the top banner container."""
     st.markdown(
         f"""
         <div class="sgds-hero">
@@ -169,7 +180,7 @@ def render_hero_banner(heading: str, description: str):
     )
 
 def render_feature_card(icon: str, title: str, description: str):
-    """Renders visual interactive card containers."""
+    """Renders feature card containers."""
     st.markdown(
         f"""
         <div class="feature-card">
@@ -184,7 +195,7 @@ def render_feature_card(icon: str, title: str, description: str):
     )
 
 def render_kpi_dashboard(readiness_pct: int, gaps: int, in_progress: int):
-    """Renders visual readiness score indicators."""
+    """Renders readiness indicator tiles."""
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown(
@@ -200,7 +211,7 @@ def render_kpi_dashboard(readiness_pct: int, gaps: int, in_progress: int):
         st.markdown(
             f"""
             <div class="metric-tile">
-                <div class="metric-number" style="color: {'#dc2626' if gaps > 0 else '#16a34a'};">{gaps}</div>
+                <div class="metric-number" style="color: {'#d8232a' if gaps > 0 else '#16a34a'};">{gaps}</div>
                 <div class="metric-label">Prerequisite Gaps</div>
             </div>
             """,
@@ -210,7 +221,7 @@ def render_kpi_dashboard(readiness_pct: int, gaps: int, in_progress: int):
         st.markdown(
             f"""
             <div class="metric-tile">
-                <div class="metric-number" style="color: #0284c7;">{in_progress}</div>
+                <div class="metric-number" style="color: #1b365d;">{in_progress}</div>
                 <div class="metric-label">In-Progress Items</div>
             </div>
             """,

@@ -393,70 +393,93 @@ if st.session_state.page == "Home":
             st.rerun()
 
 # =========================================================
-# SELF-ASSESSMENT (PERSISTENT STATE)
+# SELF-ASSESSMENT (MODERN TABBED WIZARD & CARD LAYOUT)
 # =========================================================
 
 elif st.session_state.page == "Self-Assessment":
     render_brand_header("Vendor Self-Assessment", subtitle="Prerequisite validation against mandatory onboarding standards.")
-    st.progress(0.50, text="Validation in Progress")
+    st.progress(0.33, text="Validation in Progress — Step 1 of 3")
 
-    st.subheader("1. Vendor Eligibility")
-    vendor_questions = [
-        ("incorporated", "Is your company incorporated in Singapore?", ["Yes", "No"]),
-        ("operation", "Has your company been in operation for at least 18 months?", ["Yes", "No"]),
-        ("financial", "Is your company financially stable (positive net equity, current ratio >= 1)?", ["Yes", "No", "Not sure"]),
-        ("track_record", "Does your company have satisfactory track record with government agencies?", ["Yes", "No", "Not currently, but development is underway"]),
-        ("resources", "Does your company have sufficient quality resources?", ["Yes", "No", "Not sure"]),
-        ("cooling", "Is your company currently serving a one-year cooling period from IMDA?", ["Yes", "No"]),
-        ("invoice_now", "Has your company signed up for an InvoiceNow account?", ["Yes", "No", "Not currently, but development is underway"])
-    ]
+    t1, t2, t3 = st.tabs(["1. Vendor Eligibility", "2. Solution Track Record", "3. Solution Eligibility"])
 
-    for key, question, options in vendor_questions:
-        current_val = st.session_state.assessment.get(key, options[0])
-        idx = options.index(current_val) if current_val in options else 0
-        st.session_state.assessment[key] = st.radio(question, options, index=idx, key=f"vendor_{key}")
+    with t1:
+        st.markdown("### 🏢 Vendor Eligibility Standards")
+        st.caption("Confirm foundational corporate and financial prerequisites.")
 
-    st.subheader("2. Solution Track Record")
-    ind_options = ["Many industries", "One or few industries", "Not sure"]
-    current_ind = st.session_state.assessment.get("industries", ind_options[0])
-    ind_idx = ind_options.index(current_ind) if current_ind in ind_options else 0
-    industries = st.radio(
-        "Select the statement that best describes the industries your solution caters to.",
-        ind_options,
-        index=ind_idx,
-        key="industries"
-    )
-    st.session_state.assessment["industries"] = industries
+        vendor_questions = [
+            ("incorporated", "Is your company incorporated in Singapore?", ["Yes", "No"]),
+            ("operation", "Has your company been in operation for at least 18 months?", ["Yes", "No"]),
+            ("financial", "Is your company financially stable (positive net equity, current ratio >= 1)?", ["Yes", "No", "Not sure"]),
+            ("track_record", "Does your company have satisfactory track record with government agencies?", ["Yes", "No", "Not currently, but development is underway"]),
+            ("resources", "Does your company have sufficient quality resources?", ["Yes", "No", "Not sure"]),
+            ("cooling", "Is your company currently serving a one-year cooling period from IMDA?", ["Yes", "No"]),
+            ("invoice_now", "Has your company signed up for an InvoiceNow account?", ["Yes", "No", "Not currently, but development is underway"])
+        ]
 
-    if industries == "One or few industries":
-        track_opts = ["Yes", "No", "Not sure"]
-        current_track = st.session_state.assessment.get("customer_track", track_opts[0])
-        track_idx = track_opts.index(current_track) if current_track in track_opts else 0
-        st.session_state.assessment["customer_track"] = st.radio(
-            "Has your solution been deployed with at least 5 Singapore-registered SMEs for at least 6 months?",
-            track_opts,
-            index=track_idx,
-            key="customer_track"
-        )
+        for key, question, options in vendor_questions:
+            with st.container(border=True):
+                current_val = st.session_state.assessment.get(key, options[0])
+                idx = options.index(current_val) if current_val in options else 0
+                st.session_state.assessment[key] = st.radio(question, options, index=idx, key=f"vendor_{key}")
 
-    st.subheader("3. Solution Eligibility")
-    solution_questions = [
-        ("pricing", "Is your solution priced reasonably for SMEs?", ["Yes", "No", "Not sure"]),
-        ("suitability", "Is your solution designed to suit the needs and demands of SMEs?", ["Yes", "No", "Not sure"]),
-        ("productivity", "Does your solution help SMEs improve productivity?", ["Yes", "No", "Not sure"]),
-        ("website", "Do you have a website that showcases the solution?", ["Yes", "No", "Not currently, but development is underway"]),
-        ("dapdp", "Have you validated compliance with Data Analytics and Personal Data Protection requirements?", ["Yes", "No", "Not currently, but development is underway"])
-    ]
+        st.markdown("")
+        if st.button("Save & Continue to Track Record →", type="primary", use_container_width=True):
+            st.rerun()
 
-    for key, question, options in solution_questions:
-        current_val = st.session_state.assessment.get(key, options[0])
-        idx = options.index(current_val) if current_val in options else 0
-        st.session_state.assessment[key] = st.radio(question, options, index=idx, key=f"solution_{key}")
+    with t2:
+        st.markdown("### 📊 Solution Track Record & Deployment")
+        st.caption("Specify market reach and SME customer base metrics.")
 
-    st.markdown("---")
-    if st.button("Continue to Solution Category →", type="primary", use_container_width=True):
-        st.session_state.page = "AI Category Finder"
-        st.rerun()
+        with st.container(border=True):
+            ind_options = ["Many industries", "One or few industries", "Not sure"]
+            current_ind = st.session_state.assessment.get("industries", ind_options[0])
+            ind_idx = ind_options.index(current_ind) if current_ind in ind_options else 0
+            industries = st.radio(
+                "Select the statement that best describes the industries your solution caters to.",
+                ind_options,
+                index=ind_idx,
+                key="industries"
+            )
+            st.session_state.assessment["industries"] = industries
+
+        if industries == "One or few industries":
+            with st.container(border=True):
+                track_opts = ["Yes", "No", "Not sure"]
+                current_track = st.session_state.assessment.get("customer_track", track_opts[0])
+                track_idx = track_opts.index(current_track) if current_track in track_opts else 0
+                st.session_state.assessment["customer_track"] = st.radio(
+                    "Has your solution been deployed with at least 5 Singapore-registered SMEs for at least 6 months?",
+                    track_opts,
+                    index=track_idx,
+                    key="customer_track"
+                )
+
+        st.markdown("")
+        if st.button("Save & Continue to Solution Eligibility →", type="primary", use_container_width=True):
+            st.rerun()
+
+    with t3:
+        st.markdown("### ⚙️ Solution Specifications & Value")
+        st.caption("Verify pricing, suitability, productivity impact, and compliance.")
+
+        solution_questions = [
+            ("pricing", "Is your solution priced reasonably for SMEs?", ["Yes", "No", "Not sure"]),
+            ("suitability", "Is your solution designed to suit the needs and demands of SMEs?", ["Yes", "No", "Not sure"]),
+            ("productivity", "Does your solution help SMEs improve productivity?", ["Yes", "No", "Not sure"]),
+            ("website", "Do you have a website that showcases the solution?", ["Yes", "No", "Not currently, but development is underway"]),
+            ("dapdp", "Have you validated compliance with Data Analytics and Personal Data Protection requirements?", ["Yes", "No", "Not currently, but development is underway"])
+        ]
+
+        for key, question, options in solution_questions:
+            with st.container(border=True):
+                current_val = st.session_state.assessment.get(key, options[0])
+                idx = options.index(current_val) if current_val in options else 0
+                st.session_state.assessment[key] = st.radio(question, options, index=idx, key=f"solution_{key}")
+
+        st.markdown("---")
+        if st.button("Complete Assessment & Find Solution Category →", type="primary", use_container_width=True):
+            st.session_state.page = "AI Category Finder"
+            st.rerun()
 
 # =========================================================
 # AI CATEGORY FINDER

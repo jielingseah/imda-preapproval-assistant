@@ -475,11 +475,14 @@ elif st.session_state.page == "AI Category Finder":
                     st.rerun()
 
 # =========================================================
-# CATEGORY REQUIREMENTS
+# CATEGORY REQUIREMENTS & CONTACT / GAP AUDIT SUBMISSION
 # =========================================================
 
 elif st.session_state.page == "Category Requirements":
-    render_brand_header("Category Requirements", subtitle="Specific functional checklist for your chosen category.")
+    render_brand_header(
+        "Category Requirements & Pre-Submission Review", 
+        subtitle="Specific functional checklist, prerequisite gap analysis, and enquiry submission."
+    )
     selected = st.session_state.selected_category
 
     if not selected:
@@ -503,7 +506,10 @@ elif st.session_state.page == "Category Requirements":
         if not mandatory:
             st.warning("Requirements could not be extracted automatically. Please verify via the link above.")
         else:
-            st.subheader("Mandatory Functional Requirements")
+            # 1. Checklist Questions
+            st.subheader("1. Mandatory Functional Checklist")
+            st.caption("Indicate your solution's current compliance status for each item below.")
+
             for question in mandatory:
                 key = f"category_q_{question['number']}"
                 st.session_state.category_answers[question["number"]] = st.radio(
@@ -518,9 +524,81 @@ elif st.session_state.page == "Category Requirements":
                         st.write(f"**Q{question['number']}** — {question['question']}")
 
             st.markdown("---")
-            if st.button("Proceed to AI Copilot Chat →", type="primary", use_container_width=True):
-                st.session_state.page = "AI Assistant (RAG Chatbot)"
-                st.rerun()
+
+            # 2. Automated Gap Detection
+            st.subheader("2. Automated Prerequisite Gap Detection")
+            unmet_questions = []
+            for question in mandatory:
+                ans = st.session_state.category_answers.get(question["number"])
+                if ans in ["No", "Not sure"]:
+                    unmet_questions.append({
+                        "number": question["number"],
+                        "question": question["question"],
+                        "status": ans
+                    })
+
+            if unmet_questions:
+                st.warning(f"⚠️ System detected **{len(unmet_questions)}** requirement(s) that your solution currently does not meet or is unsure about:")
+                for uq in unmet_questions:
+                    st.markdown(f"- **Q{uq['number']} ({uq['status']}):** {uq['question']}")
+            else:
+                st.success("✅ Excellent! Your solution declared full compliance with all mandatory functional specifications.")
+
+            st.markdown("---")
+
+            # 3. Contact Details & Vendor Inquiry Form
+            st.subheader("3. Contact Details & Vendor Enquiries")
+            st.caption("Provide your company contact information and any specific questions regarding unmet criteria or general onboarding.")
+
+            with st.form("vendor_submission_form"):
+                col_c1, col_c2 = st.columns(2)
+                with col_c1:
+                    company_name = st.text_input("Company Registered Name *", placeholder="e.g. Acme Tech Solutions Pte Ltd")
+                    contact_person = st.text_input("Contact Person Name *", placeholder="e.g. John Tan")
+                with col_c2:
+                    contact_email = st.text_input("Corporate Email Address *", placeholder="e.g. john.tan@acme.com")
+                    contact_phone = st.text_input("Contact Number *", placeholder="e.g. +65 9123 4567")
+
+                vendor_inquiry = st.text_area(
+                    "Questions / Notes on Unmet Requirements",
+                    placeholder="If you marked 'No' or 'Not sure' above, specify your planned roadmap, alternative workarounds, or questions for IMDA officers here.",
+                    height=130
+                )
+
+                submit_button = st.form_submit_button("Submit Assessment & Send Summary →", type="primary", use_container_width=True)
+
+            # 4. Submission & Email Dispatch Simulation
+            if submit_button:
+                if not company_name or not contact_person or not contact_email:
+                    st.error("Please fill in all mandatory contact fields (Company Name, Contact Person, and Email).")
+                else:
+                    st.success("🎉 Assessment & Enquiries Submitted Successfully!")
+
+                    # Formal Summary Card
+                    with st.container(border=True):
+                        st.markdown("### 📋 Submission Summary Dossier")
+                        st.markdown(f"**Target Pre-Approval Category:** {selected}")
+                        st.markdown(f"**Company:** {company_name} | **Contact:** {contact_person} ({contact_email}, {contact_phone})")
+                        st.markdown(f"**Compliance Ratio:** {len(mandatory) - len(unmet_questions)} / {len(mandatory)} Mandatory Items Fulfilled")
+                        
+                        if unmet_questions:
+                            st.markdown("#### Detected Gaps for Officer Review:")
+                            for uq in unmet_questions:
+                                st.markdown(f"- **Q{uq['number']} ({uq['status']}):** {uq['question']}")
+                        
+                        if vendor_inquiry.strip():
+                            st.markdown("#### Applicant Inquiries:")
+                            st.write(vendor_inquiry)
+
+                    # Official Officer Notification Alert & Prototype Notice
+                    st.info(
+                        "📧 **Notification Routing:** This summary report and inquiry record have been prepared for dispatch to **`seah_jie_ling@imda.gov.sg`** for officer review."
+                    )
+                    st.warning(
+                        "ℹ️ **Prototype Notice:** Please note that this is a proof-of-concept demonstration environment. "
+                        "Live SMTP servers and automated email dispatch are intentionally not configured for this prototype session, "
+                        "and external emails will not be transmitted."
+                    )
 
 # =========================================================
 # AI ASSISTANT (RAG CHATBOT)

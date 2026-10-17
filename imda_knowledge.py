@@ -6,7 +6,7 @@ import re
 import time
 from collections import Counter
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
 
 import requests
 import streamlit as st
@@ -20,80 +20,72 @@ LOGGER = logging.getLogger(__name__)
 PRIMARY_PAGES = [
     {
         "title": "Eligibility Criteria (Vendor & Solution)",
-        "md_url": f"{BASE_URL}/pre-approval-guide/eligibility-criteria.md",
-        "web_url": f"{BASE_URL}/pre-approval-guide/eligibility-criteria"
+        "fetch_urls": [
+            f"{BASE_URL}/pre-approval-guide/eligibility-criteria",
+            f"{BASE_URL}/pre-approval-guide/eligibility-criteria.md"
+        ],
+        "web_url": "https://preapproval-guide.imda.gov.sg/pre-approval-guide/eligibility-criteria"
     },
     {
         "title": "Stage 1: Overview & Self-Assessment",
-        "md_url": f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment.md",
-        "web_url": f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment"
+        "fetch_urls": [
+            f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment",
+            f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment.md"
+        ],
+        "web_url": "https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-1-vendor-self-assessment"
     },
     {
         "title": "Stage 1: Solution Categories Directory",
-        "md_url": f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment/identify-suitable-solution-category.md",
-        "web_url": f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment/identify-suitable-solution-category"
+        "fetch_urls": [
+            f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment/identify-suitable-solution-category",
+            f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment/identify-suitable-solution-category.md"
+        ],
+        "web_url": "https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-1-vendor-self-assessment/identify-suitable-solution-category"
     },
     {
         "title": "Stage 2: Preparing Submission & Documents",
-        "md_url": f"{BASE_URL}/pre-approval-guide/stage-2-preparing-submission.md",
-        "web_url": f"{BASE_URL}/pre-approval-guide/stage-2-preparing-submission"
+        "fetch_urls": [
+            f"{BASE_URL}/pre-approval-guide/stage-2-preparing-submission",
+            f"{BASE_URL}/pre-approval-guide/stage-2-preparing-submission.md"
+        ],
+        "web_url": "https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-2-preparing-submission"
     },
     {
         "title": "FAQ & Maintaining Pre-Approved Status",
-        "md_url": f"{BASE_URL}/maintaining-your-contract-status/faq.md",
-        "web_url": f"{BASE_URL}/maintaining-your-contract-status/faq"
+        "fetch_urls": [
+            f"{BASE_URL}/maintaining-your-contract-status/faq",
+            f"{BASE_URL}/maintaining-your-contract-status/faq.md"
+        ],
+        "web_url": "https://preapproval-guide.imda.gov.sg/maintaining-your-contract-status/faq"
     }
 ]
 
-def _canonical_url(url: str):
-    """Restrict crawl to the official host and remove query/fragment/.md."""
-    parts = urlsplit(url)
-    if parts.scheme not in ("https", "http") or parts.netloc != urlsplit(BASE_URL).netloc:
-        return None
-    path = re.sub(r"/{2,}", "/", parts.path).rstrip("/")
-    if path.endswith(".md"):
-        path = path[:-3]
-    if not path or path in ("/", "/llms.txt"):
-        return None
-    return urlunsplit(("https", parts.netloc, path, "", ""))
-
-
 @st.cache_data(ttl=3600)
-def fetch_page(url: str) -> str:
-    """Download a Markdown page with caching."""
-    canonical = _canonical_url(url)
-    target_url = (canonical + ".md") if canonical else url
-    try:
-        response = requests.get(
-            target_url,
-            timeout=REQUEST_TIMEOUT,
-            headers={"User-Agent": "IMDA-PreApproval-POC/1.0", "Accept": "text/markdown, text/plain"},
-        )
-        response.raise_for_status()
-        text = response.text
-        if not text.strip():
-            return ""
-        return text
-    except Exception as e:
-        LOGGER.warning("Failed to fetch %s: %s", target_url, e)
-        return ""
-
+def fetch_page_content(urls: list[str]) -> str:
+    """Tries primary and fallback endpoints to reliably download document text."""
+    headers = {"User-Agent": "IMDA-PreApproval-POC/1.0", "Accept": "text/markdown, text/plain, text/html"}
+    for u in urls:
+        try:
+            resp = requests.get(u, timeout=REQUEST_TIMEOUT, headers=headers)
+            if resp.status_code == 200 and len(resp.text.strip()) > 100:
+                return resp.text
+        except Exception:
+            continue
+    return ""
 
 @st.cache_data(ttl=3600)
 def get_consolidated_knowledge_base() -> list[dict]:
     """Downloads and caches primary guide pages in memory."""
     kb = []
     for item in PRIMARY_PAGES:
-        content = fetch_page(item["md_url"])
+        content = fetch_page_content(item["fetch_urls"])
         if content:
             kb.append({
                 "title": item["title"],
-                "md_url": item["md_url"],
                 "web_url": item["web_url"],
                 "content": content
             })
     return kb
-
 
 def query_live_guide_rag(client, user_query: str, chat_history: list = None, model_name: str = MODEL_NAME) -> str:
     """
@@ -110,28 +102,33 @@ def query_live_guide_rag(client, user_query: str, chat_history: list = None, mod
     # Score documents by relevance
     query_tokens = [w.lower() for w in re.findall(r"\w+", user_query) if len(w) > 2]
     scored_docs = []
+    
+    is_eligibility_query = any(term in user_query.lower() for term in [
+        "customer", "track record", "eligib", "criteria", "requirement", "incorporat", "month", "invoice", "5 "
+    ])
+
     for doc in kb:
         score = 0
         haystack = (doc["title"] + " " + doc["content"]).lower()
         for token in query_tokens:
             score += haystack.count(token)
 
-        if any(term in user_query.lower() for term in ["customer", "track record", "eligib", "criteria", "requirement", "incorporat", "invoice"]):
-            if "eligibility" in doc["title"].lower():
-                score += 50
+        # Heavily prioritize the Eligibility Criteria document for qualification questions
+        if is_eligibility_query and "eligibility" in doc["title"].lower():
+            score += 1000
 
         scored_docs.append((score, doc))
 
     scored_docs.sort(key=lambda x: x[0], reverse=True)
     selected = [item[1] for item in scored_docs[:2]]
-    primary_source_url = selected[0]["web_url"] if selected else "https://preapproval-guide.imda.gov.sg/"
+    primary_source_url = selected[0]["web_url"] if selected else "https://preapproval-guide.imda.gov.sg/pre-approval-guide/eligibility-criteria"
 
     context_blocks = []
     for doc in selected:
         context_blocks.append(
             f"SOURCE TITLE: {doc['title']}\n"
             f"SOURCE URL: {doc['web_url']}\n"
-            f"CONTENT:\n{doc['content'][:4500]}\n"
+            f"CONTENT:\n{doc['content'][:6500]}\n"
         )
     full_context = "\n---\n".join(context_blocks)
 

@@ -486,22 +486,26 @@ elif st.session_state.page == "Self-Assessment":
             st.rerun()
 
 # =========================================================
-# AI CATEGORY FINDER (CARD LAYOUT)
+# AI CATEGORY FINDER & INTERACTIVE MANUAL BROWSER
 # =========================================================
 
 elif st.session_state.page == "AI Category Finder":
-    render_brand_header("AI Category Finder", subtitle="Describe your capabilities to find matching official categories.")
+    render_brand_header("AI Category Finder & Solution Selection", subtitle="Discover categories via AI recommendation or browse the complete interactive catalogue manually.")
 
+    # 1. AI Recommendation Input Card
     with st.container(border=True):
+        st.markdown("### 🤖 Step 1: AI-Powered Recommendation")
+        st.caption("Describe your solution capabilities to let Gemini match you with the best official categories.")
+        
         description = st.text_area(
             "Tell us about your solution",
-            height=140,
+            height=130,
             value=st.session_state.assessment.get("solution_description", ""),
             placeholder="Example: We provide a cloud inventory management system with automated POS reconciliation and e-invoicing for retail SMEs."
         )
         st.session_state.assessment["solution_description"] = description
 
-        if st.button("Find Relevant Categories →", type="primary", use_container_width=True):
+        if st.button("Find Relevant Categories via AI →", type="primary", use_container_width=True):
             is_safe, sanitized_text = sanitize_and_check_injection(description)
             if not is_safe:
                 st.error(sanitized_text)
@@ -515,21 +519,89 @@ elif st.session_state.page == "AI Category Finder":
                     matches = parse_category_matches(result["answer"], result["catalogue"])
                     st.session_state.category_suggestions = matches
 
+    # Display AI Suggestions if available
     if st.session_state.category_suggestions:
         st.markdown("---")
-        st.subheader("Recommended IMDA Solution Categories")
+        st.subheader("💡 AI Recommended Matches")
         for index, suggestion in enumerate(st.session_state.category_suggestions):
             category_key = suggestion["category_key"]
-            category = get_category_catalogue()[category_key]
+            catalogue = get_category_catalogue()
+            category = catalogue.get(category_key, {"url": "#", "description": ""})
 
             with st.container(border=True):
                 st.markdown(f"### {index + 1}. {category_key}")
                 st.write(suggestion["why"])
-                if st.button("Select this category", key=f"select_cat_{index}", use_container_width=True):
+                if st.button("Confirm & Select AI Category", key=f"select_ai_cat_{index}", use_container_width=True):
                     st.session_state.selected_category = category_key
                     st.session_state.selected_category_url = category["url"]
                     st.session_state.page = "Category Requirements"
                     st.rerun()
+
+    # 2. Interactive Manual Catalogue Card Browser
+    st.markdown("---")
+    with st.container(border=True):
+        st.markdown("### 🔍 Step 2: Interactive Official Catalogue Browser (Manual Selection)")
+        st.caption("Browse all valid IMDA solution categories by sector or filter keywords manually below.")
+
+        try:
+            catalogue = get_category_catalogue()
+            if catalogue:
+                sectors = sorted(list(set([val["sector"] for val in catalogue.values()])))
+                
+                selected_sector = st.radio(
+                    "Filter by Sector",
+                    ["All Sectors"] + sectors,
+                    horizontal=True,
+                    key="interactive_sector_filter"
+                )
+
+                search_query = st.text_input("Search categories by keyword", placeholder="e.g. Cybersecurity, Invoicing, POS...", key="cat_search_query")
+
+                filtered_items = []
+                for k, v in catalogue.items():
+                    if selected_sector != "All Sectors" and v["sector"] != selected_sector:
+                        continue
+                    if search_query.strip() and search_query.lower() not in k.lower() and search_query.lower() not in v["description"].lower():
+                        continue
+                    filtered_items.append((k, v))
+
+                st.markdown(f"**Showing {len(filtered_items)} available categories:**")
+
+                if filtered_items:
+                    for i in range(0, len(filtered_items), 2):
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            if i < len(filtered_items):
+                                k1, v1 = filtered_items[i]
+                                with st.container(border=True):
+                                    st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;'>{v1['sector']}</span>", unsafe_allow_html=True)
+                                    st.markdown(f"#### {v1['category']}")
+                                    st.write(v1["description"] if v1["description"] else "Official IMDA pre-approved solution category.")
+                                    if st.button("Select Category →", key=f"manual_card_{i}", use_container_width=True):
+                                        st.session_state.selected_category = k1
+                                        st.session_state.selected_category_url = v1["url"]
+                                        st.session_state.page = "Category Requirements"
+                                        st.rerun()
+
+                        with col2:
+                            if i + 1 < len(filtered_items):
+                                k2, v2 = filtered_items[i + 1]
+                                with st.container(border=True):
+                                    st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;'>{v2['sector']}</span>", unsafe_allow_html=True)
+                                    st.markdown(f"#### {v2['category']}")
+                                    st.write(v2["description"] if v2["description"] else "Official IMDA pre-approved solution category.")
+                                    if st.button("Select Category →", key=f"manual_card_{i+1}", use_container_width=True):
+                                        st.session_state.selected_category = k2
+                                        st.session_state.selected_category_url = v2["url"]
+                                        st.session_state.page = "Category Requirements"
+                                        st.rerun()
+                else:
+                    st.info("No categories match your current sector filter or search keyword.")
+            else:
+                st.warning("Catalogue could not be loaded at this moment.")
+        except Exception as e:
+            st.error(f"Error loading interactive catalogue: {e}")
 
 # =========================================================
 # CATEGORY REQUIREMENTS & GAP AUDIT / SUBMISSION (CARD LAYOUT)
@@ -549,7 +621,8 @@ elif st.session_state.page == "Category Requirements":
                 st.session_state.page = "AI Category Finder"
                 st.rerun()
     else:
-        category = get_category_catalogue()[selected]
+        catalogue = get_category_catalogue()
+        category = catalogue.get(selected, {"description": "Official IMDA category checklist.", "url": "#"})
         
         with st.container(border=True):
             st.success(f"Selected Category: **{selected}**")

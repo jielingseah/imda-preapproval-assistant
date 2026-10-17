@@ -723,10 +723,12 @@ elif st.session_state.page == "AI Assistant (RAG Chatbot)":
                 with st.chat_message("assistant"):
                     with st.spinner("Consulting official guide..."):
                         assistant_response = query_live_guide_rag(
-                            client,
-                            user_query=sanitized_query,
-                            chat_history=st.session_state.chat_messages,
-                            model_name=MODEL_NAME
+                         client,
+                        user_query=sanitized_query,
+                        chat_history=st.session_state.chat_messages,
+                        user_assessment=st.session_state.assessment,
+                        selected_category=st.session_state.selected_category,
+                        model_name=MODEL_NAME
                         )
                         st.markdown(assistant_response)
 

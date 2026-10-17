@@ -46,7 +46,7 @@ def inject_custom_css():
             align-items: baseline;
             gap: 14px;
             padding: 8px 0 16px 0;
-            border-bottom: 1px solid #ebebf0;
+            border-bottom: 1px solid #ebebf2;
             margin-bottom: 22px;
         }
         .logo-smes {
@@ -131,11 +131,6 @@ def inject_custom_css():
             gap: 12px;
             width: 90%;
             box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-        }
-        .smes-search-pill input-text {
-            color: #888899;
-            font-size: 13.5px;
-            flex-grow: 1;
         }
         .smes-search-btn {
             background-color: #5d1a58;

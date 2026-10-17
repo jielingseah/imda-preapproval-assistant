@@ -65,6 +65,10 @@ def check_password():
                 st.error("Incorrect passcode. Please check credentials.")
     return False
 
+# Enforce access gate
+if not check_password():
+    st.stop()
+
 # =========================================================
 # CONSTANTS & MODEL SELECTION
 # =========================================================
@@ -315,6 +319,11 @@ selected_page = st.sidebar.radio(
     index=pages.index(st.session_state.page if st.session_state.page in pages else "Home")
 )
 st.session_state.page = selected_page
+
+st.sidebar.markdown("---")
+if st.sidebar.button("🔒 Logout / Lock App", use_container_width=True):
+    st.session_state.authenticated = False
+    st.rerun()
 
 st.sidebar.markdown("---")
 with st.sidebar.expander("⚠️ IMPORTANT NOTICE — Prototype", expanded=False):

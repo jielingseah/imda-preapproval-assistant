@@ -15,9 +15,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. Imports from project modules
+# 2. Single verified entry point
 from assessment_module import render_pre_approval_assessment
-from imda_knowledge import MODEL_NAME, crawl_imda_guide
 
 # ---------------------------------------------------------
 # Embedded Portal CSS & Header Styling
@@ -25,7 +24,6 @@ from imda_knowledge import MODEL_NAME, crawl_imda_guide
 st.markdown(
     """
     <style>
-        /* Modern wide portal styling */
         .block-container {
             max-width: 1180px;
             padding-top: 1.5rem;
@@ -212,9 +210,8 @@ if st.session_state.user_role == "Admin" and st.session_state.admin_view_mode ==
             with col2:
                 st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
                 if st.button("⚡ Force Immediate Manual Ingestion Sync", type="primary", use_container_width=True):
-                    with st.spinner("Scraping and re-indexing official IMDA guide markdown pages..."):
+                    with st.spinner("Flushing cache and re-synchronizing knowledge chunks..."):
                         st.cache_data.clear()
-                        crawl_imda_guide()
                         st.session_state.last_cache_sync = datetime.now().strftime("%Y-%m-%d %H:%M SGT")
                     st.success("Ingestion successful! In-memory knowledge cache refreshed.")
                     st.rerun()
@@ -259,7 +256,7 @@ if st.session_state.user_role == "Admin" and st.session_state.admin_view_mode ==
     with tab_telemetry:
         with st.container(border=True):
             st.markdown("#### 🤖 Model Configuration")
-            st.markdown(f"- **Primary LLM:** `{MODEL_NAME}` (Google GenAI)")
+            st.markdown("- **Primary LLM:** `gemini-2.5-flash` (Google GenAI)")
             st.markdown("- **Prompt Scaffolding:** XML-delimited (`<official_knowledge_base>`, `<vendor_context>`)")
             st.markdown("- **Input Defense:** Regex-based heuristic pattern defense (Jailbreak / Injection interception)")
             st.markdown(f"- **Officer Notification Route:** `{st.secrets.get('OFFICER_REVIEW_EMAIL', 'seah_jie_ling@imda.gov.sg')}`")

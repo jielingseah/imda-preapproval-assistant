@@ -771,4 +771,169 @@ def render_step_4_review_and_submit():
         with st.form("vendor_submission_form"):
             col_c1, col_c2 = st.columns(2)
             with col_c1:
-                company_name = st.text_input("Company Registered Name *", value=st.session_state.
+                company_name = st.text_input("Company Registered Name *", value=st.session_state.get("sub_company", ""), placeholder="e.g. Acme Tech Solutions Pte Ltd")
+                contact_person = st.text_input("Contact Person Name *", value=st.session_state.get("sub_person", ""), placeholder="e.g. John Tan")
+            with col_c2:
+                contact_email = st.text_input("Corporate Email Address *", value=st.session_state.get("sub_email", ""), placeholder="e.g. john.tan@acme.com")
+                contact_phone = st.text_input("Contact Number *", value=st.session_state.get("sub_phone", ""), placeholder="e.g. +65 9123 4567")
+
+            vendor_inquiry = st.text_area(
+                "Inquiry / Clarification Notes",
+                value=st.session_state.get("sub_inquiry", ""),
+                placeholder="Optional: Enter any questions regarding timeline or alternative compliance pathways for IMDA officers.",
+                height=90
+            )
+
+            submit_button = st.form_submit_button("Submit Assessment & Generate Dossier →", type="primary", use_container_width=True)
+
+    if submit_button:
+        if not company_name or not contact_person or not contact_email:
+            st.error("Please fill in all mandatory contact fields (Company Name, Contact Person, and Email).")
+            st.session_state.form_submitted = False
+        else:
+            st.session_state.form_submitted = True
+            st.session_state.sub_company = company_name
+            st.session_state.sub_person = contact_person
+            st.session_state.sub_email = contact_email
+            st.session_state.sub_phone = contact_phone
+            st.session_state.sub_inquiry = vendor_inquiry
+
+    # 4. Post-Submission Actions
+    if st.session_state.get("form_submitted", False):
+        st.success("🎉 Assessment Dossier Generated Successfully!")
+
+        with st.container(border=True):
+            st.markdown("### 📋 Submission Summary Dossier")
+            st.markdown(f"**Target Category:** {selected}")
+            st.markdown(f"**Company:** {st.session_state.sub_company} | **Contact:** {st.session_state.sub_person} ({st.session_state.sub_email}, {st.session_state.sub_phone})")
+
+            if total_gaps_count > 0:
+                st.markdown("#### Detected Gaps for Review:")
+                for uq in unmet_cat_questions:
+                    st.markdown(f"- Category Requirement Q{uq['number']} ({uq['status']})")
+                for fg in front_gaps:
+                    st.markdown(f"- Baseline Prerequisite: {fg['item']} ({fg['status']})")
+            else:
+                st.markdown("✅ **Readiness Status:** 100% compliant across evaluated criteria.")
+
+            if st.session_state.sub_inquiry.strip():
+                st.markdown("#### Inquiries / Notes:")
+                st.write(st.session_state.sub_inquiry)
+
+        officer_email = st.secrets.get("OFFICER_REVIEW_EMAIL", "seah_jie_ling@imda.gov.sg")
+        st.info(f"📧 **Officer Routing:** Record prepared for dispatch to **`{officer_email}`**.")
+        st.warning("ℹ️ **Prototype Notice:** Live SMTP servers are not configured for this prototype session; emails will not be transmitted externally.")
+
+        st.markdown("---")
+
+        # 5. Dual Action Paths
+        if total_gaps_count > 0:
+            with st.container(border=True):
+                st.markdown("### 🤖 Decision Path 1: Address Gaps via AI Copilot")
+                st.write("Your assessment has identified requirement gaps. You can pass these gaps automatically to the AI Copilot for grounded policy recommendations.")
+                if st.button("💬 Launch AI Copilot for Remediation Advice →", type="primary", use_container_width=True):
+                    gap_lines = [f"- Category Requirement Q{uq['number']} ({uq['status']})" for uq in unmet_cat_questions]
+                    gap_lines += [f"- Baseline Prerequisite: {fg['item']} ({fg['status']})" for fg in front_gaps]
+                    gaps_text = "\n".join(gap_lines)
+
+                    auto_prompt = (
+                        f"I have completed my self-assessment for the pre-approval category '{selected}'. "
+                        f"The system flagged the following requirement gaps:\n\n{gaps_text}\n\n"
+                        "Based on the official IMDA Pre-Approval Guide, what specific remediation steps, "
+                        "alternative compliance pathways, or documentation can I prepare to address these gaps?"
+                    )
+                    st.session_state.chat_messages.append({"role": "user", "content": auto_prompt})
+
+                    client = get_gemini_client()
+                    if client:
+                        with st.spinner("Analyzing gaps against official IMDA guide..."):
+                            auto_response = query_live_guide_rag(
+                                client,
+                                user_query=auto_prompt,
+                                chat_history=st.session_state.chat_messages,
+                                user_assessment=st.session_state.assessment,
+                                selected_category=st.session_state.selected_category,
+                                model_name=MODEL_NAME
+                            )
+                        st.session_state.chat_messages.append({"role": "assistant", "content": auto_response})
+
+                    st.session_state.show_chat_dialog = True
+                    st.rerun()
+
+        else:
+            with st.container(border=True):
+                st.markdown("### 🚀 Decision Path 2: Ready for Stage 2 Application & VMP Submission")
+                st.write(
+                    """
+                    Your solution meets all evaluated baseline criteria and category functional requirements!
+                    Your next step is to read the official **Stage 2: Vendor Application** guide to prepare your solution 
+                    deck, pricing matrix, and customer proof, then formally submit your application through the **Vendor Management Portal (VMP)**.
+                    """
+                )
+                col_d1, col_d2 = st.columns(2)
+                with col_d1:
+                    st.link_button(
+                        "📖 Read Stage 2 Guide ↗",
+                        STAGE_2_GUIDE_URL,
+                        use_container_width=True
+                    )
+                with col_d2:
+                    st.link_button(
+                        "🏛️ Launch VMP Portal ↗",
+                        VMP_PORTAL_URL,
+                        use_container_width=True
+                    )
+
+    st.markdown("")
+    if st.button("← Back to Step 3: Prerequisite Validation", use_container_width=True):
+        st.session_state.assessment_step = 2
+        st.rerun()
+
+# =========================================================
+# MASTER CONTROLLER: PRE-APPROVAL ASSESSMENT (4 STEPS)
+# =========================================================
+
+def render_pre_approval_assessment():
+    """Renders the master 4-step assessment funnel."""
+    with st.container():
+        ctrl_col1, ctrl_col2, _ = st.columns([2.2, 1.8, 3.5])
+        with ctrl_col1:
+            if st.button("⚡ Auto-Populate Sample Data (Test Mode)", key="btn_test_populate", use_container_width=True):
+                populate_test_sample_data()
+                st.success("Test data populated! Category selected, checklist & prerequisites compliant.")
+                st.rerun()
+        with ctrl_col2:
+            if st.button("🗑️ Clear All Answers", key="btn_test_clear", use_container_width=True):
+                clear_all_assessment_data()
+                st.info("Assessment cleared. All questions reset to unanswered.")
+                st.rerun()
+
+    st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+
+    steps = [
+        "Step 1: Category Discovery",
+        "Step 2: Category Checklist",
+        "Step 3: Prerequisite Validation",
+        "Step 4: Review, Gaps & Submission"
+    ]
+    progress_vals = [0.25, 0.50, 0.75, 1.0]
+    st.progress(progress_vals[st.session_state.assessment_step], text=f"Assessment Flow — {steps[st.session_state.assessment_step]}")
+
+    selected_step_name = st.radio(
+        "Assessment Step",
+        steps,
+        index=st.session_state.assessment_step,
+        horizontal=True,
+        key="master_assessment_radio_step"
+    )
+    st.session_state.assessment_step = steps.index(selected_step_name)
+    st.markdown("---")
+
+    if st.session_state.assessment_step == 0:
+        render_step_1_discovery()
+    elif st.session_state.assessment_step == 1:
+        render_step_2_checklist()
+    elif st.session_state.assessment_step == 2:
+        render_step_3_prerequisites()
+    elif st.session_state.assessment_step == 3:
+        render_step_4_review_and_submit()

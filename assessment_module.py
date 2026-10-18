@@ -158,7 +158,7 @@ def render_manual_catalogue_browser(key_prefix: str = "manual"):
                         st.markdown(f"<span class='portal-card-tag'>{v1['sector']}</span>", unsafe_allow_html=True)
                         st.markdown(f"<h6>{v1['category']}</h6>", unsafe_allow_html=True)
                         st.markdown(f"<p>{v1['description'] or 'Official IMDA pre-approved solution category.'}</p>", unsafe_allow_html=True)
-                        if st.button("Select Category →", key=f"{key_prefix}_btn_{start_idx + i}", use_container_width=True):
+                        if st.button("Select Category →", key=f"{key_prefix}_btn_{start_idx + i}", type="primary", use_container_width=True):
                             st.session_state.selected_category = k1
                             st.session_state.selected_category_url = v1["url"]
                             st.session_state.assessment_step = 1
@@ -171,7 +171,7 @@ def render_manual_catalogue_browser(key_prefix: str = "manual"):
                         st.markdown(f"<span class='portal-card-tag'>{v2['sector']}</span>", unsafe_allow_html=True)
                         st.markdown(f"<h6>{v2['category']}</h6>", unsafe_allow_html=True)
                         st.markdown(f"<p>{v2['description'] or 'Official IMDA pre-approved solution category.'}</p>", unsafe_allow_html=True)
-                        if st.button("Select Category →", key=f"{key_prefix}_btn_{start_idx + i + 1}", use_container_width=True):
+                        if st.button("Select Category →", key=f"{key_prefix}_btn_{start_idx + i + 1}", type="primary", use_container_width=True):
                             st.session_state.selected_category = k2
                             st.session_state.selected_category_url = v2["url"]
                             st.session_state.assessment_step = 1
@@ -248,6 +248,7 @@ def render_step_1_discovery():
                     if st.button(
                         "Confirm & Proceed to Category Functional Checklist →",
                         key=f"select_ai_cat_{index}",
+                        type="primary",
                         use_container_width=True
                     ):
                         st.session_state.selected_category = category_key
@@ -302,7 +303,8 @@ def render_step_2_checklist():
         st.write(category.get("description", "Multi-functional system that streamlines operations and administration."))
         if resolved_url and resolved_url.startswith("http"):
             clean_web_link = format_web_url(resolved_url)
-            st.link_button("Open official IMDA requirements page ↗", clean_web_link)
+            # Sets type="primary" to apply purple styling with white text
+            st.link_button("Open official IMDA requirements page ↗", clean_web_link, type="primary")
 
     st.markdown("---")
     st.subheader("1. Mandatory Functional Checklist")
@@ -407,21 +409,18 @@ def render_step_3_prerequisites():
         st.session_state.prereq_tab_idx = 0
     current_tab_idx = st.session_state.prereq_tab_idx
 
-    # Container uses centralized styling rules in ui_components.py
+    # Renders the subtab buttons using Streamlit's native type="primary" for the active tab
     with st.container(key="prereq_subtab_bar"):
         tcols = st.columns(3)
         for t_idx, t_name in enumerate(tab_names):
             with tcols[t_idx]:
                 is_active_tab = (t_idx == current_tab_idx)
-                active_class = "subtab-active" if is_active_tab else "subtab-inactive"
+                btn_type = "primary" if is_active_tab else "secondary"
                 
-                with st.container():
-                    st.markdown(f'<div class="{active_class}">', unsafe_allow_html=True)
-                    if st.button(t_name, key=f"subtab_btn_{t_idx}", use_container_width=True):
-                        st.session_state.prereq_tab_idx = t_idx
-                        st.session_state.target_focus_key = None
-                        st.rerun()
-                    st.markdown('</div>', unsafe_allow_html=True)
+                if st.button(t_name, key=f"subtab_btn_{t_idx}", type=btn_type, use_container_width=True):
+                    st.session_state.prereq_tab_idx = t_idx
+                    st.session_state.target_focus_key = None
+                    st.rerun()
 
     target_focus = st.session_state.get("target_focus_key")
 
@@ -767,12 +766,14 @@ def render_step_4_review_and_submit():
                     st.link_button(
                         "📖 Read Stage 2 Guide ↗",
                         STAGE_2_GUIDE_URL,
+                        type="primary",
                         use_container_width=True
                     )
                 with col_d2:
                     st.link_button(
                         "🏛️ Launch VMP Portal ↗",
                         VMP_PORTAL_URL,
+                        type="primary",
                         use_container_width=True
                     )
 

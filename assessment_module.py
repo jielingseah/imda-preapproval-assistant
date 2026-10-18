@@ -1,9 +1,8 @@
 """
 Assessment Module for IMDA Pre-Approval Assistant.
-Encapsulates Step 1 (Category Discovery & Feasibility Pre-Check),
-Step 2 (Baseline Corporate & Track Record Prerequisites),
-Step 3 (Functional Checklist, Gap Audit, and Submission Dossier),
-and Stage 2 Preparation guidance for the Vendor Management Portal (VMP).
+Encapsulates Step 1 (Category Discovery), Step 2 (Baseline Prerequisites),
+Step 3 (Functional Checklist, Gap Detection, and Dossier Dispatch),
+and Step 4 (Stage 2 Guide & VMP Launch).
 """
 
 import streamlit as st
@@ -23,10 +22,6 @@ CATEGORY_DIRECTORY_URL = (
     + "/pre-approval-guide/stage-1-vendor-self-assessment/"
     + "identify-suitable-solution-category.md"
 )
-STAGE_2_GUIDE_URL = (
-    "https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-2-vendor-application"
-)
-VMP_PORTAL_URL = "https://services2-stg.imda.gov.sg/VMP/"
 MODEL_NAME = "gemini-3.8-flash"
 
 # =========================================================
@@ -61,6 +56,12 @@ def sanitize_and_check_injection(user_input: str) -> tuple[bool, str]:
 
 def populate_test_sample_data():
     """Autopopulates compliant self-assessment answers and contact details for testing."""
+    target_category_key = "Early Childhood: Pre-school Management System"
+    target_url = (
+        "https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-1-vendor-self-assessment/"
+        "identify-suitable-solution-category/early-childhood-pre-school-management-system.md"
+    )
+
     st.session_state.assessment = {
         "incorporated": "Yes",
         "operation": "Yes",
@@ -82,12 +83,8 @@ def populate_test_sample_data():
     st.session_state.sub_email = "alex.tan@alphadigital.sg"
     st.session_state.sub_phone = "+65 9123 4567"
     st.session_state.sub_inquiry = "We meet all baseline requirements and wish to confirm the next PSG submission batch timeline."
-    st.session_state.selected_category = "Early Childhood: Pre-school Management System"
-    st.session_state.selected_category_url = (
-        "https://preapproval-guide.imda.gov.sg/pre-approval-guide/"
-        "stage-1-vendor-self-assessment/identify-suitable-solution-category/"
-        "early-childhood-pre-school-management-system.md"
-    )
+    st.session_state.selected_category = target_category_key
+    st.session_state.selected_category_url = target_url
 
 def clear_all_assessment_data():
     """Resets all assessment questions, answers, and contact inputs to completely blank."""
@@ -108,16 +105,24 @@ def clear_all_assessment_data():
 # =========================================================
 
 @st.cache_data(ttl=3600)
-def fetch_text(url):
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()
-    return response.text
+def fetch_text(url: str) -> str:
+    if not url or not (url.startswith("http://") or url.startswith("https://")):
+        return ""
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        return response.text
+    except Exception:
+        return ""
 
 @st.cache_data(ttl=3600)
 def get_category_catalogue():
     markdown = fetch_text(CATEGORY_DIRECTORY_URL)
+    if not markdown:
+        return {}
+
     categories = {}
-    current_sector = "Unknown"
+    current_sector = "General"
     lines = markdown.splitlines()
 
     for line in lines:
@@ -158,9 +163,44 @@ def get_category_catalogue():
 
     return categories
 
+def resolve_category_info(selected_category_name: str, fallback_url: str = None) -> dict:
+    """Safely retrieves category information with fallback and fuzzy-key matching."""
+    catalogue = get_category_catalogue()
+    
+    # 1. Direct match
+    if selected_category_name in catalogue:
+        return catalogue[selected_category_name]
+    
+    # 2. Case-insensitive / partial match
+    if selected_category_name:
+        target_lower = selected_category_name.lower().strip()
+        for k, v in catalogue.items():
+            if k.lower().strip() == target_lower or target_lower in k.lower():
+                return v
+
+    # 3. Match by URL if available
+    if fallback_url and fallback_url.startswith("http"):
+        for v in catalogue.values():
+            if v["url"].strip() == fallback_url.strip():
+                return v
+
+    # 4. Safe default (with a valid URL if fallback provided)
+    return {
+        "sector": "Identified Solution",
+        "category": selected_category_name or "Official Category",
+        "url": fallback_url if (fallback_url and fallback_url.startswith("http")) else CATEGORY_DIRECTORY_URL,
+        "description": "Official IMDA category functional checklist."
+    }
+
 @st.cache_data(ttl=3600)
-def get_category_requirements(category_url):
+def get_category_requirements(category_url: str):
+    if not category_url or not (category_url.startswith("http://") or category_url.startswith("https://")):
+        return []
+
     markdown = fetch_text(category_url)
+    if not markdown:
+        return []
+
     questions = []
     lines = markdown.splitlines()
     total_lines = len(lines)
@@ -213,7 +253,7 @@ def get_gemini_client():
         return None
     return genai.Client(api_key=api_key)
 
-def recommend_categories(vendor_description):
+def recommend_categories(vendor_description: str):
     client = get_gemini_client()
     if client is None:
         return {"error": "GEMINI_API_KEY is not configured in Secrets."}
@@ -236,20 +276,14 @@ MATCH
 CATEGORY: <exact official category>
 WHY: <one or two sentence explanation>
 """
-    user_prompt = (
-        f"<official_catalogue>\n{catalogue_text}\n</official_catalogue>\n"
-        f"<vendor_description>\n{vendor_description}\n</vendor_description>"
-    )
+    user_prompt = f"<official_catalogue>\n{catalogue_text}\n</official_catalogue>\n<vendor_description>\n{vendor_description}\n</vendor_description>"
 
     for attempt in range(3):
         try:
             response = client.models.generate_content(
                 model=MODEL_NAME,
                 contents=user_prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    temperature=0.1
-                )
+                config=types.GenerateContentConfig(system_instruction=system_instruction, temperature=0.1)
             )
             return {"answer": response.text, "catalogue": catalogue}
         except Exception as e:
@@ -258,7 +292,7 @@ WHY: <one or two sentence explanation>
                 continue
             return {"error": str(e)}
 
-def parse_category_matches(answer, catalogue):
+def parse_category_matches(answer: str, catalogue: dict):
     results = []
     blocks = answer.split("MATCH")
 
@@ -291,15 +325,12 @@ def parse_category_matches(answer, catalogue):
     return results[:3]
 
 # =========================================================
-# STEP 1: CATEGORY DISCOVERY & FEASIBILITY PRE-CHECK
+# STEP 1: CATEGORY DISCOVERY & FEASIBILITY
 # =========================================================
 
 def render_step_1_discovery():
-    st.markdown("### 🔍 Step 1: Solution Category Pre-Check")
-    st.caption(
-        "Verify whether your digital product matches an official IMDA pre-approved category "
-        "before spending time on self-assessment. If no category exists, the solution is not eligible."
-    )
+    st.markdown("### 🔍 Step 1: Solution Category Discovery & Feasibility Pre-Check")
+    st.caption("Verify whether your product matches an official IMDA pre-approved category before starting self-assessment.")
 
     current_desc = st.session_state.assessment.get("solution_description", "")
     if st.session_state.get("auto_trigger_search", False) and current_desc.strip():
@@ -309,9 +340,7 @@ def render_step_1_discovery():
             with st.spinner("Analyzing against official IMDA categories..."):
                 result = recommend_categories(sanitized_text)
             if "error" not in result:
-                st.session_state.category_suggestions = parse_category_matches(
-                    result["answer"], result["catalogue"]
-                )
+                st.session_state.category_suggestions = parse_category_matches(result["answer"], result["catalogue"])
 
     tab_ai, tab_manual = st.tabs(["🤖 AI Semantic Matcher", "📂 Manual Directory Browser"])
 
@@ -325,7 +354,7 @@ def render_step_1_discovery():
             )
             st.session_state.assessment["solution_description"] = description
 
-            if st.button("Check Category Match via AI →", type="primary", use_container_width=True):
+            if st.button("Find Matching Categories via AI →", type="primary", use_container_width=True):
                 is_safe, sanitized_text = sanitize_and_check_injection(description)
                 if not is_safe:
                     st.error(sanitized_text)
@@ -341,36 +370,19 @@ def render_step_1_discovery():
 
         if st.session_state.category_suggestions:
             st.markdown("---")
-            st.markdown(
-                "<h5 style='font-size: 16px; font-weight: 700; color: #581845;'>"
-                "💡 AI Recommended Matches"
-                "</h5>",
-                unsafe_allow_html=True
-            )
+            st.markdown("<h5 style='font-size: 16px; font-weight: 700; color: #581845;'>💡 AI Recommended Matches</h5>", unsafe_allow_html=True)
             for index, suggestion in enumerate(st.session_state.category_suggestions):
                 category_key = suggestion["category_key"]
                 catalogue = get_category_catalogue()
-                category = catalogue.get(category_key, {"url": "#", "description": ""})
+                category = catalogue.get(category_key, {"url": CATEGORY_DIRECTORY_URL, "description": ""})
 
                 with st.container(border=True):
-                    st.markdown(
-                        f"<h6 style='font-size: 15px; font-weight: 700; color: #2b0b2e;'>"
-                        f"{index + 1}. {category_key}</h6>",
-                        unsafe_allow_html=True
-                    )
-                    st.markdown(
-                        f"<p style='font-size: 12.5px; color: #555566;'>{suggestion['why']}</p>",
-                        unsafe_allow_html=True
-                    )
-                    if st.button(
-                        "Confirm Category & Proceed to Prerequisites →",
-                        key=f"select_ai_cat_{index}",
-                        type="primary",
-                        use_container_width=True
-                    ):
+                    st.markdown(f"<h6 style='font-size: 15px; font-weight: 700; color: #2b0b2e;'>{index + 1}. {category_key}</h6>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='font-size: 12.5px; color: #555566;'>{suggestion['why']}</p>", unsafe_allow_html=True)
+                    if st.button("Confirm & Proceed to Step 2: Prerequisite Validation →", key=f"select_ai_cat_{index}", use_container_width=True):
                         st.session_state.selected_category = category_key
                         st.session_state.selected_category_url = category["url"]
-                        st.session_state.assessment_step = 1  # Move to Step 2
+                        st.session_state.assessment_step = 1
                         st.rerun()
 
     with tab_manual:
@@ -378,17 +390,8 @@ def render_step_1_discovery():
             catalogue = get_category_catalogue()
             if catalogue:
                 sectors = sorted(list(set([val["sector"] for val in catalogue.values()])))
-                selected_sector = st.radio(
-                    "Filter by Sector",
-                    ["All Sectors"] + sectors,
-                    horizontal=True,
-                    key="interactive_sector_filter"
-                )
-                search_query = st.text_input(
-                    "Search categories by keyword",
-                    placeholder="e.g. Cybersecurity, Invoicing, POS...",
-                    key="cat_search_query"
-                )
+                selected_sector = st.radio("Filter by Sector", ["All Sectors"] + sectors, horizontal=True, key="interactive_sector_filter")
+                search_query = st.text_input("Search categories by keyword", placeholder="e.g. Cybersecurity, Invoicing, POS...", key="cat_search_query")
 
                 filtered_items = []
                 for k, v in catalogue.items():
@@ -408,12 +411,7 @@ def render_step_1_discovery():
                     if st.session_state.catalog_page > total_pages:
                         st.session_state.catalog_page = total_pages
 
-                    st.markdown(
-                        f"<p style='font-size: 12px; color: #777788; margin-top: 8px;'>"
-                        f"Showing {total_items} matching categories "
-                        f"(Page {st.session_state.catalog_page} of {total_pages})</p>",
-                        unsafe_allow_html=True
-                    )
+                    st.markdown(f"<p style='font-size: 12px; color: #777788; margin-top: 8px;'>Showing {total_items} matching categories (Page {st.session_state.catalog_page} of {total_pages})</p>", unsafe_allow_html=True)
 
                     start_idx = (st.session_state.catalog_page - 1) * items_per_page
                     end_idx = min(start_idx + items_per_page, total_items)
@@ -425,60 +423,26 @@ def render_step_1_discovery():
                             if i < len(page_items):
                                 k1, v1 = page_items[i]
                                 with st.container(border=True):
-                                    st.markdown(
-                                        f"<span style='background:#f7eaf3; color:#7a1d5a; "
-                                        f"padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700;'>"
-                                        f"{v1['sector']}</span>",
-                                        unsafe_allow_html=True
-                                    )
-                                    st.markdown(
-                                        f"<h6 style='font-size: 14.5px; font-weight: 700; color: #2b0b2e; margin-top: 6px;'>"
-                                        f"{v1['category']}</h6>",
-                                        unsafe_allow_html=True
-                                    )
-                                    st.markdown(
-                                        f"<p style='font-size: 12px; color: #636375; line-height: 1.4;'>"
-                                        f"{v1['description'] if v1['description'] else 'Official IMDA pre-approved solution category.'}</p>",
-                                        unsafe_allow_html=True
-                                    )
-                                    if st.button(
-                                        "Select Category →",
-                                        key=f"manual_card_{start_idx + i}",
-                                        use_container_width=True
-                                    ):
+                                    st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700;'>{v1['sector']}</span>", unsafe_allow_html=True)
+                                    st.markdown(f"<h6 style='font-size: 14.5px; font-weight: 700; color: #2b0b2e; margin-top: 6px;'>{v1['category']}</h6>", unsafe_allow_html=True)
+                                    st.markdown(f"<p style='font-size: 12px; color: #636375; line-height: 1.4;'>{v1['description'] if v1['description'] else 'Official IMDA pre-approved solution category.'}</p>", unsafe_allow_html=True)
+                                    if st.button("Select Category →", key=f"manual_card_{start_idx + i}", use_container_width=True):
                                         st.session_state.selected_category = k1
                                         st.session_state.selected_category_url = v1["url"]
-                                        st.session_state.assessment_step = 1  # Move to Step 2
+                                        st.session_state.assessment_step = 1
                                         st.rerun()
 
                         with col2:
                             if i + 1 < len(page_items):
                                 k2, v2 = page_items[i + 1]
                                 with st.container(border=True):
-                                    st.markdown(
-                                        f"<span style='background:#f7eaf3; color:#7a1d5a; "
-                                        f"padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700;'>"
-                                        f"{v2['sector']}</span>",
-                                        unsafe_allow_html=True
-                                    )
-                                    st.markdown(
-                                        f"<h6 style='font-size: 14.5px; font-weight: 700; color: #2b0b2e; margin-top: 6px;'>"
-                                        f"{v2['category']}</h6>",
-                                        unsafe_allow_html=True
-                                    )
-                                    st.markdown(
-                                        f"<p style='font-size: 12px; color: #636375; line-height: 1.4;'>"
-                                        f"{v2['description'] if v2['description'] else 'Official IMDA pre-approved solution category.'}</p>",
-                                        unsafe_allow_html=True
-                                    )
-                                    if st.button(
-                                        "Select Category →",
-                                        key=f"manual_card_{start_idx + i + 1}",
-                                        use_container_width=True
-                                    ):
+                                    st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700;'>{v2['sector']}</span>", unsafe_allow_html=True)
+                                    st.markdown(f"<h6 style='font-size: 14.5px; font-weight: 700; color: #2b0b2e; margin-top: 6px;'>{v2['category']}</h6>", unsafe_allow_html=True)
+                                    st.markdown(f"<p style='font-size: 12px; color: #636375; line-height: 1.4;'>{v2['description'] if v2['description'] else 'Official IMDA pre-approved solution category.'}</p>", unsafe_allow_html=True)
+                                    if st.button("Select Category →", key=f"manual_card_{start_idx + i + 1}", use_container_width=True):
                                         st.session_state.selected_category = k2
                                         st.session_state.selected_category_url = v2["url"]
-                                        st.session_state.assessment_step = 1  # Move to Step 2
+                                        st.session_state.assessment_step = 1
                                         st.rerun()
 
                     st.markdown("---")
@@ -494,19 +458,17 @@ def render_step_1_discovery():
             st.error(f"Error loading catalogue: {e}")
 
 # =========================================================
-# STEP 2: PREREQUISITE VALIDATION (CORPORATE & TRACK RECORD)
+# STEP 2: BASELINE PREREQUISITE VALIDATION
 # =========================================================
 
 def render_step_2_prerequisites():
     st.markdown("### 🏢 Step 2: Baseline Prerequisite Validation")
-    st.caption("Confirm foundational corporate, financial, and deployment prerequisites before functional audit.")
+    st.caption("Confirm foundational corporate, financial, and deployment prerequisites before auditing technical requirements.")
 
-    if st.session_state.selected_category:
-        st.info(f"Target Solution Category: **{st.session_state.selected_category}**")
-    else:
-        st.warning("⚠️ No category selected yet. You can still complete baseline criteria, but selecting a category in Step 1 is advised.")
+    if st.session_state.get("selected_category"):
+        st.info(f"Target Category Selected: **{st.session_state.selected_category}**")
 
-    t1, t2, t3 = st.tabs(["1. Vendor Eligibility", "2. Track Record", "3. Solution Specifications"])
+    t1, t2, t3 = st.tabs(["1. Corporate & Financials", "2. SME Deployment Track Record", "3. Solution Suitability"])
 
     with t1:
         vendor_questions = [
@@ -531,12 +493,7 @@ def render_step_2_prerequisites():
             ind_options = ["Many industries", "One or few industries", "Not sure"]
             current_ind = st.session_state.assessment.get("industries")
             ind_idx = ind_options.index(current_ind) if current_ind in ind_options else None
-            chosen_ind = st.radio(
-                "Select the statement that best describes the industries your solution caters to.",
-                ind_options,
-                index=ind_idx,
-                key="industries"
-            )
+            chosen_ind = st.radio("Select the statement that best describes the industries your solution caters to.", ind_options, index=ind_idx, key="industries")
             if chosen_ind is not None:
                 st.session_state.assessment["industries"] = chosen_ind
 
@@ -571,23 +528,24 @@ def render_step_2_prerequisites():
                     st.session_state.assessment[key] = chosen_sol
 
     st.markdown("")
-    col_nav1, col_nav2 = st.columns(2)
-    with col_nav1:
+    col_b1, col_b2 = st.columns(2)
+    with col_b1:
         if st.button("← Back to Step 1: Category Discovery", use_container_width=True):
             st.session_state.assessment_step = 0
             st.rerun()
-    with col_nav2:
-        if st.button("Save & Proceed to Step 3: Functional Gap Review →", type="primary", use_container_width=True):
+    with col_b2:
+        if st.button("Proceed to Step 3: Functional Gap Review →", type="primary", use_container_width=True):
             st.session_state.assessment_step = 2
             st.rerun()
 
 # =========================================================
-# STEP 3: FUNCTIONAL GAP REVIEW & ENQUIRY DOSSIER
+# STEP 3: FUNCTIONAL REQUIREMENTS & GAP AUDIT
 # =========================================================
 
-def render_step_3_audit_and_submit():
+def render_step_3_audit():
     st.markdown("### 📋 Step 3: Functional Requirements & Gap Review")
-    selected = st.session_state.selected_category
+    selected = st.session_state.get("selected_category")
+    stored_url = st.session_state.get("selected_category_url")
 
     if not selected:
         with st.container(border=True):
@@ -596,48 +554,49 @@ def render_step_3_audit_and_submit():
             if st.button("← Go to Step 1: Category Discovery", type="primary"):
                 st.session_state.assessment_step = 0
                 st.rerun()
-        return
-
-    catalogue = get_category_catalogue()
-    category = catalogue.get(selected, {"description": "Official IMDA category checklist.", "url": "#"})
-
-    with st.container(border=True):
-        st.success(f"Target Category: **{selected}**")
-        st.write(category["description"])
-        st.link_button("Open official IMDA requirements page ↗", category["url"])
-
-    st.markdown("---")
-    with st.spinner("Loading official checklist..."):
-        requirements = get_category_requirements(category["url"])
-
-    mandatory = [q for q in requirements if q["mandatory"]]
-    preferred = [q for q in requirements if not q["mandatory"]]
-
-    if not mandatory:
-        st.warning("Requirements could not be extracted automatically. Please verify via the official link above.")
     else:
-        st.subheader("1. Mandatory Functional Checklist")
-        for question in mandatory:
-            key = f"category_q_{question['number']}"
-            existing_ans = st.session_state.category_answers.get(question["number"])
-            ans_opts = ["Yes", "No", "Not sure"]
-            ans_idx = ans_opts.index(existing_ans) if existing_ans in ans_opts else None
+        # Safe URL & info resolution
+        category = resolve_category_info(selected, stored_url)
+        resolved_url = category.get("url") or CATEGORY_DIRECTORY_URL
 
-            with st.container(border=True):
-                chosen_q = st.radio(
-                    f"Q{question['number']} — {question['question']}",
-                    ans_opts,
-                    index=ans_idx,
-                    key=key
-                )
-                if chosen_q is not None:
-                    st.session_state.category_answers[question["number"]] = chosen_q
+        with st.container(border=True):
+            st.success(f"Target Category: **{selected}**")
+            st.write(category.get("description", "Official IMDA category functional checklist."))
+            if resolved_url and resolved_url.startswith("http"):
+                st.link_button("Open official IMDA requirements page ↗", resolved_url)
 
-        if preferred:
-            with st.expander(f"View {len(preferred)} Preferred Requirements"):
-                for question in preferred:
-                    with st.container(border=True):
-                        st.write(f"**Q{question['number']}** — {question['question']}")
+        st.markdown("---")
+        with st.spinner("Loading official checklist..."):
+            requirements = get_category_requirements(resolved_url)
+
+        mandatory = [q for q in requirements if q["mandatory"]]
+        preferred = [q for q in requirements if not q["mandatory"]]
+
+        if not mandatory:
+            st.info("No specific functional checklist questions were extracted for this category. You may verify details directly on the official IMDA page above.")
+        else:
+            st.subheader("1. Mandatory Functional Checklist")
+            for question in mandatory:
+                key = f"category_q_{question['number']}"
+                existing_ans = st.session_state.category_answers.get(question["number"])
+                ans_opts = ["Yes", "No", "Not sure"]
+                ans_idx = ans_opts.index(existing_ans) if existing_ans in ans_opts else None
+
+                with st.container(border=True):
+                    chosen_q = st.radio(
+                        f"Q{question['number']} — {question['question']}",
+                        ans_opts,
+                        index=ans_idx,
+                        key=key
+                    )
+                    if chosen_q is not None:
+                        st.session_state.category_answers[question["number"]] = chosen_q
+
+            if preferred:
+                with st.expander(f"View {len(preferred)} Preferred Requirements"):
+                    for question in preferred:
+                        with st.container(border=True):
+                            st.write(f"**Q{question['number']}** — {question['question']}")
 
         st.markdown("---")
 
@@ -690,7 +649,7 @@ def render_step_3_audit_and_submit():
                             st.markdown(f"- 🔴 **{fg['item']}** (Status: *{fg['status']}*)")
                         with gap_col2:
                             if st.button("Edit ✏️", key=f"edit_gap_{fg_idx}", use_container_width=True):
-                                st.session_state.assessment_step = 1  # Jump to Step 2
+                                st.session_state.assessment_step = 1  # Jump to Step 2 Prerequisites to edit
                                 st.rerun()
 
                 if unmet_cat_questions:
@@ -703,34 +662,18 @@ def render_step_3_audit_and_submit():
         st.markdown("---")
 
         # 3. Contact Details & Vendor Enquiries Form
-        st.subheader("3. Contact Details & Submission Dossier")
+        st.subheader("3. Contact Details & Vendor Enquiries")
         st.caption("Provide your contact details and inquiries for IMDA officers.")
 
         with st.container(border=True):
             with st.form("vendor_submission_form"):
                 col_c1, col_c2 = st.columns(2)
                 with col_c1:
-                    company_name = st.text_input(
-                        "Company Registered Name *",
-                        value=st.session_state.get("sub_company", ""),
-                        placeholder="e.g. Acme Tech Solutions Pte Ltd"
-                    )
-                    contact_person = st.text_input(
-                        "Contact Person Name *",
-                        value=st.session_state.get("sub_person", ""),
-                        placeholder="e.g. John Tan"
-                    )
+                    company_name = st.text_input("Company Registered Name *", value=st.session_state.get("sub_company", ""), placeholder="e.g. Acme Tech Solutions Pte Ltd")
+                    contact_person = st.text_input("Contact Person Name *", value=st.session_state.get("sub_person", ""), placeholder="e.g. John Tan")
                 with col_c2:
-                    contact_email = st.text_input(
-                        "Corporate Email Address *",
-                        value=st.session_state.get("sub_email", ""),
-                        placeholder="e.g. john.tan@acme.com"
-                    )
-                    contact_phone = st.text_input(
-                        "Contact Number *",
-                        value=st.session_state.get("sub_phone", ""),
-                        placeholder="e.g. +65 9123 4567"
-                    )
+                    contact_email = st.text_input("Corporate Email Address *", value=st.session_state.get("sub_email", ""), placeholder="e.g. john.tan@acme.com")
+                    contact_phone = st.text_input("Contact Number *", value=st.session_state.get("sub_phone", ""), placeholder="e.g. +65 9123 4567")
 
                 vendor_inquiry = st.text_area(
                     "Questions / Notes on Unmet Requirements",
@@ -739,11 +682,7 @@ def render_step_3_audit_and_submit():
                     height=100
                 )
 
-                submit_button = st.form_submit_button(
-                    "Submit Assessment & Generate Summary →",
-                    type="primary",
-                    use_container_width=True
-                )
+                submit_button = st.form_submit_button("Submit Assessment & Generate Dossier →", type="primary", use_container_width=True)
 
         if submit_button:
             if not company_name or not contact_person or not contact_email:
@@ -758,16 +697,12 @@ def render_step_3_audit_and_submit():
                 st.session_state.sub_inquiry = vendor_inquiry
 
         if st.session_state.get("form_submitted", False):
-            st.success("🎉 Assessment & Enquiries Recorded Successfully!")
+            st.success("🎉 Assessment & Enquiries Submitted Successfully!")
 
             with st.container(border=True):
                 st.markdown("### 📋 Submission Summary Dossier")
                 st.markdown(f"**Target Pre-Approval Category:** {selected}")
-                st.markdown(
-                    f"**Company:** {st.session_state.sub_company} | "
-                    f"**Contact:** {st.session_state.sub_person} "
-                    f"({st.session_state.sub_email}, {st.session_state.sub_phone})"
-                )
+                st.markdown(f"**Company:** {st.session_state.sub_company} | **Contact:** {st.session_state.sub_person} ({st.session_state.sub_email}, {st.session_state.sub_phone})")
 
                 if front_gaps or unmet_cat_questions:
                     st.markdown("#### Detected Gaps for Officer Review:")
@@ -787,11 +722,11 @@ def render_step_3_audit_and_submit():
 
             st.markdown("---")
 
-            # Adaptive Next Steps (Gap remediation or proceed to Step 4)
+            # Adaptive Next Steps based on Readiness
             if total_gaps_count > 0:
                 with st.container(border=True):
                     st.markdown("### 🤖 Next Steps: Address Your Identified Gaps")
-                    st.write("You have unmet criteria flagged in your readiness audit. Click below to automatically pass your assessment details to the copilot for instant, grounded recommendations.")
+                    st.write("You have unmet criteria or questions flagged in your readiness audit. Click below to automatically pass your assessment details to the copilot for instant, grounded recommendations.")
                     
                     if st.button("💬 Launch AI Copilot for Recommendations →", key="btn_auto_launch_copilot", type="primary", use_container_width=True):
                         gap_summary_lines = []
@@ -831,63 +766,62 @@ def render_step_3_audit_and_submit():
                         st.rerun()
             else:
                 with st.container(border=True):
-                    st.markdown("### 🚀 Step 4: Advance to Stage 2 Preparation & VMP Submission")
-                    st.write(
-                        "Your solution declared 100% compliance! Proceed to Step 4 to review required application documents before entering the VMP."
-                    )
-                    if st.button("Proceed to Step 4: Application Preparation →", type="primary", use_container_width=True):
+                    st.markdown("### 🚀 Ready for Step 4: Formal Application & VMP Submission")
+                    st.write("All baseline prerequisites and category checklists are satisfied!")
+                    if st.button("Proceed to Step 4: Application Preparation & VMP →", type="primary", use_container_width=True):
                         st.session_state.assessment_step = 3
                         st.rerun()
 
-    st.markdown("")
-    col_b1, col_b2 = st.columns(2)
-    with col_b1:
-        if st.button("← Back to Step 2: Prerequisite Validation", use_container_width=True):
-            st.session_state.assessment_step = 1
-            st.rerun()
+        st.markdown("")
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.button("← Back to Step 2: Prerequisite Validation", use_container_width=True):
+                st.session_state.assessment_step = 1
+                st.rerun()
+        with col_b2:
+            if st.button("Skip / Go to Step 4: Application & VMP →", use_container_width=True):
+                st.session_state.assessment_step = 3
+                st.rerun()
 
 # =========================================================
 # STEP 4: STAGE 2 APPLICATION PREPARATION & VMP
 # =========================================================
 
-def render_step_4_application_and_vmp():
-    st.markdown("### 🚀 Step 4: Official Stage 2 Preparation & VMP Submission")
-    st.caption("Review required documentation in the official guide before formally applying through the Vendor Management Portal.")
+def render_step_4_application():
+    st.markdown("### 🚀 Step 4: Stage 2 Application Preparation & VMP")
+    st.caption("Official guidance on compiling required documentation and formal submission via the Vendor Management Portal (VMP).")
 
     with st.container(border=True):
-        st.markdown("#### 📖 1. Must Read: Official IMDA Stage 2 Guide")
+        st.markdown("#### 1. Official Preparation: Stage 2 Vendor Application Guide")
         st.write(
             """
-            The **Stage 1 Vendor Self-Assessment** you completed confirms your eligibility and category fit. 
-            Before submitting your formal application, you must read the **Stage 2: Vendor Application Guide** 
-            to prepare mandatory documentation:
-            - **Solution Presentation Deck** detailing key modules and technical architecture
-            - **Standard & Promotional Pricing Packages** formatted to IMDA guidelines
-            - **Verified Track Record Documentation** (e.g., invoices, signed purchase orders from at least 5 Singapore SMEs)
-            - **Personal Data Protection & Security Clearances**
+            Before accessing the submission portal, vendors **must** read the official 
+            **Stage 2: Vendor Application** guide to prepare all mandatory collateral, including:
+            - Standard Solution Presentation Deck (covering architecture, features, and target SME audience)
+            - Standard Pricing Packages & Quotation Breakdown
+            - SME Deployment Proof & Track Record Verifications
+            - Security, Data Protection, and InvoiceNow compliance documentation
             """
         )
         st.link_button(
-            "Read Official Stage 2: Vendor Application Guide ↗",
-            STAGE_2_GUIDE_URL,
-            type="primary",
+            "📖 Open Official Stage 2 Vendor Application Guide ↗",
+            "[https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-2-vendor-application](https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-2-vendor-application)",
             use_container_width=True
         )
 
-    st.markdown("---")
+    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
 
     with st.container(border=True):
-        st.markdown("#### 🏛️ 2. Submit Application: Vendor Management Portal (VMP)")
+        st.markdown("#### 2. Formal Submission: Vendor Management Portal (VMP)")
         st.write(
             """
-            Once all required documentation from Stage 2 is prepared, log in to the **Vendor Management Portal (VMP)** 
-            using your corporate Singpass (CorpPass) to submit your solution application, upload supporting documents, 
-            and track officer evaluation milestones.
+            Once your Stage 2 documents are ready, log in to the official **Vendor Management Portal (VMP)** 
+            using CorpPass to submit your formal application, upload your solution packages, and track submission milestones.
             """
         )
         st.link_button(
-            "Access Vendor Management Portal (VMP) ↗",
-            VMP_PORTAL_URL,
+            "🏛️ Access Vendor Management Portal (VMP) ↗",
+            "[https://services2-stg.imda.gov.sg/VMP/](https://services2-stg.imda.gov.sg/VMP/)",
             use_container_width=True
         )
 
@@ -902,7 +836,6 @@ def render_step_4_application_and_vmp():
 
 def render_pre_approval_assessment():
     """Renders the master 4-step assessment funnel."""
-    # Test Mode Quick Fill / Clear Bar
     with st.container():
         ctrl_col1, ctrl_col2, _ = st.columns([2.2, 1.8, 3.5])
         with ctrl_col1:
@@ -925,10 +858,7 @@ def render_pre_approval_assessment():
         "Step 4: Application & VMP"
     ]
     progress_vals = [0.25, 0.50, 0.75, 1.0]
-    st.progress(
-        progress_vals[st.session_state.assessment_step],
-        text=f"Assessment Flow — {steps[st.session_state.assessment_step]}"
-    )
+    st.progress(progress_vals[st.session_state.assessment_step], text=f"Assessment Flow — {steps[st.session_state.assessment_step]}")
 
     selected_step_name = st.radio(
         "Assessment Step",
@@ -945,6 +875,6 @@ def render_pre_approval_assessment():
     elif st.session_state.assessment_step == 1:
         render_step_2_prerequisites()
     elif st.session_state.assessment_step == 2:
-        render_step_3_audit_and_submit()
+        render_step_3_audit()
     elif st.session_state.assessment_step == 3:
-        render_step_4_application_and_vmp()
+        render_step_4_application()

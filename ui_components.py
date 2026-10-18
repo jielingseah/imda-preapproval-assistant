@@ -235,26 +235,21 @@ def inject_custom_css():
             margin-bottom: 10px;
         }
 
-        div[data-testid="stVerticalBlock"]:has(> div.stepper-marker) {
-            background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%) !important;
-            border-radius: 16px !important;
-            padding: 20px 24px 18px 24px !important;
-            margin-bottom: 22px !important;
-            box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25) !important;
-        }
-
+        /* Direct styling for Stepper Action Buttons */
         div[class*="st-key-stepper_click_"] button {
-            border: none !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
             box-shadow: none !important;
             cursor: pointer !important;
             transition: all 0.2s ease !important;
-            text-align: left !important;
-            padding: 8px 10px !important;
-            border-radius: 10px !important;
+            text-align: center !important;
+            padding: 7px 12px !important;
+            border-radius: 8px !important;
+            font-size: 12.5px !important;
         }
         div[class*="st-key-stepper_click_"] button:hover {
-            background-color: rgba(255, 255, 255, 0.12) !important;
-            transform: translateY(-2px) !important;
+            background-color: rgba(255, 255, 255, 0.22) !important;
+            border-color: rgba(255, 255, 255, 0.4) !important;
+            transform: translateY(-1px) !important;
         }
 
         .prototype-footer {
@@ -373,9 +368,8 @@ def render_hero_banner(heading: str, description: str):
 
 def render_purple_segmented_stepper(current_step: int):
     """
-    Renders an interactive 4-step progress bar entirely inside the purple banner.
-    Each of the 4 sections is directly clickable.
-    Validates actual completion state so a step turns green only when truly answered.
+    Renders an interactive 4-step progress bar entirely inside the Home purple banner.
+    Each bar is directly clickable with strict completion validation.
     """
     steps = [
         "1. Discovery",
@@ -384,72 +378,85 @@ def render_purple_segmented_stepper(current_step: int):
         "4. Review & Summary"
     ]
 
+    # Strict completion check based on actual answers
     is_step_1_done = bool(st.session_state.get("selected_category"))
-
     cat_answers = st.session_state.get("category_answers", {})
-    is_step_2_done = bool(cat_answers and len(cat_answers) > 0)
-
+    is_step_2_done = bool(is_step_1_done and len(cat_answers) > 0)
+    
     assessment_data = st.session_state.get("assessment", {})
-    answered_prereq_keys = [k for k in assessment_data.keys() if k != "solution_description"]
-    is_step_3_done = bool(len(answered_prereq_keys) >= 3)
-
+    valid_prereqs = [k for k in assessment_data.keys() if k != "solution_description"]
+    is_step_3_done = bool(len(valid_prereqs) >= 5)
+    
     is_step_4_done = bool(st.session_state.get("form_submitted", False))
 
     completion_flags = [is_step_1_done, is_step_2_done, is_step_3_done, is_step_4_done]
 
-    with st.container():
-        st.markdown('<div class="stepper-marker" style="display:none;"></div>', unsafe_allow_html=True)
-        st.markdown(
-            f"""
-            <div style="color: #f3d7e8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;">
+    # Open the guaranteed solid purple banner card
+    st.markdown(
+        f"""
+        <div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%);
+                    border-radius: 16px; padding: 22px 24px 18px 24px; margin-bottom: 20px;
+                    box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">
+            <div style="color: #f3d7e8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">
                 Assessment Flow — Step {current_step + 1} of 4: {steps[current_step]}
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+        """,
+        unsafe_allow_html=True
+    )
 
-        cols = st.columns(4)
-        for idx, name in enumerate(steps):
-            with cols[idx]:
-                is_active = (idx == current_step)
-                is_done = completion_flags[idx]
+    # 4 Columns nested inside the purple banner
+    cols = st.columns(4)
+    for idx, name in enumerate(steps):
+        with cols[idx]:
+            is_active = (idx == current_step)
+            is_done = completion_flags[idx]
 
-                if is_active:
-                    bar_bg = "#ff4081"
-                    prefix = "● "
-                    btn_bg = "rgba(255, 64, 129, 0.16)"
-                elif is_done:
-                    bar_bg = "#00e676"
-                    prefix = "✓ "
-                    btn_bg = "rgba(0, 230, 118, 0.12)"
-                else:
-                    bar_bg = "rgba(255, 255, 255, 0.22)"
-                    prefix = ""
-                    btn_bg = "transparent"
+            if is_active:
+                bar_color = "#ff4081"
+                prefix = "● "
+                text_color = "#ffffff"
+                btn_bg = "rgba(255, 64, 129, 0.28)"
+                font_weight = "800"
+            elif is_done:
+                bar_color = "#00e676"
+                prefix = "✓ "
+                text_color = "#e8f5e9"
+                btn_bg = "rgba(0, 230, 118, 0.20)"
+                font_weight = "700"
+            else:
+                bar_color = "rgba(255, 255, 255, 0.22)"
+                prefix = ""
+                text_color = "rgba(243, 215, 232, 0.55)"
+                btn_bg = "rgba(255, 255, 255, 0.06)"
+                font_weight = "500"
 
-                st.markdown(
-                    f"""
-                    <style>
-                    div.st-key-stepper_click_{idx} button {{
-                        background-color: {btn_bg} !important;
-                    }}
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
+            # Progress bar line visual
+            st.markdown(
+                f'<div style="height: 8px; border-radius: 999px; background-color: {bar_color}; margin-bottom: 8px;"></div>',
+                unsafe_allow_html=True
+            )
 
-                st.markdown(
-                    f"""
-                    <div style="height: 8px; border-radius: 999px; background-color: {bar_bg}; margin-bottom: 6px;"></div>
-                    """,
-                    unsafe_allow_html=True
-                )
+            # Interactive button styled directly inside the purple mesh
+            st.markdown(
+                f"""
+                <style>
+                div.st-key-stepper_click_{idx} button {{
+                    background-color: {btn_bg} !important;
+                    color: {text_color} !important;
+                    font-weight: {font_weight} !important;
+                }}
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
 
-                btn_display_text = f"{prefix}{name}"
-                if st.button(btn_display_text, key=f"stepper_click_{idx}", use_container_width=True):
-                    st.session_state.assessment_step = idx
-                    st.session_state.target_focus_key = None
-                    st.rerun()
+            if st.button(f"{prefix}{name}", key=f"stepper_click_{idx}", use_container_width=True):
+                st.session_state.assessment_step = idx
+                st.session_state.target_focus_key = None
+                st.rerun()
+
+    # Close the purple card
+    st.markdown("</div>", unsafe_allow_html=True)
 
 def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
     """Renders portal cards with prominent badges and icons."""

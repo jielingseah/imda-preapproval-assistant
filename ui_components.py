@@ -56,17 +56,29 @@ def inject_custom_css():
             text-decoration: none;
         }
 
-        /* Clickable Logo Button Styling */
-        button[key="nav_brand_logo_btn"] {
+        /* Clickable Brand Logo Container & Invisible Button Overlay */
+        .brand-logo-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            padding-top: 4px;
+        }
+        button[key="nav_logo_overlay_btn"] {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
             background: transparent !important;
             border: none !important;
-            padding: 0 !important;
-            text-align: left !important;
-            box-shadow: none !important;
+            color: transparent !important;
+            cursor: pointer !important;
+            z-index: 10 !important;
         }
-        button[key="nav_brand_logo_btn"]:hover {
+        button[key="nav_logo_overlay_btn"]:hover {
             background: transparent !important;
-            transform: scale(1.02);
+            border: none !important;
+            color: transparent !important;
         }
 
         /* Sleek Deep Purple Logout Pill */
@@ -197,7 +209,7 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """Renders the streamlined top navigation header bar (Home button removed, Logo is clickable)."""
+    """Renders the top navigation bar with the dual-color brand logo clickable directly to Home."""
     pages = [
         "Pre-Approval Assessment",
         "About Us",
@@ -216,12 +228,19 @@ def render_top_navigation():
         unsafe_allow_html=True
     )
 
-    # Columns: Clickable Logo (3.6) + 3 Nav items (2.5, 1.3, 1.4) + Logout Pill (1.0)
+    # Columns: Clickable Brand Logo (3.6) + 3 Nav items (2.5, 1.3, 1.4) + Logout Pill (1.0)
     cols = st.columns([3.6, 2.5, 1.3, 1.4, 1.0])
 
     with cols[0]:
-        # Clickable brand logo routing directly to Home
-        if st.button("SMEs godigital ↗", key="nav_brand_logo_btn"):
+        st.markdown(
+            """
+            <div class="brand-logo-container">
+                <span style="font-size: 22px; font-weight: 800; color: #581845; letter-spacing: -0.5px;">SMEs</span><span style="font-size: 22px; font-weight: 800; color: #d8232a; letter-spacing: -0.5px;">godigital ↗</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        if st.button(" ", key="nav_logo_overlay_btn", help="Go to Home"):
             st.session_state.page = "Home"
             st.session_state.show_chat_dialog = False
             st.rerun()

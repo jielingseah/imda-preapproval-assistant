@@ -152,19 +152,20 @@ def inject_custom_css():
             text-decoration: underline;
         }
 
-        /* Invisible Logo Overlay */
+        /* Combined Logo & Title Overlay Button */
         div.st-key-nav_logo_overlay_btn {
-            margin-top: -40px !important;
-            height: 38px !important;
-            width: 195px !important;
+            margin-top: -46px !important;
+            height: 44px !important;
+            width: 100% !important;
+            max-width: 330px !important;
         }
         div.st-key-nav_logo_overlay_btn button {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
             outline: none !important;
-            height: 38px !important;
-            width: 195px !important;
+            height: 44px !important;
+            width: 100% !important;
             cursor: pointer !important;
             color: transparent !important;
             padding: 0 !important;
@@ -327,7 +328,9 @@ def inject_custom_css():
             transform: translateY(-1px) !important;
         }
 
-        /* Global Purple Action & Form Submit Buttons */
+        /* =========================================================
+           GLOBAL PURPLE ACTION & FORM SUBMIT BUTTONS
+           ========================================================= */
         button[kind="primary"],
         button[data-testid="baseButton-primary"],
         div[data-testid="stFormSubmitButton"] button,
@@ -425,7 +428,10 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """Renders the top navigation bar with the expandable official SG banner and clickable logo."""
+    """
+    Renders top navigation with Singapore Government masthead and combined
+    SMEs Go Digital + IMDA Pre-Approval Assistant logo linking directly to Home.
+    """
     pages = [
         "Pre-Approval Assessment",
         "About Us",
@@ -434,6 +440,7 @@ def render_top_navigation():
 
     current_page = st.session_state.get("page", "Home")
 
+    # Singapore Government Expandable Masthead
     st.markdown(
         """
         <details class="sg-masthead">
@@ -468,18 +475,28 @@ def render_top_navigation():
         unsafe_allow_html=True
     )
 
-    cols = st.columns([3.6, 2.5, 1.3, 1.4, 1.0])
+    # Navigation Layout: Expanded brand column + page links + logout
+    cols = st.columns([4.2, 2.3, 1.2, 1.3, 1.0])
 
     with cols[0]:
+        # Visual combined logo lockup
         st.markdown(
             """
-            <div style="height: 38px; padding-top: 4px; pointer-events: none;">
-                <span style="font-size: 22px; font-weight: 800; color: #581845; letter-spacing: -0.5px;">SMEs</span><span style="font-size: 22px; font-weight: 800; color: #d8232a; letter-spacing: -0.5px;">godigital ↗</span>
+            <div style="height: 44px; display: flex; align-items: center; gap: 10px; pointer-events: none; user-select: none;">
+                <div style="line-height: 1;">
+                    <span style="font-size: 21px; font-weight: 800; color: #581845; letter-spacing: -0.5px;">SMEs</span><span style="font-size: 21px; font-weight: 800; color: #d8232a; letter-spacing: -0.5px;">godigital</span>
+                </div>
+                <div style="height: 18px; width: 1.5px; background-color: #d0c4d8;"></div>
+                <div style="line-height: 1.15;">
+                    <span style="font-size: 13.5px; font-weight: 800; color: #581845; letter-spacing: -0.2px;">Pre-Approval Assistant</span>
+                    <span style="display: block; font-size: 9.5px; font-weight: 700; color: #7a1d5a; text-transform: uppercase; letter-spacing: 0.5px;">IMDA Pilot</span>
+                </div>
             </div>
             """,
             unsafe_allow_html=True
         )
-        if st.button(" ", key="nav_logo_overlay_btn"):
+        # Transparent click overlay covering the entire combined unit
+        if st.button(" ", key="nav_logo_overlay_btn", use_container_width=False):
             st.session_state.page = "Home"
             st.session_state.show_chat_dialog = False
             st.rerun()

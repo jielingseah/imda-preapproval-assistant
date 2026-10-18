@@ -34,6 +34,22 @@ from assessment_service import (
 PAGE_SIZE = 6
 UNLISTED_CAT_LABEL = "Unlisted / New Category Inquiry"
 
+def get_default_inquiry_text(selected_cat: str, has_gaps: bool) -> str:
+    """Returns a context-accurate default inquiry note based on vendor assessment outcome."""
+    if selected_cat == UNLISTED_CAT_LABEL:
+        return (
+            "We understand our solution falls under an unlisted category. "
+            "We are submitting our company profile, product website, and solution capabilities "
+            "as an Expression of Interest for IMDA's future roadmap and category review cycles."
+        )
+    elif has_gaps:
+        return (
+            "We are currently reviewing our identified prerequisite/checklist gaps and would like to seek "
+            "clarification on acceptable remediation documentation and alternative compliance pathways."
+        )
+    else:
+        return "We meet all baseline requirements and category checklists, ready for Stage 2 submission."
+
 def render_compliance_badge(current_val: str | None, compliant_options: list[str]):
     """Renders compliance status using centralized CSS classes from ui_components."""
     if not current_val:
@@ -85,7 +101,7 @@ def populate_test_sample_data():
     st.session_state.sub_person = "Alex Tan"
     st.session_state.sub_email = "alex.tan@alphadigital.sg"
     st.session_state.sub_phone = "+65 9123 4567"
-    st.session_state.sub_inquiry = "We meet all baseline requirements and category checklists, ready for Stage 2 submission."
+    st.session_state.sub_inquiry = get_default_inquiry_text(target_category_key, has_gaps=False)
 
 def clear_all_assessment_data():
     """Resets all assessment questions, answers, and contact inputs to completely blank."""
@@ -734,7 +750,7 @@ def render_step_4_review_and_submit():
 
     st.markdown("---")
 
-    # STEP 4 FORM: Includes Target Category, Solution Capabilities, and Website URL
+    # STEP 4 FORM: Includes Target Category, Solution Capabilities, Website URL, and Dynamic Inquiries
     form_heading = (
         "Vendor Profile & Expression of Interest Submission" 
         if selected == UNLISTED_CAT_LABEL 
@@ -763,16 +779,24 @@ def render_step_4_review_and_submit():
                 contact_email = st.text_input("Corporate Email Address *", value=st.session_state.get("sub_email", ""), placeholder="e.g. john.tan@acme.com")
                 contact_phone = st.text_input("Contact Number *", value=st.session_state.get("sub_phone", ""), placeholder="e.g. +65 9123 4567")
 
-            # Website Field
             company_website_input = st.text_input(
                 "Company / Product Website URL *",
                 value=st.session_state.get("sub_website", ""),
                 placeholder="e.g. https://www.yourcompany.com"
             )
 
+            # Dynamically derive appropriate default inquiry note if empty or mismatched
+            current_inquiry = st.session_state.get("sub_inquiry", "").strip()
+            if not current_inquiry or (
+                selected == UNLISTED_CAT_LABEL and "ready for Stage 2" in current_inquiry
+            ) or (
+                total_gaps_count > 0 and "ready for Stage 2" in current_inquiry
+            ):
+                current_inquiry = get_default_inquiry_text(selected, has_gaps=(total_gaps_count > 0))
+
             vendor_inquiry = st.text_area(
                 "Inquiry / Clarification Notes",
-                value=st.session_state.get("sub_inquiry", ""),
+                value=current_inquiry,
                 placeholder="Optional: Enter any questions regarding timeline, pilot participation, or alternative compliance pathways for IMDA officers.",
                 height=80
             )

@@ -68,6 +68,9 @@ if not check_password():
 
 inject_custom_css()
 
+# Anchor point for instant return to top
+st.markdown('<div id="page-top"></div>', unsafe_allow_html=True)
+
 # =========================================================
 # CONSTANTS & MODEL SELECTION
 # =========================================================
@@ -127,6 +130,7 @@ defaults = {
     "sub_email": "",
     "sub_phone": "",
     "sub_inquiry": "",
+    "show_chat_dialog": False,
     "chat_messages": [
         {
             "role": "assistant",
@@ -322,7 +326,7 @@ def parse_category_matches(answer, catalogue):
     return results[:3]
 
 # =========================================================
-# FLOATING RAG CHATBOT DIALOG (AVAILABLE EVERYWHERE)
+# FLOATING PERSISTENT RAG CHATBOT DIALOG
 # =========================================================
 
 @st.dialog("💬 IMDA Pre-Approval AI Copilot", width="large")
@@ -334,7 +338,7 @@ def render_floating_chat_modal():
         if st.session_state.selected_category:
             st.info(f"Target Category: **{st.session_state.selected_category}**")
     with col_t2:
-        if st.button("🔄 Reset", use_container_width=True):
+        if st.button("🔄 Reset", key="modal_reset_chat", use_container_width=True):
             st.session_state.chat_messages = [
                 {
                     "role": "assistant",
@@ -343,13 +347,13 @@ def render_floating_chat_modal():
             ]
             st.rerun()
 
-    chat_box = st.container(height=350)
+    chat_box = st.container(height=360)
     with chat_box:
         for msg in st.session_state.chat_messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-    if user_prompt := st.chat_input("Ask a question (e.g. Can a company registered in Malaysia apply?)"):
+    if user_prompt := st.chat_input("Ask a question about pre-approval or addressing your gaps..."):
         is_safe, sanitized_query = sanitize_and_check_injection(user_prompt)
         if not is_safe:
             st.error(sanitized_query)
@@ -369,11 +373,23 @@ def render_floating_chat_modal():
                 st.session_state.chat_messages.append({"role": "assistant", "content": assistant_response})
             st.rerun()
 
-# Floating button trigger rendered in layout
+if st.session_state.show_chat_dialog:
+    render_floating_chat_modal()
+
+# Persistent bottom-right floating trigger controls (↑ Top + 💬 Ask Copilot)
 with st.container():
+    st.markdown(
+        """
+        <div class="st-key-floating_top_trigger">
+            <a href="#page-top">↑ Top</a>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     st.markdown('<div class="st-key-floating_chat_trigger">', unsafe_allow_html=True)
     if st.button("💬 Ask Copilot", key="floating_chat_button"):
-        render_floating_chat_modal()
+        st.session_state.show_chat_dialog = True
+        st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
 # =========================================================
@@ -411,7 +427,7 @@ if st.session_state.page == "Home":
                     st.session_state.assessment["solution_description"] = home_query.strip()
                     st.session_state.auto_trigger_search = True
                     st.session_state.page = "Pre-Approval Assessment"
-                    st.session_state.assessment_step = 1  # jump to discovery
+                    st.session_state.assessment_step = 1  # jump straight to discovery
                     st.rerun()
 
         st.markdown("<p style='font-size:11.5px; color:#777788; margin-top:8px; margin-bottom:4px;'>💡 Or click a sample prompt to try:</p>", unsafe_allow_html=True)
@@ -440,7 +456,7 @@ if st.session_state.page == "Home":
 
     st.markdown("---")
 
-    # Interactive Guided Journey (Front and Center)
+    # The Pre-Approval Journey (Stage 1) - Front & Center
     st.markdown("<h3 style='font-size:20px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>The Pre-Approval Journey (Stage 1)</h3>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -481,7 +497,7 @@ if st.session_state.page == "Home":
 
     st.markdown("---")
 
-    # External Official Ecosystem Resources (Positioned at Bottom to Keep User on Flow)
+    # External Official Ecosystem Resources (Positioned at bottom)
     st.markdown("<h4 style='font-size:16px; font-weight:700; color:#581845; margin-bottom:12px;'>Official IMDA Framework & Portals</h4>", unsafe_allow_html=True)
     col_info1, col_info2 = st.columns(2)
     with col_info1:
@@ -527,7 +543,6 @@ elif st.session_state.page == "Pre-Approval Assessment":
     progress_vals = [0.33, 0.66, 1.0]
     st.progress(progress_vals[st.session_state.assessment_step], text=f"Assessment Flow — {steps[st.session_state.assessment_step]}")
 
-    # Step Tabs
     selected_step_name = st.radio(
         "Assessment Step",
         steps,
@@ -610,7 +625,6 @@ elif st.session_state.page == "Pre-Approval Assessment":
         st.markdown("### 🔍 Step 2: Identify Suitable Solution Category")
         st.caption("Discover your official pre-approved category via AI semantic matching or manual directory browsing.")
 
-        # Auto-execute recommendation if routed from Home search bar
         current_desc = st.session_state.assessment.get("solution_description", "")
         if st.session_state.get("auto_trigger_search", False) and current_desc.strip():
             st.session_state.auto_trigger_search = False
@@ -661,7 +675,7 @@ elif st.session_state.page == "Pre-Approval Assessment":
                         if st.button("Confirm & Proceed with this Category →", key=f"select_ai_cat_{index}", use_container_width=True):
                             st.session_state.selected_category = category_key
                             st.session_state.selected_category_url = category["url"]
-                            st.session_state.assessment_step = 2  # advance to checklist
+                            st.session_state.assessment_step = 2
                             st.rerun()
 
         with tab_manual:
@@ -797,7 +811,7 @@ elif st.session_state.page == "Pre-Approval Assessment":
 
                 st.markdown("---")
 
-                # Automated Prerequisite Gap Detection with Clickable Edit Action
+                # Automated Prerequisite Gap Detection with Clickable Edit Action Links
                 st.subheader("2. Automated Prerequisite Gap Detection")
 
                 front_assessment_labels = {
@@ -922,9 +936,48 @@ elif st.session_state.page == "Pre-Approval Assessment":
                     if total_gaps_count > 0:
                         with st.container(border=True):
                             st.markdown("### 🤖 Next Steps: Address Your Identified Gaps")
-                            st.write("You have unmet criteria or questions flagged in your readiness audit. Click below or open the floating copilot to consult official guidelines.")
-                            if st.button("💬 Launch AI Copilot for Recommendations →", type="primary", use_container_width=True):
-                                render_floating_chat_modal()
+                            st.write("You have unmet criteria or questions flagged in your readiness audit. Click below to automatically pass your assessment details to the copilot for instant, grounded recommendations.")
+                            
+                            if st.button("💬 Launch AI Copilot for Recommendations →", key="btn_auto_launch_copilot", type="primary", use_container_width=True):
+                                # 1. Compile detected gaps into an automated prompt
+                                gap_summary_lines = []
+                                if front_gaps:
+                                    gap_summary_lines.append("**Baseline Prerequisite Gaps:**")
+                                    for fg in front_gaps:
+                                        gap_summary_lines.append(f"- {fg['item']} (Current Status: {fg['status']})")
+                                if unmet_cat_questions:
+                                    gap_summary_lines.append(f"**Functional Checklist Gaps for {selected}:**")
+                                    for uq in unmet_cat_questions:
+                                        gap_summary_lines.append(f"- Q{uq['number']} ({uq['status']}): {uq['question']}")
+                                
+                                gaps_text = "\n".join(gap_summary_lines)
+                                auto_prompt = (
+                                    f"I have completed my self-assessment for the pre-approval category '{selected}'. "
+                                    f"The system flagged the following requirement gaps:\n\n{gaps_text}\n\n"
+                                    "Based on the official IMDA Pre-Approval Guide, what specific remediation steps, "
+                                    "alternative compliance pathways, or documentation can I prepare to address these gaps?"
+                                )
+
+                                # 2. Append request to chat session
+                                st.session_state.chat_messages.append({"role": "user", "content": auto_prompt})
+
+                                # 3. Query Gemini RAG directly
+                                client = get_gemini_client()
+                                if client:
+                                    with st.spinner("Analyzing gaps against official IMDA guide..."):
+                                        auto_response = query_live_guide_rag(
+                                            client,
+                                            user_query=auto_prompt,
+                                            chat_history=st.session_state.chat_messages,
+                                            user_assessment=st.session_state.assessment,
+                                            selected_category=st.session_state.selected_category,
+                                            model_name=MODEL_NAME
+                                        )
+                                    st.session_state.chat_messages.append({"role": "assistant", "content": auto_response})
+
+                                # 4. Keep dialog open persistently across reruns
+                                st.session_state.show_chat_dialog = True
+                                st.rerun()
                     else:
                         with st.container(border=True):
                             st.markdown("### 🚀 Congratulations! You Are Ready for Stage 1 Formal Submission")
@@ -988,7 +1041,7 @@ elif st.session_state.page == "About Us":
         with st.container(border=True):
             st.markdown("#### 🤖 Grounded AI Copilot")
             st.markdown("""
-            - **Floating Slide-over Modal:** Accessible from any page via the floating `💬 Ask Copilot` widget.
+            - **Floating Slide-over Modal:** Accessible from any page via the persistent floating `💬 Ask Copilot` widget.
             - **Context-Aware RAG:** Grounds responses directly in live IMDA pre-approval policy documents.
             - **Dossier Dispatch:** Formats structured submission records routed to reviewing public officers.
             """)

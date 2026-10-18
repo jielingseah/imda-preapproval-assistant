@@ -258,7 +258,7 @@ if st.session_state.page == "Home":
             icon="📋"
         )
         st.write("")
-        if st.button("Review Checklist →", key="home_btn_checklist", use_container_width=True):
+        if st.button("Review Checklist →", key="home_btn_checklist", type="primary", use_container_width=True):
             st.session_state.page = "Pre-Approval Assessment"
             st.session_state.assessment_step = 1
             st.rerun()
@@ -271,7 +271,7 @@ if st.session_state.page == "Home":
             icon="🏢"
         )
         st.write("")
-        if st.button("Start Assessment →", key="home_btn_prereq", use_container_width=True):
+        if st.button("Start Assessment →", key="home_btn_prereq", type="primary", use_container_width=True):
             st.session_state.page = "Pre-Approval Assessment"
             st.session_state.assessment_step = 2
             st.rerun()
@@ -304,9 +304,9 @@ if st.session_state.page == "Home":
         
         st4_col1, st4_col2 = st.columns(2)
         with st4_col1:
-            st.link_button("📖 Read Stage 2 Guide ↗", STAGE_2_GUIDE_URL, use_container_width=True)
+            st.link_button("📖 Read Stage 2 Guide ↗", STAGE_2_GUIDE_URL, type="primary", use_container_width=True)
         with st4_col2:
-            st.link_button("🏛️ Launch VMP Portal ↗", VMP_PORTAL_URL, use_container_width=True)
+            st.link_button("🏛️ Launch VMP Portal ↗", VMP_PORTAL_URL, type="primary", use_container_width=True)
 
     render_footer_disclaimer()
 

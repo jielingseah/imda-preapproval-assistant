@@ -182,28 +182,27 @@ if st.session_state.page == "Home":
         "The SMEs Go Digital programme supports SMEs in adopting pre-approved digital solutions with grant support. Use this copilot to check your category feasibility, assess corporate eligibility, and prepare your formal submission."
     )
 
-    st.markdown("<h3 style='font-size:18px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>The Pre-Approval Journey (Stage 1: Vendor Self-Assessment)</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 class='portal-section-heading'>The Pre-Approval Journey (Stage 1: Vendor Self-Assessment)</h3>", unsafe_allow_html=True)
 
     with st.container(border=True):
         st.markdown(
             """
-            <div style="margin-bottom: 8px;">
+            <div class="portal-spacer-sm">
                 <span class="step-badge">
-                    <span style="font-size: 15px;">🔍</span> STEP 1: DISCOVERY & FEASIBILITY
+                    <span>🔍</span> STEP 1: DISCOVERY & FEASIBILITY
                 </span>
             </div>
             """,
             unsafe_allow_html=True
         )
+        st.markdown("<h4 class='portal-card-title'>🔍 Solution Category Pre-Check</h4>", unsafe_allow_html=True)
         st.markdown(
-            "<h4 style='font-size:17px; font-weight:800; color:#2b0b2e; margin:4px 0 6px 0;'>🔍 Solution Category Pre-Check</h4>",
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<p style='font-size:13px; color:#636375; margin-bottom:14px; line-height:1.5;'>"
-            "Check if your solution fits an official IMDA category before starting self-assessment. "
-            "If your product does not fall under an existing pre-approved category, it is not eligible under this programme."
-            "</p>",
+            """
+            <p class="portal-section-subtext">
+                Check if your solution fits an official IMDA category before starting self-assessment. 
+                If your product does not fall under an existing pre-approved category, it is not eligible under this programme.
+            </p>
+            """,
             unsafe_allow_html=True
         )
         
@@ -224,7 +223,7 @@ if st.session_state.page == "Home":
                     st.session_state.assessment_step = 0
                     st.rerun()
 
-        st.markdown("<p style='font-size:11.5px; color:#777788; margin-top:8px; margin-bottom:4px;'>💡 Or click a sample prompt to try:</p>", unsafe_allow_html=True)
+        st.markdown("<p class='portal-hint-text'>💡 Or click a sample prompt to try:</p>", unsafe_allow_html=True)
         s_col1, s_col2, s_col3 = st.columns(3)
         with s_col1:
             if st.button("🏫 Pre-School Operations", key="sample_prompt_1", use_container_width=True):
@@ -248,7 +247,7 @@ if st.session_state.page == "Home":
                 st.session_state.assessment_step = 0
                 st.rerun()
 
-    st.markdown("<div style='margin-bottom: 14px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='portal-spacer-sm'></div>", unsafe_allow_html=True)
 
     col2, col3 = st.columns(2)
     with col2:
@@ -277,30 +276,29 @@ if st.session_state.page == "Home":
             st.session_state.assessment_step = 2
             st.rerun()
 
-    st.markdown("<div style='margin-top: 24px; margin-bottom: 14px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='portal-spacer-md'></div>", unsafe_allow_html=True)
 
-    st.markdown("<h3 style='font-size:18px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>The Pre-Approval Journey (Stage 2: Vendor Application)</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 class='portal-section-heading'>The Pre-Approval Journey (Stage 2: Vendor Application)</h3>", unsafe_allow_html=True)
 
     with st.container(border=True):
         st.markdown(
             """
-            <div style="margin-bottom: 8px;">
+            <div class="portal-spacer-sm">
                 <span class="step-badge">
-                    <span style="font-size: 15px;">🚀</span> STEP 4: SUBMISSION & VMP
+                    <span>🚀</span> STEP 4: SUBMISSION & VMP
                 </span>
             </div>
             """,
             unsafe_allow_html=True
         )
+        st.markdown("<h4 class='portal-card-title'>🚀 Stage 2 Preparation & Formal VMP Submission</h4>", unsafe_allow_html=True)
         st.markdown(
-            "<h4 style='font-size:17px; font-weight:800; color:#2b0b2e; margin:4px 0 6px 0;'>🚀 Stage 2 Preparation & Formal VMP Submission</h4>",
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<p style='font-size:13px; color:#636375; line-height:1.5; margin-bottom:16px;'>"
-            "Once you clear Stage 1 Self-Assessment, review the official documentation guidelines to prepare your solution presentation deck, "
-            "pricing matrix, and customer proof before formally submitting via the Vendor Management Portal (VMP)."
-            "</p>",
+            """
+            <p class="portal-section-subtext">
+                Once you clear Stage 1 Self-Assessment, review the official documentation guidelines to prepare your solution presentation deck, 
+                pricing matrix, and customer proof before formally submitting via the Vendor Management Portal (VMP).
+            </p>
+            """,
             unsafe_allow_html=True
         )
         
@@ -381,6 +379,7 @@ elif st.session_state.page == "About Us":
         """)
 
     render_footer_disclaimer()
+
 # =========================================================
 # PAGE 4: METHODOLOGY & SYSTEM ARCHITECTURE
 # =========================================================
@@ -462,6 +461,7 @@ elif st.session_state.page == "Methodology":
         """)
 
     render_footer_disclaimer()
+
 # =========================================================
 # FLOATING ACTION CONTROLS
 # =========================================================

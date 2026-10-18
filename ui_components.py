@@ -1,12 +1,12 @@
 """
 UI/UX Component & Style Library for IMDA Pre-Approval Assistant.
-Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.sg) portal.
+Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.sg) portal header.
 """
 
 import streamlit as st
 
 def inject_custom_css():
-    """Injects SMEs Go Digital official portal theme styling and hides default sidebar."""
+    """Injects SMEs Go Digital official portal header styling and hides default elements."""
     st.markdown(
         """
         <style>
@@ -17,42 +17,47 @@ def inject_custom_css():
             color: #1a1a24;
         }
 
-        /* Hide Streamlit default sidebar completely */
+        /* Hide Streamlit default sidebar and header decorations */
         [data-testid="stSidebar"] {
             display: none !important;
         }
+        header {visibility: hidden;}
 
         /* Top Government Masthead */
         .sg-masthead {
-            background-color: #f0f0f2;
-            padding: 5px 16px;
-            font-size: 11.5px;
-            color: #4b4b5a;
+            background-color: #f8f8f9;
+            padding: 4px 16px;
+            font-size: 11px;
+            color: #555566;
             display: flex;
             align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid #e2e2e8;
-            margin: -6rem -5rem 1rem -5rem;
+            gap: 6px;
+            border-bottom: 1px solid #eaeaf0;
+            margin: -6rem -5rem 0.8rem -5rem;
         }
         .sg-masthead-crest {
             color: #d8232a;
             font-weight: 700;
-            font-size: 13px;
         }
         .sg-masthead a {
             color: #2b5cb8;
-            text-decoration: underline;
-            cursor: pointer;
+            text-decoration: none;
         }
 
-        /* SMEs Go Digital Brand Logo Header */
-        .brand-logo-container {
+        /* SMEs Go Digital Brand Logo Header Bar */
+        .portal-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0 14px 0;
+            border-bottom: 1px solid #eaeaef;
+            margin-bottom: 24px;
+            background-color: #ffffff;
+        }
+        .logo-container {
             display: flex;
             align-items: baseline;
-            gap: 14px;
-            padding: 6px 0 12px 0;
-            border-bottom: 1px solid #ebebf2;
-            margin-bottom: 15px;
+            gap: 12px;
         }
         .logo-smes {
             font-size: 24px;
@@ -69,48 +74,18 @@ def inject_custom_css():
             line-height: 1;
         }
         .logo-subtitle {
-            font-size: 12.5px;
+            font-size: 12px;
             font-weight: 600;
-            color: #6c6c7d;
+            color: #777788;
             border-left: 2px solid #d0d0dc;
             padding-left: 10px;
-            margin-left: 4px;
-        }
-        .brand-badge {
-            background: linear-gradient(135deg, #581845 0%, #d8232a 100%);
-            color: #ffffff;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 9px;
-            border-radius: 999px;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-left: auto;
         }
 
-        /* SMEs Go Digital Signature Purple/Magenta Mesh Banner */
-        .smes-banner {
-            background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%);
-            color: #ffffff;
-            padding: 32px 32px;
-            border-radius: 16px;
-            margin-bottom: 24px;
-            box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);
-            position: relative;
-            overflow: hidden;
-        }
-        .smes-banner h2 {
-            font-size: 24px;
-            font-weight: 800;
-            color: #ffffff !important;
-            margin: 0 0 8px 0;
-        }
-        .smes-banner p {
-            font-size: 14.5px;
-            color: #f3d7e8;
-            margin: 0;
-            max-width: 85%;
-            line-height: 1.5;
+        /* Sleek Top Nav Links */
+        .nav-link-row {
+            display: flex;
+            align-items: center;
+            gap: 24px;
         }
 
         /* Portal Cards */
@@ -193,7 +168,7 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """Renders top navigation banner with clean buttons and logout on the right."""
+    """Renders the top navigation header bar matching smesgodigital.gov.sg cleanly without ugly buttons."""
     pages = [
         "Home",
         "Self-Assessment",
@@ -206,62 +181,78 @@ def render_top_navigation():
 
     current_page = st.session_state.get("page", "Home")
 
-    # Render top banner menu using columns
-    cols = st.columns([len(pages), 1.2])
-    
-    with cols[0]:
-        nav_cols = st.columns(len(pages))
-        for idx, page_name in enumerate(pages):
-            with nav_cols[idx]:
-                is_active = (current_page == page_name)
-                btn_type = "primary" if is_active else "secondary"
-                if st.button(page_name, key=f"top_nav_{idx}", type=btn_type, use_container_width=True):
-                    st.session_state.page = page_name
-                    st.rerun()
-
-    with cols[1]:
-        if st.button("🔒 Logout", key="top_logout_btn", use_container_width=True):
-            st.session_state.authenticated = False
-            st.rerun()
-
-    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
-
-def render_brand_header(title: str, subtitle: str = None, badge: str = "Prototype"):
-    """Renders the top Singapore Government Masthead, Logo, and Top Navigation Banner."""
-    badge_html = f'<span class="brand-badge">{badge}</span>' if badge else ""
+    # Top Masthead
     st.markdown(
-        f"""
+        """
         <div class="sg-masthead">
-            <span class="sg-masthead-crest">🇸🇬</span> A Singapore Government Agency Website &nbsp;<a href="#">How to identify</a>
-        </div>
-        <div class="brand-logo-container">
-            <div>
-                <span class="logo-smes">SMEs</span> <span class="logo-godigital">godigital ↗</span>
-                <span class="logo-subtitle">Pre-Approval Assistant</span>
-            </div>
-            {badge_html}
+            <span class="sg-masthead-crest">🇸🇬</span> A Singapore Government Agency Website &nbsp;<a href="#">How to identify ▾</a>
         </div>
         """,
         unsafe_allow_html=True
     )
+
+    # Header Bar layout
+    col_logo, col_nav, col_actions = st.columns([2.2, 5.8, 2])
+
+    with col_logo:
+        st.markdown(
+            """
+            <div class="logo-container" style="padding-top: 4px;">
+                <span class="logo-smes">SMEs</span><span class="logo-godigital">godigital ↗</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    with col_nav:
+        # Render pages as clean inline link buttons
+        nav_cols = st.columns(len(pages))
+        for idx, page_name in enumerate(pages):
+            with nav_cols[idx]:
+                is_active = (current_page == page_name)
+                # Style active page with bolder color / underline look via button styling
+                btn_type = "primary" if is_active else "secondary"
+                if st.button(page_name, key=f"sleek_nav_{idx}", type=btn_type, use_container_width=True):
+                    st.session_state.page = page_name
+                    st.rerun()
+
+    with col_actions:
+        col_srch, col_log = st.columns([1, 1])
+        with col_srch:
+            if st.button("🔍 Search", key="header_search_btn", use_container_width=True):
+                st.session_state.page = "AI Category Finder"
+                st.rerun()
+        with col_log:
+            if st.button("🔒 Logout", key="header_logout_btn", type="primary", use_container_width=True):
+                st.session_state.authenticated = False
+                st.rerun()
+
+    st.markdown("<div style='border-bottom: 1px solid #eaeaef; margin-top: 8px; margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+
+def render_brand_header(title: str, subtitle: str = None, badge: str = "Prototype"):
+    """Renders the sleek top navigation header bar and page title."""
     render_top_navigation()
+    
+    badge_html = f'<span style="background: linear-gradient(135deg, #581845 0%, #d8232a 100%); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; float: right;">{badge}</span>'
+    st.markdown(f"<div>{badge_html}<h1 style='font-size: 24px; font-weight: 800; color: #2b0b2e; margin: 0;'>{title}</h1></div>", unsafe_allow_html=True)
+    
     if subtitle:
-        st.markdown(f"<p style='color:#636375; font-size:13.5px; margin-top:-4px; margin-bottom:16px;'>{subtitle}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color:#636375; font-size:13.5px; margin-top:4px; margin-bottom:18px;'>{subtitle}</p>", unsafe_allow_html=True)
 
 def render_hero_banner(heading: str, description: str):
-    """Renders the official purple-magenta mesh banner seen on smesgodigital.gov.sg."""
+    """Renders the official purple-magenta mesh banner."""
     st.markdown(
         f"""
-        <div class="smes-banner">
-            <h2>{heading}</h2>
-            <p>{description}</p>
+        <div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%); color: #ffffff; padding: 32px 32px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">
+            <h2 style="font-size: 24px; font-weight: 800; color: #ffffff !important; margin: 0 0 8px 0;">{heading}</h2>
+            <p style="font-size: 14.5px; color: #f3d7e8; margin: 0; max-width: 85%; line-height: 1.5;">{description}</p>
         </div>
         """,
         unsafe_allow_html=True
     )
 
 def render_feature_card(tag: str, title: str, description: str):
-    """Renders sleek portal cards with rounded corners and hover glow."""
+    """Renders sleek portal cards."""
     st.markdown(
         f"""
         <div class="portal-card">

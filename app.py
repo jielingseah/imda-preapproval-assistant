@@ -381,7 +381,6 @@ elif st.session_state.page == "About Us":
         """)
 
     render_footer_disclaimer()
-
 # =========================================================
 # PAGE 4: METHODOLOGY & SYSTEM ARCHITECTURE
 # =========================================================
@@ -395,27 +394,29 @@ elif st.session_state.page == "Methodology":
     with st.container(border=True):
         st.markdown("""
         ### Architectural Philosophy
-        The application is engineered using clean software engineering principles, decoupling user interface styling, session orchestration, domain assessment logic, and GenAI knowledge retrieval across six specialized modules:
-        `app.py`, `ui_components.py`, `assessment_module.py`, `assessment_schemas.py`, `assessment_service.py`, and `imda_knowledge.py`.
+        The **IMDA Pre-Approval Assistant** is built on a modular, service-oriented architecture designed to decouple policy schema definitions, web-scraped policy intelligence, generative AI reasoning, and presentation logic.
+        
+        The codebase is partitioned into six decoupled modules across `app.py`, `assessment_module.py`, `assessment_schemas.py`, `assessment_service.py`, `ui_components.py`, and `imda_knowledge.py`.
         """)
 
     st.markdown("### 1. Multi-Turn RAG Pipeline & Prompt Engineering")
     with st.container(border=True):
         st.markdown("""
-        The conversational copilot uses the `gemini-2.5-flash` model orchestrated through a Retrieval-Augmented Generation (RAG) pipeline:
-        - **Dynamic Context Injection:** Pulls live markdown data directly from `https://preapproval-guide.imda.gov.sg/`.
-        - **XML Boundary Delimitation:** All untrusted inputs are encapsulated within strict `<user_query>` and `<context>` XML tags to prevent context bleeding.
-        - **Multi-Turn Session Memory:** Tracks conversation state within structured `<conversation_history>` envelopes to support sequential follow-up reasoning.
-        - **Zero-Shot Semantic Matching:** Matches plain-language solution descriptions to exact official categories using strict structured response parsing.
+        The conversational copilot uses **Google GenAI (`gemini-2.5-flash`)** orchestrated through a grounded Retrieval-Augmented Generation (RAG) architecture:
+        - **Live Document Ingestion & Caching:** Pulls and caches markdown pages directly from the official portal (`https://preapproval-guide.imda.gov.sg/`) with TTL cache expiration to ensure compliance with the latest policy updates.
+        - **XML Boundary Delimitation:** All untrusted user inputs and retrieved reference documents are enclosed within strict `<user_query>`, `<conversation_history>`, and `<context>` XML boundaries to prevent context contamination and jailbreaks.
+        - **Multi-Turn Conversational Memory:** Preserves multi-turn state across user interactions, enabling vendors to ask follow-up questions regarding specific checklist items or financial ratios.
+        - **Zero-Shot Semantic Matching:** Translates unstructured vendor solution descriptions into official IMDA categories using constrained JSON-like structural parsing.
         """)
 
     st.markdown("### 2. Cybersecurity & Prompt Injection Defenses")
     with st.container(border=True):
         st.markdown("""
-        To defend against malicious prompt engineering and compliance tampering, the app enforces an automated security layer:
-        - **Adversarial Regex Heuristics:** Blocks instruction override sequences (e.g. `ignore previous instructions`, `system prompt`, `bypass guardrails`).
-        - **XSS & HTML Sanitization:** Strips HTML/script tags (`<script>`, `javascript:`) before processing user inputs.
-        - **Access Authentication Gate:** Secures the prototype environment via session passcode authentication.
+        To safeguard public sector compliance integrity and prevent prompt tampering:
+        - **Adversarial Regex Heuristics:** Evaluates incoming user inputs against multi-pattern jailbreak filters (e.g., `ignore previous instructions`, `system prompt`, `bypass guardrail`, `reveal API key`).
+        - **XSS & Code Injection Sanitization:** Encodes angle brackets (`<`, `>`) and strips script tags (`<script>`, `javascript:`) before passing strings into the execution context.
+        - **Prototype Passcode Gating:** Restricts prototype access via environment-managed passcodes verified against Streamlit Secrets.
+        - **No Client-Side Credential Exposure:** All API keys (`GEMINI_API_KEY`) remain strictly server-side and are never serialized to the client browser.
         """)
 
     st.markdown("### 3. Modular Engineering Blueprint (6 Decoupled Modules)")
@@ -423,33 +424,44 @@ elif st.session_state.page == "Methodology":
     with col_m1:
         with st.container(border=True):
             st.markdown("#### `app.py`")
-            st.caption("Main Orchestration Engine (~180 lines)")
-            st.markdown("Handles access gating, session routing, persistent floating copilot modal state, and Home/Documentation page renderers.")
+            st.caption("Main Orchestration Engine (~200 lines)")
+            st.markdown("Controls authentication gating, session state initialization, routing across primary pages (Home, Assessment, About, Methodology), and the persistent floating Copilot modal.")
+        
         with st.container(border=True):
             st.markdown("#### `assessment_module.py`")
             st.caption("UI View Controller (~320 lines)")
-            st.markdown("Orchestrates Step 1 Category Discovery, Step 2 Checklist, Step 3 Baseline Tabs, and Step 4 Review & Submission.")
+            st.markdown("Encapsulates the presentation layer for all 4 assessment steps (Discovery, Functional Checklist, Prerequisite Tabs, and Review & Submission Summary) with interactive deep-linking.")
+
         with st.container(border=True):
             st.markdown("#### `assessment_schemas.py`")
-            st.caption("Static Baseline Policy Schema (~110 lines)")
-            st.markdown("Centralized single source of truth for corporate incorporation, financial ratios, InvoiceNow, and SME deployment benchmarks.")
+            st.caption("Single Source of Truth Policy Schema (~110 lines)")
+            st.markdown("Centralizes baseline criteria (Singapore incorporation, 18-month operation, positive net equity, current ratio $\\ge 1$, InvoiceNow status, and SME deployment benchmarks).")
 
     with col_m2:
         with st.container(border=True):
             st.markdown("#### `assessment_service.py`")
             st.caption("Scraping, Security & AI Matcher (~190 lines)")
-            st.markdown("Encapsulates prompt injection defense heuristics, live category web scraping, caching, and Gemini category recommendation logic.")
+            st.markdown("Handles remote markdown scraping from `preapproval-guide.imda.gov.sg`, question extraction regex, prompt injection sanitization, and Gemini-powered category recommendations.")
+
         with st.container(border=True):
             st.markdown("#### `ui_components.py`")
-            st.caption("Design System & Styling (~240 lines)")
-            st.markdown("Encapsulates SMEs Go Digital purple mesh styling, top navigation bar, floating trigger buttons, and interactive segmented steppers.")
+            st.caption("Design System & Brand Styling (~240 lines)")
+            st.markdown("Implements the official SMEs Go Digital visual language (deep purple/magenta gradients, Singapore Government `.gov.sg` masthead drawer, scoped purple segmented stepper, and high-contrast button styling).")
+
         with st.container(border=True):
             st.markdown("#### `imda_knowledge.py`")
             st.caption("Grounded Knowledge Engine (~120 lines)")
-            st.markdown("Parses live IMDA documentation, centralizes portal endpoints/models, manages multi-turn RAG prompt templates, and executes grounded LLM generation.")
+            st.markdown("Manages portal constants, system prompt definitions, XML formatting for live RAG retrieval, and execution calls to the Gemini API client.")
+
+    st.markdown("### 4. Stage 1 to Stage 2 Handover Workflow")
+    with st.container(border=True):
+        st.markdown("""
+        1. **Stage 1: Vendor Self-Assessment:** Vendors self-screen eligibility upfront across category suitability, mandatory functional requirements, and corporate stability.
+        2. **Gap Audit & Copilot Remediation:** Any unmet criteria are flagged as compliance gaps; vendors can click to pass gaps directly into the AI Copilot for remediation guidance.
+        3. **Stage 2 Preparation & Submission:** Once compliant, the assistant generates a structured summary record and provides direct launch links to the **Vendor Management Portal (VMP)** and official submission guidelines.
+        """)
 
     render_footer_disclaimer()
-
 # =========================================================
 # FLOATING ACTION CONTROLS
 # =========================================================

@@ -253,22 +253,20 @@ if st.session_state.show_chat_dialog:
 # =========================================================
 
 if st.session_state.get("user_role") == "Admin":
-    # Clean Branded Header without the public nav buttons
+    # High-contrast Branded Header for Admin Console
     st.markdown(
         """
-        <div style="background: linear-gradient(135deg, #2b0b2e 0%, #4a154b 60%, #611f69 100%); color: #ffffff; padding: 22px 28px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 14px rgba(43, 11, 46, 0.15);">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <span style="background: rgba(255, 255, 255, 0.15); color: #f1d5f5; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        System Administrator
-                    </span>
-                    <h2 style="color: #ffffff !important; margin: 8px 0 4px 0; font-size: 22px; font-weight: 800; letter-spacing: -0.3px;">
-                        🛡️ IMDA Officer Operations & Pipeline Console
-                    </h2>
-                    <p style="color: #f1d5f5; margin: 0; font-size: 13.5px;">
-                        Manage daily knowledge harvesting automation, category intake governance, and audit vendor submissions.
-                    </p>
-                </div>
+        <div style="background: linear-gradient(135deg, #2b0b2e 0%, #4a154b 60%, #611f69 100%); color: #ffffff !important; padding: 24px 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 14px rgba(43, 11, 46, 0.25);">
+            <div>
+                <span style="background: rgba(255, 255, 255, 0.22); color: #ffffff !important; font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.8px; display: inline-block;">
+                    SYSTEM ADMINISTRATOR
+                </span>
+                <h2 style="color: #ffffff !important; margin: 10px 0 6px 0; font-size: 24px; font-weight: 800; letter-spacing: -0.3px;">
+                    🛡️ IMDA Officer Operations & Pipeline Console
+                </h2>
+                <p style="color: #f8fafc !important; margin: 0; font-size: 14px; font-weight: 400; opacity: 0.95;">
+                    Manage daily knowledge harvesting automation, category intake governance, and audit vendor submissions.
+                </p>
             </div>
         </div>
         """,

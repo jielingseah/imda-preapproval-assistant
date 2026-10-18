@@ -245,50 +245,51 @@ def inject_custom_css():
         }
 
         /* =========================================================
-           PURPLE THEME FOR ASSESSMENT FLOW (PROGRESS BAR & RADIO)
+           PURPLE SEGMENTED STEPPER BANNER (CLICKABLE BARS)
            ========================================================= */
-        
-        /* Progress Bar Fill - Gradient matching hero banner */
-        div[data-testid="stProgressBar"] > div > div > div > div {
-            background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%) !important;
-            border-radius: 999px !important;
+        .stepper-purple-wrapper {
+            background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%);
+            border-radius: 16px;
+            padding: 22px 26px 18px 26px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);
         }
 
-        /* Progress Bar Track (Background groove) */
-        div[data-testid="stProgressBar"] > div > div > div {
-            background-color: #f3e8f0 !important;
-            border-radius: 999px !important;
+        .stepper-header-title {
+            color: #f3d7e8;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 14px;
+        }
+
+        /* Stepper Bar Clickable Button Overrides */
+        div[class*="st-key-stepper_bar_"] button {
             height: 10px !important;
+            min-height: 10px !important;
+            padding: 0 !important;
+            border-radius: 999px !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease-in-out !important;
+            box-shadow: none !important;
         }
 
-        /* Progress text label */
-        div[data-testid="stProgressBar"] + div, 
-        div[data-testid="stProgressBar"] [data-testid="stMarkdownContainer"] p {
-            color: #581845 !important;
-            font-weight: 700 !important;
+        /* Stepper Label Clickable Button Overrides */
+        div[class*="st-key-stepper_lbl_"] button {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 6px 0 0 0 !important;
             font-size: 13px !important;
+            text-align: left !important;
+            cursor: pointer !important;
         }
-
-        /* Step Radio Buttons - Custom Purple/Magenta Active State */
-        div[data-testid="stRadio"] label[data-baseweb="radio"] input:checked + div {
-            background-color: #7a1d5a !important;
-            border-color: #581845 !important;
-        }
-
-        /* Radio inner dot when active */
-        div[data-testid="stRadio"] label[data-baseweb="radio"] input:checked + div > div {
-            background-color: #ffffff !important;
-        }
-
-        /* Radio option hover ring */
-        div[data-testid="stRadio"] label[data-baseweb="radio"]:hover div {
-            border-color: #9a1f52 !important;
-        }
-
-        /* Radio label text styling when active */
-        div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) p {
-            color: #581845 !important;
-            font-weight: 800 !important;
+        div[class*="st-key-stepper_lbl_"] button:hover {
+            background: transparent !important;
+            border: none !important;
+            color: #ffffff !important;
         }
 
         /* Footer Prototype Notice */
@@ -408,30 +409,86 @@ def render_hero_banner(heading: str, description: str):
         unsafe_allow_html=True
     )
 
-def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
-    """Renders portal cards with prominent badges and icons."""
-    icon_html = f"<span style='font-size: 22px;'>{icon}</span> " if icon else ""
+def render_purple_segmented_stepper(current_step: int):
+    """
+    Renders the unified 4-segment progress bar inside the purple banner.
+    Users can click directly on any of the 4 horizontal bars or labels to navigate.
+    """
+    steps = [
+        "1. Discovery",
+        "2. Checklist",
+        "3. Prerequisites",
+        "4. Review & Summary"
+    ]
+
     st.markdown(
         f"""
-        <div class="portal-card">
-            <div>
-                <div class="portal-card-tag">{tag}</div>
-                <div class="portal-card-title">{icon_html}{title}</div>
-                <div class="portal-card-desc">{description}</div>
+        <div class="stepper-purple-wrapper">
+            <div class="stepper-header-title">
+                Assessment Flow — Step {current_step + 1} of 4: {steps[current_step]}
             </div>
-        </div>
         """,
         unsafe_allow_html=True
     )
 
-def render_footer_disclaimer():
-    """Renders the prototype disclaimer at the bottom of each page."""
-    st.markdown(
-        """
-        <div class="prototype-footer">
-            <strong>⚠️ IMPORTANT NOTICE — Prototype:</strong> This web application is developed for demonstration purposes only under the IMDA SMEs Go Digital POC. 
-            The information provided here is NOT intended for actual business or regulatory decisions.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    cols = st.columns(4)
+    for idx, label in enumerate(steps):
+        with cols[idx]:
+            # Determine styling by state
+            if idx < current_step:
+                # Completed
+                bar_bg = "#ffffff"
+                bar_opacity = "0.9"
+                text_color = "#fce8f4"
+                weight = "600"
+                prefix = "✓ "
+            elif idx == current_step:
+                # Active
+                bar_bg = "#ff5e7e"
+                bar_opacity = "1.0"
+                text_color = "#ffffff"
+                weight = "800"
+                prefix = "● "
+            else:
+                # Upcoming
+                bar_bg = "rgba(255, 255, 255, 0.28)"
+                bar_opacity = "0.4"
+                text_color = "rgba(243, 215, 232, 0.6)"
+                weight = "500"
+                prefix = ""
+
+            # Inject per-bar dynamic background
+            st.markdown(
+                f"""
+                <style>
+                div.st-key-stepper_bar_{idx} button {{
+                    background: {bar_bg} !important;
+                    opacity: {bar_opacity} !important;
+                }}
+                div.st-key-stepper_bar_{idx} button:hover {{
+                    opacity: 1.0 !important;
+                    transform: scaleY(1.3) !important;
+                }}
+                div.st-key-stepper_lbl_{idx} button {{
+                    color: {text_color} !important;
+                    font-weight: {weight} !important;
+                }}
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # Clickable Bar
+            if st.button(" ", key=f"stepper_bar_{idx}", help=f"Jump to {label}", use_container_width=True):
+                st.session_state.assessment_step = idx
+                st.rerun()
+
+            # Clickable Label
+            if st.button(f"{prefix}{label}", key=f"stepper_lbl_{idx}", use_container_width=True):
+                st.session_state.assessment_step = idx
+                st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
+    """Renders portal cards with prominent badges

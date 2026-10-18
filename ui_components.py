@@ -1,4 +1,4 @@
- """
+"""
 UI/UX Component & Style Library for IMDA Pre-Approval Assistant.
 Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.sg) portal.
 """

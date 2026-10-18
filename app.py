@@ -124,7 +124,7 @@ def check_password():
                 unsafe_allow_html=True
             )
 
-            # Horizontal Role Toggle
+            # Role Toggle
             selected_role = st.radio(
                 "Access Role",
                 ["Member of Public", "Admin"],
@@ -253,15 +253,26 @@ if st.session_state.show_chat_dialog:
 # =========================================================
 
 if st.session_state.get("user_role") == "Admin":
-    render_brand_header(
-        "IMDA Officer Operations & Pipeline Console",
-        subtitle="Manage daily knowledge harvesting automation, category intake governance, and view session submissions.",
-        badge="System Administrator"
-    )
-
-    render_hero_banner(
-        "Automated Knowledge Ingestion & Governance Dashboard",
-        "This console provides reviewing officers with operational visibility into the daily GitHub Actions scraping daemon, cache invalidation controls, and real-time intake telemetry."
+    # Clean Branded Header without the public nav buttons
+    st.markdown(
+        """
+        <div style="background: linear-gradient(135deg, #2b0b2e 0%, #4a154b 60%, #611f69 100%); color: #ffffff; padding: 22px 28px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 14px rgba(43, 11, 46, 0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="background: rgba(255, 255, 255, 0.15); color: #f1d5f5; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        System Administrator
+                    </span>
+                    <h2 style="color: #ffffff !important; margin: 8px 0 4px 0; font-size: 22px; font-weight: 800; letter-spacing: -0.3px;">
+                        🛡️ IMDA Officer Operations & Pipeline Console
+                    </h2>
+                    <p style="color: #f1d5f5; margin: 0; font-size: 13.5px;">
+                        Manage daily knowledge harvesting automation, category intake governance, and audit vendor submissions.
+                    </p>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
     # Top Utility Bar for Admin
@@ -280,7 +291,7 @@ if st.session_state.get("user_role") == "Admin":
             st.session_state.authenticated = False
             st.rerun()
 
-    st.markdown("<div class='portal-spacer-sm'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 16px;'></div>", unsafe_allow_html=True)
 
     tab_pipeline, tab_knowledge, tab_submissions = st.tabs([
         "🕒 Automated Ingestion Scheduler", 
@@ -374,8 +385,9 @@ jobs:
     with tab_submissions:
         with st.container(border=True):
             st.markdown("<h4 class='portal-card-title'>🚪 Category Intake Governance</h4>", unsafe_allow_html=True)
-            st.toggle("Accept New Vendor Stage 1 Self-Assessments", value=True)
-            st.toggle("Permit Expressions of Interest (EOI) for Unlisted Categories", value=True)
+            st.caption("Operational controls for intake cycles in active runtime session:")
+            st.toggle("Accept New Vendor Stage 1 Self-Assessments", value=True, key="admin_intake_toggle")
+            st.toggle("Permit Expressions of Interest (EOI) for Unlisted Categories", value=True, key="admin_eoi_toggle")
 
         with st.container(border=True):
             st.markdown("<h4 class='portal-card-title'>📥 Logged Session Submissions</h4>", unsafe_allow_html=True)
@@ -388,7 +400,7 @@ jobs:
                 st.dataframe(df, use_container_width=True)
 
     render_footer_disclaimer()
-    st.stop()  # Admin execution halts here, preserving Member of Public below
+    st.stop()  # Admin execution halts here, keeping Member of Public completely isolated below
 
 # =========================================================
 # PAGE 1: HOME PAGE (STRUCTURED STAGE 1 & STAGE 2)

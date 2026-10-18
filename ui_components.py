@@ -12,10 +12,17 @@ def inject_custom_css():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
+        /* Clean White Base Portal Background */
+        html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+            background-color: #ffffff !important;
+            color: #2b0b2e;
+        }
+
         .block-container {
             padding-top: 0rem !important;
             padding-bottom: 3rem !important;
             max-width: 95% !important;
+            background-color: #ffffff !important;
         }
 
         html, body, [class*="css"], [class*="st-"], 
@@ -131,7 +138,6 @@ def inject_custom_css():
             color: transparent !important;
         }
 
-        /* Sleek Deep Purple Logout Pill */
         button[key="header_logout_btn"] {
             background-color: #6a1a72 !important;
             color: #ffffff !important;
@@ -145,7 +151,6 @@ def inject_custom_css():
             color: #ffffff !important;
         }
 
-        /* True Fixed Floating Anchor Buttons (Bottom Right) */
         .floating-action-bar {
             position: fixed !important;
             bottom: 24px !important;
@@ -170,7 +175,6 @@ def inject_custom_css():
             color: #7a1d5a !important;
         }
 
-        /* Fixed Ask Copilot Button in bottom right */
         div.st-key-floating_chat_button {
             position: fixed !important;
             bottom: 24px !important;
@@ -192,7 +196,6 @@ def inject_custom_css():
             box-shadow: 0 12px 30px rgba(88, 24, 69, 0.45) !important;
         }
 
-        /* Portal Badges and Cards */
         .portal-card-tag, .step-badge {
             font-size: 12.5px !important;
             font-weight: 800 !important;
@@ -241,38 +244,30 @@ def inject_custom_css():
             margin-bottom: 10px;
         }
 
-        /* =========================================================
-           ENTIRE STEPPER GRID ENCLOSED IN PURPLE GRADIENT
-           ========================================================= */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.stepper-box-marker),
-        div[data-testid="stVerticalBlock"]:has(.stepper-box-marker) {
+        /* ONLY TARGET THE SPECIFIC STEPPER CONTAINER */
+        div.st-key-stepper_isolated_container {
             background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%) !important;
             border-radius: 16px !important;
-            border: none !important;
             padding: 22px 24px 20px 24px !important;
-            margin-bottom: 22px !important;
+            margin-bottom: 24px !important;
             box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25) !important;
         }
 
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.stepper-box-marker) > div {
-            background: transparent !important;
-            border: none !important;
-        }
-
-        div[class*="st-key-stepper_click_"] button {
-            border: 1px solid rgba(255, 255, 255, 0.16) !important;
+        /* Stepper buttons strictly inside that container */
+        div.st-key-stepper_isolated_container div[class*="st-key-stepper_click_"] button {
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
             box-shadow: none !important;
             cursor: pointer !important;
             transition: all 0.2s ease !important;
             text-align: center !important;
-            padding: 8px 12px !important;
+            padding: 8px 10px !important;
             border-radius: 8px !important;
-            font-size: 13px !important;
+            font-size: 12.5px !important;
             width: 100% !important;
         }
-        div[class*="st-key-stepper_click_"] button:hover {
-            background-color: rgba(255, 255, 255, 0.22) !important;
-            border-color: rgba(255, 255, 255, 0.45) !important;
+        div.st-key-stepper_isolated_container div[class*="st-key-stepper_click_"] button:hover {
+            background-color: rgba(255, 255, 255, 0.25) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
             transform: translateY(-1px) !important;
         }
 
@@ -392,8 +387,8 @@ def render_hero_banner(heading: str, description: str):
 
 def render_purple_segmented_stepper(current_step: int):
     """
-    Renders the 4-step progress bar and clickable buttons entirely enclosed inside the purple banner.
-    Accurately validates completion state so sections only show green when genuinely answered.
+    Renders the 4-step progress bar and clickable buttons strictly inside the purple banner.
+    Restricts the purple background strictly to this stepper card.
     """
     steps = [
         "1. Discovery",
@@ -402,20 +397,33 @@ def render_purple_segmented_stepper(current_step: int):
         "4. Review & Summary"
     ]
 
-    is_step_1_done = bool(st.session_state.get("selected_category"))
+    # --- ACCURATE COMPLETION LOGIC ---
+    # Step 1: True only if a valid category has been chosen
+    selected_cat = st.session_state.get("selected_category")
+    is_step_1_done = bool(selected_cat and str(selected_cat).strip() != "")
+
+    # Step 2: True only if target category selected AND at least one question answered
     cat_answers = st.session_state.get("category_answers", {})
-    is_step_2_done = bool(is_step_1_done and cat_answers and len(cat_answers) > 0)
-    
+    is_step_2_done = bool(is_step_1_done and len(cat_answers) > 0)
+
+    # Step 3: True only if all core baseline fields are answered (not just search description)
+    from assessment_module import BASELINE_PREREQUISITES_SCHEMA
     assessment_data = st.session_state.get("assessment", {})
-    answered_keys = [k for k, v in assessment_data.items() if k != "solution_description" and v]
-    is_step_3_done = bool(len(answered_keys) >= 6)
-    
+    all_baseline_keys = [
+        item["key"] 
+        for section in BASELINE_PREREQUISITES_SCHEMA.values() 
+        for item in section 
+        if item["key"] != "customer_track"
+    ]
+    is_step_3_done = all(assessment_data.get(k) is not None for k in all_baseline_keys)
+
+    # Step 4: True only if form submitted
     is_step_4_done = bool(st.session_state.get("form_submitted", False))
 
     completion_flags = [is_step_1_done, is_step_2_done, is_step_3_done, is_step_4_done]
 
-    with st.container(border=True):
-        st.markdown('<span class="stepper-box-marker" style="display:none;"></span>', unsafe_allow_html=True)
+    # Isolated container using native st.container with key
+    with st.container(key="stepper_isolated_container"):
         st.markdown(
             f"""
             <div style="color: #f3d7e8; font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">
@@ -450,11 +458,13 @@ def render_purple_segmented_stepper(current_step: int):
                     btn_bg = "rgba(255, 255, 255, 0.08)"
                     font_weight = "500"
 
+                # Progress bar strip
                 st.markdown(
                     f'<div style="height: 8px; border-radius: 999px; background-color: {bar_color}; margin-bottom: 8px;"></div>',
                     unsafe_allow_html=True
                 )
 
+                # Scoped button style
                 st.markdown(
                     f"""
                     <style>

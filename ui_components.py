@@ -105,7 +105,7 @@ def inject_custom_css():
             text-decoration: underline;
         }
 
-        /* Seamless Invisible Logo Overlay */
+        /* Seamless Invisible Logo Overlay (No weird box, no border) */
         div.st-key-nav_logo_overlay_btn {
             margin-top: -40px !important;
             height: 38px !important;
@@ -244,6 +244,53 @@ def inject_custom_css():
             margin-bottom: 10px;
         }
 
+        /* =========================================================
+           PURPLE THEME FOR ASSESSMENT FLOW (PROGRESS BAR & RADIO)
+           ========================================================= */
+        
+        /* Progress Bar Fill - Gradient matching hero banner */
+        div[data-testid="stProgressBar"] > div > div > div > div {
+            background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%) !important;
+            border-radius: 999px !important;
+        }
+
+        /* Progress Bar Track (Background groove) */
+        div[data-testid="stProgressBar"] > div > div > div {
+            background-color: #f3e8f0 !important;
+            border-radius: 999px !important;
+            height: 10px !important;
+        }
+
+        /* Progress text label */
+        div[data-testid="stProgressBar"] + div, 
+        div[data-testid="stProgressBar"] [data-testid="stMarkdownContainer"] p {
+            color: #581845 !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+        }
+
+        /* Step Radio Buttons - Custom Purple/Magenta Active State */
+        div[data-testid="stRadio"] label[data-baseweb="radio"] input:checked + div {
+            background-color: #7a1d5a !important;
+            border-color: #581845 !important;
+        }
+
+        /* Radio inner dot when active */
+        div[data-testid="stRadio"] label[data-baseweb="radio"] input:checked + div > div {
+            background-color: #ffffff !important;
+        }
+
+        /* Radio option hover ring */
+        div[data-testid="stRadio"] label[data-baseweb="radio"]:hover div {
+            border-color: #9a1f52 !important;
+        }
+
+        /* Radio label text styling when active */
+        div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) p {
+            color: #581845 !important;
+            font-weight: 800 !important;
+        }
+
         /* Footer Prototype Notice */
         .prototype-footer {
             margin-top: 40px;
@@ -270,7 +317,7 @@ def render_top_navigation():
 
     current_page = st.session_state.get("page", "Home")
 
-    # Interactive Singapore Government Masthead
+    # Interactive Singapore Government Masthead (Expands in-place to reveal trusted sites verification)
     st.markdown(
         """
         <details class="sg-masthead">
@@ -360,89 +407,6 @@ def render_hero_banner(heading: str, description: str):
         """,
         unsafe_allow_html=True
     )
-
- def render_purple_segmented_stepper(current_step: int):
-    """
-    Renders an all-in-one 4-step progress bar inside the purple banner.
-    Completed steps appear in bright green with checkmarks, the active step
-    appears in vibrant coral, and upcoming steps appear dimmed.
-    """
-    steps = [
-        "1. Discovery",
-        "2. Checklist",
-        "3. Prerequisites",
-        "4. Review & Summary"
-    ]
-
-    is_step_1_done = bool(st.session_state.get("selected_category"))
-    is_step_2_done = bool(st.session_state.get("category_answers"))
-    is_step_3_done = bool(st.session_state.get("assessment"))
-
-    completion_flags = [is_step_1_done, is_step_2_done, is_step_3_done, False]
-
-    # Build unindented HTML strings so Markdown doesn't treat them as code blocks
-    bar_html_parts = []
-    for idx, name in enumerate(steps):
-        is_completed = (idx < current_step) or completion_flags[idx]
-        is_current = (idx == current_step)
-
-        if is_current:
-            bar_color = "#ff4081"      # Vibrant coral active
-            opacity = "1.0"
-            label_color = "#ffffff"
-            font_weight = "800"
-            prefix = "● "
-        elif is_completed:
-            bar_color = "#00e676"      # Solid emerald green for completed
-            opacity = "1.0"
-            label_color = "#e8f5e9"
-            font_weight = "700"
-            prefix = "✓ "
-        else:
-            bar_color = "#ffffff"      # Dimmed upcoming
-            opacity = "0.22"
-            label_color = "rgba(243, 215, 232, 0.55)"
-            font_weight = "500"
-            prefix = ""
-
-        glow = "box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);" if (is_completed and not is_current) else ""
-
-        # Strictly flush-left without 4-space indentation
-        part = (
-            f'<div style="flex: 1; margin: 0 6px; text-align: left;">'
-            f'<div style="height: 10px; border-radius: 999px; background-color: {bar_color}; opacity: {opacity}; {glow}"></div>'
-            f'<div style="color: {label_color}; font-size: 12.5px; font-weight: {font_weight}; margin-top: 8px;">{prefix}{name}</div>'
-            f'</div>'
-        )
-        bar_html_parts.append(part)
-
-    bars_layout = "".join(bar_html_parts)
-
-    stepper_html = (
-        f'<div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%); '
-        f'border-radius: 16px; padding: 22px 24px 20px 24px; margin-bottom: 16px; '
-        f'box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">'
-        f'<div style="color: #f3d7e8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">'
-        f'Assessment Flow — Step {current_step + 1} of 4: {steps[current_step]}'
-        f'</div>'
-        f'<div style="display: flex; justify-content: space-between; align-items: flex-start;">'
-        f'{bars_layout}'
-        f'</div>'
-        f'</div>'
-    )
-
-    st.markdown(stepper_html, unsafe_allow_html=True)
-
-    # 4 clean navigation jump buttons placed right below the banner
-    cols = st.columns(4)
-    for idx, name in enumerate(steps):
-        with cols[idx]:
-            btn_type = "primary" if idx == current_step else "secondary"
-            clean_lbl = name.split(". ")[1]
-            if st.button(f"Go to {clean_lbl}", key=f"nav_step_bar_btn_{idx}", type=btn_type, use_container_width=True):
-                st.session_state.assessment_step = idx
-                st.session_state.target_focus_key = None
-                st.rerun()
 
 def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
     """Renders portal cards with prominent badges and icons."""

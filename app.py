@@ -180,10 +180,19 @@ if st.session_state.page == "Home":
         "The SMEs Go Digital programme supports SMEs in adopting pre-approved digital solutions with grant support. Use this copilot to assess your corporate eligibility, identify matching solution categories, and prepare your formal submission."
     )
 
-    # Main Page Hero Search Bar
+    # Main Page Hero Search Bar — Solution Category Pre-Check (Angle 1)
     with st.container(border=True):
-        st.markdown("<h4 style='font-weight:700; color:#2b0b2e; margin:0 0 6px 0;'>🔍 Search Official Pre-Approved Categories & Solutions</h4>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size:12.5px; color:#636375; margin-bottom:12px;'>Enter keywords or describe your software in natural language to let our AI match you with eligible categories.</p>", unsafe_allow_html=True)
+        st.markdown(
+            "<h4 style='font-weight:700; color:#2b0b2e; margin:0 0 6px 0;'>🔍 Solution Category Pre-Check</h4>",
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            "<p style='font-size:12.5px; color:#636375; margin-bottom:12px; line-height:1.5;'>"
+            "Check if your solution fits an official IMDA category before starting self-assessment. "
+            "If your product does not fall under an existing pre-approved category, it is not eligible under this programme."
+            "</p>",
+            unsafe_allow_html=True
+        )
         
         home_search_col1, home_search_col2 = st.columns([5, 1.4])
         with home_search_col1:
@@ -194,7 +203,7 @@ if st.session_state.page == "Home":
                 key="home_hero_search_input"
             )
         with home_search_col2:
-            if st.button("Find Solution Category →", type="primary", use_container_width=True):
+            if st.button("Check Category →", type="primary", use_container_width=True):
                 if home_query.strip():
                     st.session_state.assessment["solution_description"] = home_query.strip()
                     st.session_state.auto_trigger_search = True

@@ -165,6 +165,8 @@ def render_floating_chat_modal():
 
 if st.session_state.show_chat_dialog:
     render_floating_chat_modal()
+    # Auto-reset so tab transitions do not re-open the dialog
+    st.session_state.show_chat_dialog = False
 
 # =========================================================
 # PAGE 1: HOME PAGE (STRUCTURED STAGE 1 & STAGE 2)

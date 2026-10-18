@@ -33,6 +33,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Injected first so the login screen adopts the SMEs Go Digital design system immediately
+inject_custom_css()
+
+# Anchor point for instant return to top
+st.markdown('<div id="page-top"></div>', unsafe_allow_html=True)
+
 # =========================================================
 # ACCESS CONTROL (Strict Secrets Authentication)
 # =========================================================
@@ -45,33 +51,96 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    st.title("🔒 IMDA Pre-Approval Assistant")
-    st.caption("SMEs Go Digital — Proof-of-Concept Prototype")
-    st.info("This is an authorized demonstration prototype. Please enter the passcode provided in LaunchPad.")
+    # Official SG Masthead for login screen
+    st.markdown(
+        """
+        <details class="sg-masthead">
+            <summary class="sg-masthead-summary">
+                <span class="sg-masthead-crest">🇸🇬</span> 
+                <span>A Singapore Government Agency Website</span> 
+                <span class="sg-masthead-trigger">How to identify ▾</span>
+            </summary>
+            <div class="sg-masthead-drawer">
+                <div class="sg-masthead-col">
+                    <span class="sg-masthead-icon">🏛️</span>
+                    <div>
+                        <div class="sg-masthead-text-title">Official website links end with .gov.sg</div>
+                        <p class="sg-masthead-text-desc">
+                            Government agencies communicate via .gov.sg websites. 
+                            <a href="https://www.gov.sg/trusted-sites#govsites" target="_blank" rel="noopener noreferrer">Trusted websites ↗</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="sg-masthead-col">
+                    <span class="sg-masthead-icon">🔒</span>
+                    <div>
+                        <div class="sg-masthead-text-title">Secure websites use HTTPS</div>
+                        <p class="sg-masthead-text-desc">
+                            Look for a <strong>lock (🔒)</strong> or https:// as an added precaution.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </details>
+        """,
+        unsafe_allow_html=True
+    )
 
-    col1, _ = st.columns([1, 1])
-    with col1:
-        pwd_input = st.text_input("Access Passcode", type="password", key="login_passcode")
-        if st.button("Enter Assistant", type="primary", use_container_width=True):
-            configured_pwd = str(st.secrets.get("APP_PASSWORD", "")).strip().lower()
-            user_entered = pwd_input.strip().lower() if pwd_input else ""
+    # Branded Header Lockup
+    st.markdown(
+        """
+        <div style="height: 44px; display: flex; align-items: center; gap: 10px; margin-bottom: 24px; user-select: none;">
+            <div style="line-height: 1;">
+                <span style="font-size: 24px; font-weight: 800; color: #581845; letter-spacing: -0.5px;">SMEs</span><span style="font-size: 24px; font-weight: 800; color: #d8232a; letter-spacing: -0.5px;">godigital</span>
+            </div>
+            <div style="height: 20px; width: 1.5px; background-color: #d0c4d8;"></div>
+            <div style="line-height: 1.15;">
+                <span style="font-size: 15px; font-weight: 800; color: #581845; letter-spacing: -0.2px;">Pre-Approval Assistant</span>
+                <span style="display: block; font-size: 10px; font-weight: 700; color: #7a1d5a; text-transform: uppercase; letter-spacing: 0.5px;">IMDA Pilot</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-            if not configured_pwd:
-                st.error("Authentication configuration error: 'APP_PASSWORD' is not set in Streamlit Secrets.")
-            elif user_entered == configured_pwd:
-                st.session_state.authenticated = True
-                st.rerun()
-            else:
-                st.error("Incorrect passcode. Please check credentials.")
+    login_col1, _, _ = st.columns([1.8, 1.2, 1.0])
+    with login_col1:
+        with st.container(border=True):
+            st.markdown(
+                """
+                <span class="step-badge">
+                    <span>🔒</span> AUTHORIZED ACCESS ONLY
+                </span>
+                <h3 style="font-size: 18px; font-weight: 800; color: #2b0b2e; margin-top: 6px; margin-bottom: 4px;">
+                    Prototype Access Gate
+                </h3>
+                <p style="font-size: 13px; color: #636375; line-height: 1.5; margin-bottom: 16px;">
+                    This is an authorized demonstration prototype under the IMDA SMEs Go Digital pilot. Please enter the passcode provided in LaunchPad.
+                </p>
+                """,
+                unsafe_allow_html=True
+            )
+
+            pwd_input = st.text_input("Access Passcode", type="password", key="login_passcode", placeholder="Enter passcode...")
+            st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+
+            if st.button("Enter Assistant →", type="primary", use_container_width=True):
+                configured_pwd = str(st.secrets.get("APP_PASSWORD", "")).strip().lower()
+                user_entered = pwd_input.strip().lower() if pwd_input else ""
+
+                if not configured_pwd:
+                    st.error("Authentication configuration error: 'APP_PASSWORD' is not set in Streamlit Secrets.")
+                elif user_entered == configured_pwd:
+                    st.session_state.authenticated = True
+                    st.rerun()
+                else:
+                    st.error("Incorrect passcode. Please check your credentials.")
+
+    render_footer_disclaimer()
     return False
 
 if not check_password():
     st.stop()
-
-inject_custom_css()
-
-# Anchor point for instant return to top
-st.markdown('<div id="page-top"></div>', unsafe_allow_html=True)
 
 # =========================================================
 # SESSION STATE DEFAULTS

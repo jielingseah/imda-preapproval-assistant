@@ -361,7 +361,7 @@ def render_hero_banner(heading: str, description: str):
         unsafe_allow_html=True
     )
 
-def render_purple_segmented_stepper(current_step: int):
+ def render_purple_segmented_stepper(current_step: int):
     """
     Renders an all-in-one 4-step progress bar inside the purple banner.
     Completed steps appear in bright green with checkmarks, the active step
@@ -380,6 +380,7 @@ def render_purple_segmented_stepper(current_step: int):
 
     completion_flags = [is_step_1_done, is_step_2_done, is_step_3_done, False]
 
+    # Build unindented HTML strings so Markdown doesn't treat them as code blocks
     bar_html_parts = []
     for idx, name in enumerate(steps):
         is_completed = (idx < current_step) or completion_flags[idx]
@@ -406,32 +407,31 @@ def render_purple_segmented_stepper(current_step: int):
 
         glow = "box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);" if (is_completed and not is_current) else ""
 
-        bar_html_parts.append(f"""
-            <div style="flex: 1; margin: 0 5px; text-align: left;">
-                <div style="height: 10px; border-radius: 999px; background-color: {bar_color}; opacity: {opacity}; {glow}"></div>
-                <div style="color: {label_color}; font-size: 12.5px; font-weight: {font_weight}; margin-top: 8px;">
-                    {prefix}{name}
-                </div>
-            </div>
-        """)
+        # Strictly flush-left without 4-space indentation
+        part = (
+            f'<div style="flex: 1; margin: 0 6px; text-align: left;">'
+            f'<div style="height: 10px; border-radius: 999px; background-color: {bar_color}; opacity: {opacity}; {glow}"></div>'
+            f'<div style="color: {label_color}; font-size: 12.5px; font-weight: {font_weight}; margin-top: 8px;">{prefix}{name}</div>'
+            f'</div>'
+        )
+        bar_html_parts.append(part)
 
     bars_layout = "".join(bar_html_parts)
 
-    st.markdown(
-        f"""
-        <div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%);
-                    border-radius: 16px; padding: 22px 24px 20px 24px; margin-bottom: 16px;
-                    box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">
-            <div style="color: #f3d7e8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">
-                Assessment Flow — Step {current_step + 1} of 4: {steps[current_step]}
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                {bars_layout}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
+    stepper_html = (
+        f'<div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%); '
+        f'border-radius: 16px; padding: 22px 24px 20px 24px; margin-bottom: 16px; '
+        f'box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">'
+        f'<div style="color: #f3d7e8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">'
+        f'Assessment Flow — Step {current_step + 1} of 4: {steps[current_step]}'
+        f'</div>'
+        f'<div style="display: flex; justify-content: space-between; align-items: flex-start;">'
+        f'{bars_layout}'
+        f'</div>'
+        f'</div>'
     )
+
+    st.markdown(stepper_html, unsafe_allow_html=True)
 
     # 4 clean navigation jump buttons placed right below the banner
     cols = st.columns(4)

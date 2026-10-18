@@ -12,14 +12,12 @@ def inject_custom_css():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
-        /* Remove default Streamlit top blank space */
         .block-container {
             padding-top: 0rem !important;
             padding-bottom: 3rem !important;
             max-width: 95% !important;
         }
 
-        /* Universal Font Sync */
         html, body, [class*="css"], [class*="st-"], 
         h1, h2, h3, h4, h5, h6, p, div, span, label, input, textarea, button, a {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
@@ -35,7 +33,6 @@ def inject_custom_css():
         }
         header {visibility: hidden;}
 
-        /* Sleek Top Government Masthead & Interactive Expandable Drawer */
         .sg-masthead {
             background-color: #f0f0f0;
             border-bottom: 1px solid #e5e5e5;
@@ -105,7 +102,6 @@ def inject_custom_css():
             text-decoration: underline;
         }
 
-        /* Seamless Invisible Logo Overlay */
         div.st-key-nav_logo_overlay_btn {
             margin-top: -40px !important;
             height: 38px !important;
@@ -133,7 +129,6 @@ def inject_custom_css():
             color: transparent !important;
         }
 
-        /* Sleek Deep Purple Logout Pill */
         button[key="header_logout_btn"] {
             background-color: #6a1a72 !important;
             color: #ffffff !important;
@@ -147,7 +142,6 @@ def inject_custom_css():
             color: #ffffff !important;
         }
 
-        /* True Fixed Floating Anchor Buttons (Bottom Right) */
         .floating-action-bar {
             position: fixed !important;
             bottom: 24px !important;
@@ -172,7 +166,6 @@ def inject_custom_css():
             color: #7a1d5a !important;
         }
 
-        /* Fixed Ask Copilot Button in bottom right */
         div.st-key-floating_chat_button {
             position: fixed !important;
             bottom: 24px !important;
@@ -194,7 +187,6 @@ def inject_custom_css():
             box-shadow: 0 12px 30px rgba(88, 24, 69, 0.45) !important;
         }
 
-        /* Prominent Step Badges */
         .portal-card-tag, .step-badge {
             font-size: 12.5px !important;
             font-weight: 800 !important;
@@ -212,7 +204,6 @@ def inject_custom_css():
             gap: 6px !important;
         }
 
-        /* Portal Cards */
         .portal-card {
             background-color: #ffffff;
             border: 1px solid #ebebf2;
@@ -244,7 +235,28 @@ def inject_custom_css():
             margin-bottom: 10px;
         }
 
-        /* Footer Prototype Notice */
+        div[data-testid="stVerticalBlock"]:has(> div.stepper-marker) {
+            background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%) !important;
+            border-radius: 16px !important;
+            padding: 20px 24px 18px 24px !important;
+            margin-bottom: 22px !important;
+            box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25) !important;
+        }
+
+        div[class*="st-key-stepper_click_"] button {
+            border: none !important;
+            box-shadow: none !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            text-align: left !important;
+            padding: 8px 10px !important;
+            border-radius: 10px !important;
+        }
+        div[class*="st-key-stepper_click_"] button:hover {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+            transform: translateY(-2px) !important;
+        }
+
         .prototype-footer {
             margin-top: 40px;
             padding: 18px;
@@ -270,7 +282,6 @@ def render_top_navigation():
 
     current_page = st.session_state.get("page", "Home")
 
-    # Interactive Singapore Government Masthead
     st.markdown(
         """
         <details class="sg-masthead">
@@ -305,7 +316,6 @@ def render_top_navigation():
         unsafe_allow_html=True
     )
 
-    # Columns: Brand Logo (3.6) + 3 Nav items (2.5, 1.3, 1.4) + Logout Pill (1.0)
     cols = st.columns([3.6, 2.5, 1.3, 1.4, 1.0])
 
     with cols[0]:
@@ -363,9 +373,9 @@ def render_hero_banner(heading: str, description: str):
 
 def render_purple_segmented_stepper(current_step: int):
     """
-    Renders an all-in-one 4-step progress bar inside the purple banner.
-    Completed steps appear in bright green with checkmarks, the active step
-    appears in vibrant coral, and upcoming steps appear dimmed.
+    Renders an interactive 4-step progress bar entirely inside the purple banner.
+    Each of the 4 sections is directly clickable.
+    Validates actual completion state so a step turns green only when truly answered.
     """
     steps = [
         "1. Discovery",
@@ -375,97 +385,20 @@ def render_purple_segmented_stepper(current_step: int):
     ]
 
     is_step_1_done = bool(st.session_state.get("selected_category"))
-    is_step_2_done = bool(st.session_state.get("category_answers"))
-    is_step_3_done = bool(st.session_state.get("assessment"))
 
-    completion_flags = [is_step_1_done, is_step_2_done, is_step_3_done, False]
+    cat_answers = st.session_state.get("category_answers", {})
+    is_step_2_done = bool(cat_answers and len(cat_answers) > 0)
 
-    # Build unindented HTML strings to prevent Markdown code block interpretation
-    bar_html_parts = []
-    for idx, name in enumerate(steps):
-        is_completed = (idx < current_step) or completion_flags[idx]
-        is_current = (idx == current_step)
+    assessment_data = st.session_state.get("assessment", {})
+    answered_prereq_keys = [k for k in assessment_data.keys() if k != "solution_description"]
+    is_step_3_done = bool(len(answered_prereq_keys) >= 3)
 
-        if is_current:
-            bar_color = "#ff4081"
-            opacity = "1.0"
-            label_color = "#ffffff"
-            font_weight = "800"
-            prefix = "● "
-        elif is_completed:
-            bar_color = "#00e676"
-            opacity = "1.0"
-            label_color = "#e8f5e9"
-            font_weight = "700"
-            prefix = "✓ "
-        else:
-            bar_color = "#ffffff"
-            opacity = "0.22"
-            label_color = "rgba(243, 215, 232, 0.55)"
-            font_weight = "500"
-            prefix = ""
+    is_step_4_done = bool(st.session_state.get("form_submitted", False))
 
-        glow = "box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);" if (is_completed and not is_current) else ""
+    completion_flags = [is_step_1_done, is_step_2_done, is_step_3_done, is_step_4_done]
 
-        part = (
-            f'<div style="flex: 1; margin: 0 6px; text-align: left;">'
-            f'<div style="height: 10px; border-radius: 999px; background-color: {bar_color}; opacity: {opacity}; {glow}"></div>'
-            f'<div style="color: {label_color}; font-size: 12.5px; font-weight: {font_weight}; margin-top: 8px;">{prefix}{name}</div>'
-            f'</div>'
-        )
-        bar_html_parts.append(part)
-
-    bars_layout = "".join(bar_html_parts)
-
-    stepper_html = (
-        f'<div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%); '
-        f'border-radius: 16px; padding: 22px 24px 20px 24px; margin-bottom: 16px; '
-        f'box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">'
-        f'<div style="color: #f3d7e8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">'
-        f'Assessment Flow — Step {current_step + 1} of 4: {steps[current_step]}'
-        f'</div>'
-        f'<div style="display: flex; justify-content: space-between; align-items: flex-start;">'
-        f'{bars_layout}'
-        f'</div>'
-        f'</div>'
-    )
-
-    st.markdown(stepper_html, unsafe_allow_html=True)
-
-    cols = st.columns(4)
-    for idx, name in enumerate(steps):
-        with cols[idx]:
-            btn_type = "primary" if idx == current_step else "secondary"
-            clean_lbl = name.split(". ")[1]
-            if st.button(f"Go to {clean_lbl}", key=f"nav_step_bar_btn_{idx}", type=btn_type, use_container_width=True):
-                st.session_state.assessment_step = idx
-                st.session_state.target_focus_key = None
-                st.rerun()
-
-def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
-    """Renders portal cards with prominent badges and icons."""
-    icon_html = f"<span style='font-size: 22px;'>{icon}</span> " if icon else ""
-    st.markdown(
-        f"""
-        <div class="portal-card">
-            <div>
-                <div class="portal-card-tag">{tag}</div>
-                <div class="portal-card-title">{icon_html}{title}</div>
-                <div class="portal-card-desc">{description}</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-def render_footer_disclaimer():
-    """Renders the prototype disclaimer at the bottom of each page."""
-    st.markdown(
-        """
-        <div class="prototype-footer">
-            <strong>⚠️ IMPORTANT NOTICE — Prototype:</strong> This web application is developed for demonstration purposes only under the IMDA SMEs Go Digital POC. 
-            The information provided here is NOT intended for actual business or regulatory decisions.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    with st.container():
+        st.markdown('<div class="stepper-marker" style="display:none;"></div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style="color: #f3d7e8;

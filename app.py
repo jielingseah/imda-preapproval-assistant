@@ -117,6 +117,7 @@ defaults = {
     "assessment_step": 0,
     "catalog_page": 1,
     "category_suggestions": [],
+    "auto_trigger_search": False,
     "selected_category": None,
     "selected_category_url": None,
     "category_requirements": [],
@@ -340,22 +341,44 @@ if st.session_state.page == "Home":
     # 1. Main Page Hero Search Bar
     with st.container(border=True):
         st.markdown("<h4 style='font-weight:700; color:#2b0b2e; margin:0 0 6px 0;'>🔍 Search Official Pre-Approved Categories & Solutions</h4>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size:12.5px; color:#636375; margin-bottom:12px;'>Enter keywords (e.g., 'Cloud Accounting', 'Cybersecurity', 'POS System') or describe your software to find matching categories instantly.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size:12.5px; color:#636375; margin-bottom:12px;'>Enter keywords or describe your software in natural language to let our AI match you with eligible categories.</p>", unsafe_allow_html=True)
         
-        home_search_col1, home_search_col2 = st.columns([5, 1])
+        home_search_col1, home_search_col2 = st.columns([5, 1.4])
         with home_search_col1:
             home_query = st.text_input(
                 "Search query",
-                placeholder="What digital capabilities does your solution offer?",
+                placeholder='e.g., "my solution helps manage pre-school operations" or "my solution manages SEO/SEM digital marketing campaigns"',
                 label_visibility="collapsed",
                 key="home_hero_search_input"
             )
         with home_search_col2:
-            if st.button("Find Solution →", type="primary", use_container_width=True):
+            if st.button("Find Solution Category →", type="primary", use_container_width=True):
                 if home_query.strip():
                     st.session_state.assessment["solution_description"] = home_query.strip()
+                    st.session_state.auto_trigger_search = True
                     st.session_state.page = "AI Category Finder"
                     st.rerun()
+
+        st.markdown("<p style='font-size:11.5px; color:#777788; margin-top:8px; margin-bottom:4px;'>💡 Or click a sample prompt to try:</p>", unsafe_allow_html=True)
+        s_col1, s_col2, s_col3 = st.columns(3)
+        with s_col1:
+            if st.button("🏫 Pre-School Operations", key="sample_prompt_1", use_container_width=True):
+                st.session_state.assessment["solution_description"] = "My solution helps manage pre-school operations, student attendance, parent communications, and fee collection."
+                st.session_state.auto_trigger_search = True
+                st.session_state.page = "AI Category Finder"
+                st.rerun()
+        with s_col2:
+            if st.button("📈 SEO/SEM Digital Marketing", key="sample_prompt_2", use_container_width=True):
+                st.session_state.assessment["solution_description"] = "My solution manages SEO/SEM digital marketing campaigns, keyword bidding, and client conversion analytics."
+                st.session_state.auto_trigger_search = True
+                st.session_state.page = "AI Category Finder"
+                st.rerun()
+        with s_col3:
+            if st.button("🔒 Cloud Cybersecurity", key="sample_prompt_3", use_container_width=True):
+                st.session_state.assessment["solution_description"] = "My solution provides endpoint anti-malware, firewall protection, and automated threat detection for SME laptops."
+                st.session_state.auto_trigger_search = True
+                st.session_state.page = "AI Category Finder"
+                st.rerun()
 
     st.markdown("---")
 
@@ -548,6 +571,17 @@ elif st.session_state.page == "Self-Assessment":
 elif st.session_state.page == "AI Category Finder":
     st.markdown('<script>window.scrollTo(0, 0);</script>', unsafe_allow_html=True)
     render_brand_header("Solution Category Discovery", subtitle="Identify your pre-approved solution category using AI semantic matching or manual directory browsing.")
+
+    # Auto-execute recommendation if routed from the Home search bar
+    current_desc = st.session_state.assessment.get("solution_description", "")
+    if st.session_state.get("auto_trigger_search", False) and current_desc.strip():
+        st.session_state.auto_trigger_search = False
+        is_safe, sanitized_text = sanitize_and_check_injection(current_desc)
+        if is_safe:
+            with st.spinner("Analyzing against official IMDA categories..."):
+                result = recommend_categories(sanitized_text)
+            if "error" not in result:
+                st.session_state.category_suggestions = parse_category_matches(result["answer"], result["catalogue"])
 
     tab_ai, tab_manual = st.tabs(["🤖 AI Semantic Matcher", "🔍 Manual Directory Browser"])
 

@@ -514,63 +514,66 @@ elif st.session_state.page == "Self-Assessment":
             if st.button("Complete Assessment & Find Solution Category →", type="primary", use_container_width=True):
                 st.session_state.page = "AI Category Finder"
                 st.rerun()
+
 # =========================================================
 # AI CATEGORY FINDER & PAGINATED MANUAL BROWSER
 # =========================================================
 
 elif st.session_state.page == "AI Category Finder":
-    render_brand_header("AI Category Finder & Solution Selection", subtitle="Discover categories via AI recommendation or browse the complete interactive catalogue manually.")
+    # Force view to top on load/rerun
+    st.markdown('<script>window.scrollTo(0, 0);</script>', unsafe_allow_html=True)
 
-    # 1. AI Recommendation Input Card
-    with st.container(border=True):
-        st.markdown("### 🤖 Step 1: AI-Powered Recommendation")
-        st.caption("Describe your solution capabilities to let Gemini match you with the best official categories.")
+    render_brand_header("Solution Category Discovery", subtitle="Identify your pre-approved solution category using AI semantic matching or manual directory browsing.")
+
+    # Either / Or Tabs for Cleaner Layout
+    tab_ai, tab_manual = st.tabs(["🤖 AI Semantic Matcher", "🔍 Manual Directory Browser"])
+
+    with tab_ai:
+        st.markdown("<p style='font-size: 13.5px; color: #636375; margin-bottom: 12px;'>Describe your solution features to let Gemini match you with the best official IMDA categories.</p>", unsafe_allow_html=True)
         
-        description = st.text_area(
-            "Tell us about your solution",
-            height=130,
-            value=st.session_state.assessment.get("solution_description", ""),
-            placeholder="Example: We provide a cloud inventory management system with automated POS reconciliation and e-invoicing for retail SMEs."
-        )
-        st.session_state.assessment["solution_description"] = description
+        with st.container(border=True):
+            description = st.text_area(
+                "Describe your solution capabilities",
+                height=110,
+                value=st.session_state.assessment.get("solution_description", ""),
+                placeholder="Example: We provide a cloud inventory management system with automated POS reconciliation and e-invoicing for retail SMEs."
+            )
+            st.session_state.assessment["solution_description"] = description
 
-        if st.button("Find Relevant Categories via AI →", type="primary", use_container_width=True):
-            is_safe, sanitized_text = sanitize_and_check_injection(description)
-            if not is_safe:
-                st.error(sanitized_text)
-            else:
-                with st.spinner("Analyzing against official IMDA categories..."):
-                    result = recommend_categories(sanitized_text)
-
-                if "error" in result:
-                    st.error(result["error"])
+            if st.button("Find Matching Categories via AI →", type="primary", use_container_width=True):
+                is_safe, sanitized_text = sanitize_and_check_injection(description)
+                if not is_safe:
+                    st.error(sanitized_text)
                 else:
-                    matches = parse_category_matches(result["answer"], result["catalogue"])
-                    st.session_state.category_suggestions = matches
+                    with st.spinner("Analyzing against official IMDA categories..."):
+                        result = recommend_categories(sanitized_text)
 
-    # Display AI Suggestions if available
-    if st.session_state.category_suggestions:
-        st.markdown("---")
-        st.subheader("💡 AI Recommended Matches")
-        for index, suggestion in enumerate(st.session_state.category_suggestions):
-            category_key = suggestion["category_key"]
-            catalogue = get_category_catalogue()
-            category = catalogue.get(category_key, {"url": "#", "description": ""})
+                    if "error" in result:
+                        st.error(result["error"])
+                    else:
+                        matches = parse_category_matches(result["answer"], result["catalogue"])
+                        st.session_state.category_suggestions = matches
 
-            with st.container(border=True):
-                st.markdown(f"### {index + 1}. {category_key}")
-                st.write(suggestion["why"])
-                if st.button("Confirm & Select AI Category", key=f"select_ai_cat_{index}", use_container_width=True):
-                    st.session_state.selected_category = category_key
-                    st.session_state.selected_category_url = category["url"]
-                    st.session_state.page = "Category Requirements"
-                    st.rerun()
+        # Display AI Suggestions if available
+        if st.session_state.category_suggestions:
+            st.markdown("---")
+            st.markdown("<h5 style='font-size: 16px; font-weight: 700; color: #581845;'>💡 AI Recommended Matches</h5>", unsafe_allow_html=True)
+            for index, suggestion in enumerate(st.session_state.category_suggestions):
+                category_key = suggestion["category_key"]
+                catalogue = get_category_catalogue()
+                category = catalogue.get(category_key, {"url": "#", "description": ""})
 
-    # 2. Interactive Manual Catalogue Browser with Pagination
-    st.markdown("---")
-    with st.container(border=True):
-        st.markdown("### 🔍 Step 2: Interactive Official Catalogue Browser (Paginated)")
-        st.caption("Browse all valid IMDA solution categories with pagination for a clean, organized view.")
+                with st.container(border=True):
+                    st.markdown(f"<h6 style='font-size: 15px; font-weight: 700; color: #2b0b2e;'>{index + 1}. {category_key}</h6>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='font-size: 12.5px; color: #555566;'>{suggestion['why']}</p>", unsafe_allow_html=True)
+                    if st.button("Confirm & Select AI Category", key=f"select_ai_cat_{index}", use_container_width=True):
+                        st.session_state.selected_category = category_key
+                        st.session_state.selected_category_url = category["url"]
+                        st.session_state.page = "Category Requirements"
+                        st.rerun()
+
+    with tab_manual:
+        st.markdown("<p style='font-size: 13.5px; color: #636375; margin-bottom: 12px;'>Browse all valid IMDA solution categories by sector or search keywords with numbered pagination.</p>", unsafe_allow_html=True)
 
         try:
             catalogue = get_category_catalogue()
@@ -607,20 +610,7 @@ elif st.session_state.page == "AI Category Finder":
                     if st.session_state.catalog_page > total_pages:
                         st.session_state.catalog_page = total_pages
 
-                    # Pagination Controls Header
-                    p_col1, p_col2, p_col3 = st.columns([2, 3, 2])
-                    with p_col1:
-                        if st.button("← Previous Page", use_container_width=True) and st.session_state.catalog_page > 1:
-                            st.session_state.catalog_page -= 1
-                            st.rerun()
-                    with p_col2:
-                        st.markdown(f"<div style='text-align:center; font-weight:600; padding-top:6px;'>Page {st.session_state.catalog_page} of {total_pages} ({total_items} categories)</div>", unsafe_allow_html=True)
-                    with p_col3:
-                        if st.button("Next Page →", use_container_width=True) and st.session_state.catalog_page < total_pages:
-                            st.session_state.catalog_page += 1
-                            st.rerun()
-
-                    st.markdown("")
+                    st.markdown(f"<p style='font-size: 12px; color: #777788; margin-top: 8px;'>Showing {total_items} matching categories (Page {st.session_state.catalog_page} of {total_pages})</p>", unsafe_allow_html=True)
 
                     # Slice items for current page
                     start_idx = (st.session_state.catalog_page - 1) * items_per_page
@@ -635,9 +625,9 @@ elif st.session_state.page == "AI Category Finder":
                             if i < len(page_items):
                                 k1, v1 = page_items[i]
                                 with st.container(border=True):
-                                    st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;'>{v1['sector']}</span>", unsafe_allow_html=True)
-                                    st.markdown(f"#### {v1['category']}")
-                                    st.write(v1["description"] if v1["description"] else "Official IMDA pre-approved solution category.")
+                                    st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700;'>{v1['sector']}</span>", unsafe_allow_html=True)
+                                    st.markdown(f"<h6 style='font-size: 14.5px; font-weight: 700; color: #2b0b2e; margin-top: 6px;'>{v1['category']}</h6>", unsafe_allow_html=True)
+                                    st.markdown(f"<p style='font-size: 12px; color: #636375; line-height: 1.4;'>{v1['description'] if v1['description'] else 'Official IMDA pre-approved solution category.'}</p>", unsafe_allow_html=True)
                                     if st.button("Select Category →", key=f"manual_card_{start_idx + i}", use_container_width=True):
                                         st.session_state.selected_category = k1
                                         st.session_state.selected_category_url = v1["url"]
@@ -648,14 +638,25 @@ elif st.session_state.page == "AI Category Finder":
                             if i + 1 < len(page_items):
                                 k2, v2 = page_items[i + 1]
                                 with st.container(border=True):
-                                    st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;'>{v2['sector']}</span>", unsafe_allow_html=True)
-                                    st.markdown(f"#### {v2['category']}")
-                                    st.write(v2["description"] if v2["description"] else "Official IMDA pre-approved solution category.")
+                                    st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700;'>{v2['sector']}</span>", unsafe_allow_html=True)
+                                    st.markdown(f"<h6 style='font-size: 14.5px; font-weight: 700; color: #2b0b2e; margin-top: 6px;'>{v2['category']}</h6>", unsafe_allow_html=True)
+                                    st.markdown(f"<p style='font-size: 12px; color: #636375; line-height: 1.4;'>{v2['description'] if v2['description'] else 'Official IMDA pre-approved solution category.'}</p>", unsafe_allow_html=True)
                                     if st.button("Select Category →", key=f"manual_card_{start_idx + i + 1}", use_container_width=True):
                                         st.session_state.selected_category = k2
                                         st.session_state.selected_category_url = v2["url"]
                                         st.session_state.page = "Category Requirements"
                                         st.rerun()
+
+                    # Numbered Hyperlink Pagination Row
+                    st.markdown("---")
+                    page_cols = st.columns(min(total_pages, 10))
+                    for p_num in range(1, total_pages + 1):
+                        col_idx = (p_num - 1) % 10
+                        with page_cols[col_idx]:
+                            btn_type = "primary" if p_num == st.session_state.catalog_page else "secondary"
+                            if st.button(str(p_num), key=f"page_num_{p_num}", type=btn_type, use_container_width=True):
+                                st.session_state.catalog_page = p_num
+                                st.rerun()
                 else:
                     st.info("No categories match your current sector filter or search keyword.")
             else:

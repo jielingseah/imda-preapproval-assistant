@@ -17,8 +17,6 @@ from ui_components import (
 from assessment_module import (
     render_pre_approval_assessment,
     sanitize_and_check_injection,
-    STAGE_2_GUIDE_URL,
-    VMP_PORTAL_URL,
     MODEL_NAME
 )
 
@@ -167,7 +165,7 @@ if st.session_state.show_chat_dialog:
     render_floating_chat_modal()
 
 # =========================================================
-# PAGE 1: HOME PAGE (4-STEP WORKFLOW EMBEDDED IN JOURNEY)
+# PAGE 1: HOME PAGE (4-STAGE PROGRESSION)
 # =========================================================
 
 if st.session_state.page == "Home":
@@ -179,22 +177,16 @@ if st.session_state.page == "Home":
 
     render_hero_banner(
         "Accelerate Your SMEs Go Digital Pre-Approval",
-        "The SMEs Go Digital programme supports SMEs in adopting pre-approved digital solutions with grant support. Use this copilot to assess your corporate eligibility, identify matching solution categories, and prepare your formal submission."
+        "The SMEs Go Digital programme supports SMEs in adopting pre-approved digital solutions with grant support. Use this copilot to check your category feasibility, assess corporate eligibility, and prepare your formal submission."
     )
 
-    # The Pre-Approval Journey (Stage 1) Header
     st.markdown("<h3 style='font-size:20px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>The Pre-Approval Journey (Stage 1)</h3>", unsafe_allow_html=True)
 
-    # TOP ROW: Full-Width Step 1 (Solution Category Pre-Check)
+    # Step 1: Full-Width Prominent Category Pre-Check Card
     with st.container(border=True):
+        st.markdown("<span style='background:#f7eaf3; color:#7a1d5a; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700;'>STEP 1: DISCOVERY & FEASIBILITY</span>", unsafe_allow_html=True)
         st.markdown(
-            "<span style='background:#f7eaf3; color:#7a1d5a; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:700; text-transform:uppercase;'>"
-            "Step 1: Discovery & Feasibility"
-            "</span>",
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<h4 style='font-weight:700; color:#2b0b2e; margin:10px 0 6px 0;'>🔍 Solution Category Pre-Check</h4>",
+            "<h4 style='font-weight:700; color:#2b0b2e; margin:6px 0 4px 0;'>🔍 Solution Category Pre-Check</h4>",
             unsafe_allow_html=True
         )
         st.markdown(
@@ -219,7 +211,7 @@ if st.session_state.page == "Home":
                     st.session_state.assessment["solution_description"] = home_query.strip()
                     st.session_state.auto_trigger_search = True
                     st.session_state.page = "Pre-Approval Assessment"
-                    st.session_state.assessment_step = 0  # Step 1 Discovery
+                    st.session_state.assessment_step = 0  # Step 1 is index 0 in the 4-step wizard
                     st.rerun()
 
         st.markdown("<p style='font-size:11.5px; color:#777788; margin-top:8px; margin-bottom:4px;'>💡 Or click a sample prompt to try:</p>", unsafe_allow_html=True)
@@ -246,61 +238,52 @@ if st.session_state.page == "Home":
                 st.session_state.assessment_step = 0
                 st.rerun()
 
-    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 14px;'></div>", unsafe_allow_html=True)
 
-    # BOTTOM ROW: 3 Equal Columns (Step 2 | Step 3 | Step 4)
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        render_feature_card(
-            "Step 2: Eligibility",
-            "Prerequisite Validation",
-            "Verify incorporation age, financial ratios (positive equity, current ratio >= 1), InvoiceNow, and SME deployment benchmarks."
-        )
-        st.write("")
-        if st.button("Start Assessment →", key="home_btn_assess", use_container_width=True):
-            st.session_state.page = "Pre-Approval Assessment"
-            st.session_state.assessment_step = 1  # Step 2 Prerequisites
-            st.rerun()
+    # Steps 2, 3, and 4 in Balanced 3-Column Grid Below
+    col2, col3, col4 = st.columns(3)
 
     with col2:
         render_feature_card(
-            "Step 3: Audit",
-            "Functional Gap Review",
-            "Complete mandatory functional criteria for your category, audit compliance gaps, and access AI Copilot remediation."
+            "STEP 2: ELIGIBILITY",
+            "Prerequisite Validation",
+            "Verify incorporation age, financial ratios (positive equity, current ratio >= 1), and SME deployment benchmarks."
         )
         st.write("")
-        if st.button("Review Checklist →", key="home_btn_check", type="primary", use_container_width=True):
+        if st.button("Start Assessment →", key="home_btn_prereq", use_container_width=True):
             st.session_state.page = "Pre-Approval Assessment"
-            st.session_state.assessment_step = 2  # Step 3 Checklist & Gap Review
+            st.session_state.assessment_step = 1  # Step 2 is index 1
             st.rerun()
 
     with col3:
+        render_feature_card(
+            "STEP 3: AUDIT & CHECKLIST",
+            "Functional Gap Review",
+            "Complete mandatory functional criteria, audit compliance gaps, and access instant remediation via AI Copilot."
+        )
+        st.write("")
+        if st.button("Review Checklist →", key="home_btn_checklist", use_container_width=True):
+            st.session_state.page = "Pre-Approval Assessment"
+            st.session_state.assessment_step = 2  # Step 3 is index 2
+            st.rerun()
+
+    with col4:
         with st.container(border=True):
-            st.markdown(
-                "<span style='background:#f7eaf3; color:#7a1d5a; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; text-transform:uppercase;'>"
-                "Step 4: Submission & VMP"
-                "</span>",
-                unsafe_allow_html=True
-            )
-            st.markdown(
-                "<h5 style='font-size:17px; font-weight:700; color:#2b0b2e; margin:8px 0 6px 0;'>Stage 2 Application & VMP</h5>",
-                unsafe_allow_html=True
-            )
+            st.markdown("<span style='background:#f7eaf3; color:#7a1d5a; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;'>STEP 4: SUBMISSION & VMP</span>", unsafe_allow_html=True)
+            st.markdown("<h4 style='font-size:17px; font-weight:700; color:#2b0b2e; margin:6px 0;'>Stage 2 Preparation & VMP</h4>", unsafe_allow_html=True)
             st.markdown(
                 "<p style='font-size:12.5px; color:#636375; line-height:1.45; margin-bottom:12px;'>"
-                "Read the official guide to prepare decks, templates, and evidence before logging in to the Vendor Management Portal (VMP) to submit."
+                "Read the official guide to prepare required decks, templates, and audit evidence before logging in to the Vendor Management Portal (VMP) to submit."
                 "</p>",
                 unsafe_allow_html=True
             )
-            st.link_button("📖 Read Stage 2 Guide ↗", STAGE_2_GUIDE_URL, type="primary", use_container_width=True)
-            st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
-            st.link_button("🏛️ Launch VMP Portal ↗", VMP_PORTAL_URL, use_container_width=True)
+            st.link_button("📖 Read Stage 2 Guide ↗", "https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-2-vendor-application", use_container_width=True)
+            st.link_button("🏛️ Launch VMP Portal ↗", "https://services2-stg.imda.gov.sg/VMP/", use_container_width=True)
 
     render_footer_disclaimer()
 
 # =========================================================
-# PAGE 2: PRE-APPROVAL ASSESSMENT (4 STEPS)
+# PAGE 2: PRE-APPROVAL ASSESSMENT (4-STAGE FLOW)
 # =========================================================
 
 elif st.session_state.page == "Pre-Approval Assessment":
@@ -312,7 +295,7 @@ elif st.session_state.page == "Pre-Approval Assessment":
     render_footer_disclaimer()
 
 # =========================================================
-# PAGE 3: ABOUT US (DOCUMENTED FOR 4-STEP WORKFLOW)
+# PAGE 3: ABOUT US
 # =========================================================
 
 elif st.session_state.page == "About Us":
@@ -335,16 +318,16 @@ elif st.session_state.page == "About Us":
         - **Administrative Overhead:** IMDA officers spend extensive hours responding to recurring policy queries and reviewing non-compliant initial submissions.
         """)
 
-    st.markdown("### 2. Core Functional Pillars (Structured 4-Step Flow)")
+    st.markdown("### 2. Core Functional Pillars (Structured 4-Stage Progression)")
     col_a1, col_a2 = st.columns(2)
     with col_a1:
         with st.container(border=True):
-            st.markdown("#### 🎯 Guided 4-Step Assessment Funnel")
+            st.markdown("#### 🎯 Guided 4-Stage Funnel")
             st.markdown("""
-            - **Step 1: Category Discovery:** Fast feasibility pre-check using Gemini semantic matching or manual directory browsing.
-            - **Step 2: Prerequisite Validation:** Verifies incorporation age, financial ratios, InvoiceNow, and SME deployment benchmarks.
-            - **Step 3: Functional Gap Review:** Evaluates mandatory checklists with direct editing triggers and AI Copilot remediation.
-            - **Step 4: Application & VMP:** Prepares required Stage 2 documentation before CorpPass submission in the Vendor Management Portal.
+            - **Stage 1: Category Discovery:** Fast upfront check to ensure an official category exists before spending time on paperwork.
+            - **Stage 2: Prerequisite Validation:** Validates incorporation, financial health, track record, and InvoiceNow compliance.
+            - **Stage 3: Functional Gap Audit:** Evaluates category specifications with interactive editing links and AI Copilot remediation.
+            - **Stage 4: Application Preparation & VMP:** Guides vendors to read Stage 2 documentation before submitting on VMP.
             """)
     with col_a2:
         with st.container(border=True):
@@ -408,14 +391,14 @@ elif st.session_state.page == "Methodology":
             st.markdown("Handles access gating, session routing, persistent floating copilot modal state, and Home/Documentation page renderers.")
         with st.container(border=True):
             st.markdown("#### `assessment_module.py`")
-            st.caption("Domain Assessment Funnel (~380 lines)")
-            st.markdown("Encapsulates the 4-step workflow: Step 1 Category Discovery, Step 2 Prerequisite Validation, Step 3 Functional Gap Review & Dossier, and Step 4 Stage 2 Preparation & VMP Submission.")
+            st.caption("Domain Assessment Funnel (~340 lines)")
+            st.markdown("Encapsulates the 4-stage progression: Stage 1 Category Discovery, Stage 2 Baseline Validation, Stage 3 Checklist Gap Audit, and Stage 4 Stage 2 Guide & VMP Launch.")
 
     with col_m2:
         with st.container(border=True):
             st.markdown("#### `ui_components.py`")
-            st.caption("Design System & Styling (~180 lines)")
-            st.markdown("Encapsulates official SMEs Go Digital portal branding, universal font syncing, 4-item top navigation bar, floating trigger buttons, and footer disclaimers.")
+            st.caption("Design System & Styling (~170 lines)")
+            st.markdown("Encapsulates official SMEs Go Digital portal branding, universal font syncing, streamlined top navigation bar, floating trigger buttons, and footer disclaimers.")
         with st.container(border=True):
             st.markdown("#### `imda_knowledge.py`")
             st.caption("Grounded Knowledge Engine (~120 lines)")

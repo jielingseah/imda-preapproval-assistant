@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # 2. Imports after set_page_config
-from ui_components import render_header, render_footer, load_custom_css
+from ui_components import render_portal_header, load_custom_css
 from assessment_module import render_pre_approval_assessment
 from imda_knowledge import MODEL_NAME, crawl_imda_guide
 

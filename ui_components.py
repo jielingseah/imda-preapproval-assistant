@@ -222,11 +222,13 @@ def render_top_navigation():
             btn_type = "primary" if is_active else "secondary"
             if st.button(page_name, key=f"nav_link_{idx}", type=btn_type, use_container_width=True):
                 st.session_state.page = page_name
+                st.session_state.show_chat_dialog = False  # Reset dialog state on tab change
                 st.rerun()
 
     with cols[5]:
         if st.button("Log out", key="header_logout_btn", use_container_width=True):
             st.session_state.authenticated = False
+            st.session_state.show_chat_dialog = False
             st.rerun()
 
     st.markdown("<div style='border-bottom: 1px solid #eaeaef; margin-top: 8px; margin-bottom: 22px;'></div>", unsafe_allow_html=True)

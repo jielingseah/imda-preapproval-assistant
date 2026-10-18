@@ -440,38 +440,7 @@ if st.session_state.page == "Home":
 
     st.markdown("---")
 
-    # Portal Information Links
-    col_info1, col_info2 = st.columns(2)
-    with col_info1:
-        with st.container(border=True):
-            st.markdown("#### 📘 About the IMDA Pre-Approval Guide")
-            st.write(
-                """
-                Under the **SMEs Go Digital** initiative, pre-approved solutions are vetted for quality, 
-                market readiness, and track record. Eligible SMEs adopting these solutions can receive grant support (such as PSG).
-                
-                This assistant automates **Stage 1: Vendor Self-Assessment**, helping digital solution vendors verify foundational 
-                financial criteria, customer track record, and operational requirements prior to application.
-                """
-            )
-            st.link_button("View Official IMDA Guide ↗", "[https://preapproval-guide.imda.gov.sg](https://preapproval-guide.imda.gov.sg)", use_container_width=True)
-
-    with col_info2:
-        with st.container(border=True):
-            st.markdown("#### 🏛️ Vendor Management Portal (VMP)")
-            st.write(
-                """
-                The **Vendor Management Portal (VMP)** is IMDA's official platform where tech vendors formally submit applications, 
-                track submission milestones, manage approved solution packages, and report SME deployments.
-                
-                Use this copilot to detect gaps in your compliance early so that your formal submission through the VMP proceeds smoothly without delays.
-                """
-            )
-            st.link_button("Access Vendor Management Portal (VMP) ↗", "[https://services2-stg.imda.gov.sg/VMP/Home](https://services2-stg.imda.gov.sg/VMP/Home)", use_container_width=True)
-
-    st.markdown("---")
-
-    # Interactive Guided Journey
+    # Interactive Guided Journey (Front and Center)
     st.markdown("<h3 style='font-size:20px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>The Pre-Approval Journey (Stage 1)</h3>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -509,6 +478,34 @@ if st.session_state.page == "Home":
             st.session_state.page = "Pre-Approval Assessment"
             st.session_state.assessment_step = 2
             st.rerun()
+
+    st.markdown("---")
+
+    # External Official Ecosystem Resources (Positioned at Bottom to Keep User on Flow)
+    st.markdown("<h4 style='font-size:16px; font-weight:700; color:#581845; margin-bottom:12px;'>Official IMDA Framework & Portals</h4>", unsafe_allow_html=True)
+    col_info1, col_info2 = st.columns(2)
+    with col_info1:
+        with st.container(border=True):
+            st.markdown("#### 📘 Official IMDA Pre-Approval Guide")
+            st.write(
+                """
+                Under the **SMEs Go Digital** initiative, solutions are vetted for quality, market readiness, and track record. 
+                Eligible SMEs adopting these solutions can receive productivity grant support. 
+                Use this self-assessment to verify all requirements upfront before submission.
+                """
+            )
+            st.link_button("View Official IMDA Guide ↗", "[https://preapproval-guide.imda.gov.sg/](https://preapproval-guide.imda.gov.sg/)", use_container_width=True)
+
+    with col_info2:
+        with st.container(border=True):
+            st.markdown("#### 🏛️ Vendor Management Portal (VMP)")
+            st.write(
+                """
+                The **Vendor Management Portal (VMP)** is IMDA's official platform where tech vendors formally submit applications, 
+                track submission milestones, manage approved solution packages, and report SME deployments.
+                """
+            )
+            st.link_button("Access Vendor Management Portal (VMP) ↗", "[https://services2-stg.imda.gov.sg/VMP/](https://services2-stg.imda.gov.sg/VMP/)", use_container_width=True)
 
     render_footer_disclaimer()
 
@@ -919,6 +916,31 @@ elif st.session_state.page == "Pre-Approval Assessment":
                     st.info("📧 **Notification Routing:** This summary report and inquiry record have been prepared for dispatch to **`seah_jie_ling@imda.gov.sg`** for officer review.")
                     st.warning("ℹ️ **Prototype Notice:** Live SMTP servers are intentionally not configured for this prototype session; external emails will not be transmitted.")
 
+                    st.markdown("---")
+
+                    # Adaptive Next Steps based on Readiness
+                    if total_gaps_count > 0:
+                        with st.container(border=True):
+                            st.markdown("### 🤖 Next Steps: Address Your Identified Gaps")
+                            st.write("You have unmet criteria or questions flagged in your readiness audit. Click below or open the floating copilot to consult official guidelines.")
+                            if st.button("💬 Launch AI Copilot for Recommendations →", type="primary", use_container_width=True):
+                                render_floating_chat_modal()
+                    else:
+                        with st.container(border=True):
+                            st.markdown("### 🚀 Congratulations! You Are Ready for Stage 1 Formal Submission")
+                            st.write(
+                                """
+                                Your solution meets all baseline prerequisites and functional category specifications! 
+                                Your next official step is to review the formal **Stage 1 Vendor Self-Assessment** documentation 
+                                and submit your application through the **Vendor Management Portal (VMP)**.
+                                """
+                            )
+                            c_r1, c_r2 = st.columns(2)
+                            with c_r1:
+                                st.link_button("Launch Vendor Management Portal (VMP) ↗", "[https://services2-stg.imda.gov.sg/VMP/](https://services2-stg.imda.gov.sg/VMP/)", use_container_width=True)
+                            with c_r2:
+                                st.link_button("Review IMDA Pre-Approval Guide ↗", "[https://preapproval-guide.imda.gov.sg/](https://preapproval-guide.imda.gov.sg/)", use_container_width=True)
+
         st.markdown("")
         col_b1, col_b2 = st.columns(2)
         with col_b1:
@@ -929,37 +951,106 @@ elif st.session_state.page == "Pre-Approval Assessment":
     render_footer_disclaimer()
 
 # =========================================================
-# ABOUT US & METHODOLOGY
+# ABOUT US (COMPREHENSIVE PROJECT DOCUMENTATION)
 # =========================================================
 
 elif st.session_state.page == "About Us":
-    render_brand_header("About This Project", subtitle="Background, problem statement, and scope.")
+    render_brand_header("About This Project", subtitle="Background, problem statement, core deliverables, and public sector impact.")
+    
     with st.container(border=True):
         st.markdown("""
-        The **IMDA Pre-Approval Assistant** is an agentic self-service copilot designed to bridge the operational gap between digital solution vendors and IMDA's Pre-Approval framework under the SMEs Go Digital programme.
+        ### Executive Summary
+        The **IMDA Pre-Approval Assistant** is an agentic, self-service copilot designed to bridge the operational gap between digital solution vendors (Infocomm Media - ICM vendors) and IMDA's Pre-Approval framework under the **SMEs Go Digital** programme.
+        
+        By automating eligibility pre-screening, category matching, and policy Q&A, this prototype transforms a tedious, document-heavy administrative workflow into an intuitive, guided digital experience.
         """)
 
-    st.subheader("1. Problem Statement")
-    with st.container(border=True):
-        st.write("Vendors seeking pre-approval frequently encounter difficulties interpreting domain qualification criteria, identifying appropriate solution categories, and validating baseline prerequisites. This creates unnecessary manual back-and-forth for both vendors and officers.")
-
-    st.subheader("2. Project Objectives")
+    st.markdown("### 1. Operational Problem Statement")
     with st.container(border=True):
         st.markdown("""
-        - **Empower Vendor Self-Discovery:** Provide instant, semantic category recommendations from plain English descriptions.
-        - **Upfront Gap Remediation:** Highlight operational roadblocks prior to formal submission.
-        - **Real-Time Grounded Knowledge:** Equip vendors with a full multi-turn conversational copilot grounded in the official online guide.
+        Vendors seeking IMDA pre-approval under the SMEs Go Digital programme encounter several operational friction points:
+        - **Ambiguity in Domain Categorization:** Solutions with multi-faceted capabilities (e.g. POS with inventory and invoicing) struggle to identify the correct pre-approval category.
+        - **Prerequisite Blindspots:** Vendors often apply before satisfying foundational criteria (e.g., 18-month incorporation, positive net equity, current ratio $\ge 1$, or 5 SG SME deployments).
+        - **Administrative Overhead:** IMDA officers spend extensive hours responding to recurring policy queries and reviewing non-compliant initial submissions.
+        """)
+
+    st.markdown("### 2. Core Functional Pillars")
+    col_a1, col_a2 = st.columns(2)
+    with col_a1:
+        with st.container(border=True):
+            st.markdown("#### 🎯 Guided 3-Step Funnel")
+            st.markdown("""
+            - **Step 1: Baseline Prerequisites:** Validates incorporation, financial health, track record, and compliance.
+            - **Step 2: Category Discovery:** Combines zero-shot Gemini semantic matching with an interactive, paginated manual catalogue.
+            - **Step 3: Gap Audit & Review:** Evaluates official checklists and gives interactive editing links for identified gaps.
+            """)
+    with col_a2:
+        with st.container(border=True):
+            st.markdown("#### 🤖 Grounded AI Copilot")
+            st.markdown("""
+            - **Floating Slide-over Modal:** Accessible from any page via the floating `💬 Ask Copilot` widget.
+            - **Context-Aware RAG:** Grounds responses directly in live IMDA pre-approval policy documents.
+            - **Dossier Dispatch:** Formats structured submission records routed to reviewing public officers.
+            """)
+
+    st.markdown("### 3. Public Sector Digital Transformation Impact")
+    with st.container(border=True):
+        st.markdown("""
+        - **Reduces Vendor Onboarding Cycle Time:** Speeds up pre-submission readiness checks from weeks to minutes.
+        - **Minimizes Incomplete VMP Submissions:** Ensures only qualified, vetted solutions transition into the Vendor Management Portal (VMP).
+        - **Fosters Responsible AI Adoption:** Implements input sanitization, heuristic defense, and authoritative source grounding.
         """)
 
     render_footer_disclaimer()
 
+# =========================================================
+# METHODOLOGY & SYSTEM ARCHITECTURE
+# =========================================================
+
 elif st.session_state.page == "Methodology":
-    render_brand_header("Methodology & System Architecture", subtitle="Prompt engineering pipelines and security controls.")
+    render_brand_header("Methodology & System Architecture", subtitle="Technical design, RAG pipeline, cybersecurity guardrails, and modular code architecture.")
+    
     with st.container(border=True):
         st.markdown("""
-        - **Adversarial Heuristic Defense:** User inputs pass through regex pattern matching to block instruction override attacks and prompt leaks.
-        - **XML Boundary Delimitation:** Untrusted text is strictly separated from system directives using `<user_query>` and `<context>` envelopes.
-        - **Multi-Turn Context Awareness:** Conversations retain prior turns within `<conversation_history>` blocks to handle sequential follow-ups.
+        ### Architectural Philosophy
+        The application is engineered using clean software engineering principles, decoupling user interface styling, session management, and GenAI knowledge retrieval across modular micro-modules (`app.py`, `ui_components.py`, and `imda_knowledge.py`).
         """)
+
+    st.markdown("### 1. Multi-Turn RAG Pipeline & Prompt Engineering")
+    with st.container(border=True):
+        st.markdown("""
+        The conversational copilot uses the `gemini-3.8-flash` model orchestrated through a Retrieval-Augmented Generation (RAG) pipeline:
+        - **Dynamic Context Injection:** Pulls live markdown data directly from `[https://preapproval-guide.imda.gov.sg/](https://preapproval-guide.imda.gov.sg/)`.
+        - **XML Boundary Delimitation:** All untrusted inputs are encapsulated within strict `<user_query>` and `<context>` XML tags to prevent context bleeding.
+        - **Multi-Turn Session Memory:** Tracks conversation state within structured `<conversation_history>` envelopes to support sequential follow-up reasoning.
+        - **Zero-Shot Semantic Matching:** Matches plain-language solution descriptions to exact official categories using strict JSON-like structured response parsing.
+        """)
+
+    st.markdown("### 2. Cybersecurity & Prompt Injection Defenses")
+    with st.container(border=True):
+        st.markdown("""
+        To defend against malicious prompt engineering and compliance tampering, the app enforces an automated security layer:
+        - **Adversarial Regex Heuristics:** Blocks instruction override sequences (e.g. `ignore previous instructions`, `system prompt`, `bypass guardrails`).
+        - **XSS & HTML Sanitization:** Strips HTML/script tags (`<script>`, `javascript:`) before processing user inputs.
+        - **Access Authentication Gate:** Secures the prototype environment via session passcode authentication.
+        """)
+
+    st.markdown("### 3. Modular Engineering Blueprint")
+    col_m1, col_m2, col_m3 = st.columns(3)
+    with col_m1:
+        with st.container(border=True):
+            st.markdown("#### `app.py`")
+            st.caption("Main Orchestration Engine")
+            st.markdown("Handles access gating, multi-step state routing, live catalogue caching, and form submissions.")
+    with col_m2:
+        with st.container(border=True):
+            st.markdown("#### `ui_components.py`")
+            st.caption("Design System & Styling")
+            st.markdown("Encapsulates official SMEs Go Digital branding, top navigation, universal font syncing, and layout cards.")
+    with col_m3:
+        with st.container(border=True):
+            st.markdown("#### `imda_knowledge.py`")
+            st.caption("Grounded Knowledge Engine")
+            st.markdown("Parses live IMDA documentation, manages RAG prompt templates, and handles error retries.")
 
     render_footer_disclaimer()

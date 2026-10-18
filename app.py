@@ -514,9 +514,8 @@ elif st.session_state.page == "Self-Assessment":
             if st.button("Complete Assessment & Find Solution Category →", type="primary", use_container_width=True):
                 st.session_state.page = "AI Category Finder"
                 st.rerun()
-
 # =========================================================
-# AI CATEGORY FINDER & INTERACTIVE MANUAL BROWSER
+# AI CATEGORY FINDER & PAGINATED MANUAL BROWSER
 # =========================================================
 
 elif st.session_state.page == "AI Category Finder":
@@ -567,11 +566,11 @@ elif st.session_state.page == "AI Category Finder":
                     st.session_state.page = "Category Requirements"
                     st.rerun()
 
-    # 2. Interactive Manual Catalogue Card Browser
+    # 2. Interactive Manual Catalogue Browser with Pagination
     st.markdown("---")
     with st.container(border=True):
-        st.markdown("### 🔍 Step 2: Interactive Official Catalogue Browser (Manual Selection)")
-        st.caption("Browse all valid IMDA solution categories by sector or filter keywords manually below.")
+        st.markdown("### 🔍 Step 2: Interactive Official Catalogue Browser (Paginated)")
+        st.caption("Browse all valid IMDA solution categories with pagination for a clean, organized view.")
 
         try:
             catalogue = get_category_catalogue()
@@ -587,6 +586,7 @@ elif st.session_state.page == "AI Category Finder":
 
                 search_query = st.text_input("Search categories by keyword", placeholder="e.g. Cybersecurity, Invoicing, POS...", key="cat_search_query")
 
+                # Filter items
                 filtered_items = []
                 for k, v in catalogue.items():
                     if selected_sector != "All Sectors" and v["sector"] != selected_sector:
@@ -595,33 +595,63 @@ elif st.session_state.page == "AI Category Finder":
                         continue
                     filtered_items.append((k, v))
 
-                st.markdown(f"**Showing {len(filtered_items)} available categories:**")
+                total_items = len(filtered_items)
+                items_per_page = 6  # 3 rows of 2 cards
 
-                if filtered_items:
-                    for i in range(0, len(filtered_items), 2):
+                if total_items > 0:
+                    total_pages = max(1, (total_items + items_per_page - 1) // items_per_page)
+
+                    # Initialize or clamp pagination state
+                    if "catalog_page" not in st.session_state:
+                        st.session_state.catalog_page = 1
+                    if st.session_state.catalog_page > total_pages:
+                        st.session_state.catalog_page = total_pages
+
+                    # Pagination Controls Header
+                    p_col1, p_col2, p_col3 = st.columns([2, 3, 2])
+                    with p_col1:
+                        if st.button("← Previous Page", use_container_width=True) and st.session_state.catalog_page > 1:
+                            st.session_state.catalog_page -= 1
+                            st.rerun()
+                    with p_col2:
+                        st.markdown(f"<div style='text-align:center; font-weight:600; padding-top:6px;'>Page {st.session_state.catalog_page} of {total_pages} ({total_items} categories)</div>", unsafe_allow_html=True)
+                    with p_col3:
+                        if st.button("Next Page →", use_container_width=True) and st.session_state.catalog_page < total_pages:
+                            st.session_state.catalog_page += 1
+                            st.rerun()
+
+                    st.markdown("")
+
+                    # Slice items for current page
+                    start_idx = (st.session_state.catalog_page - 1) * items_per_page
+                    end_idx = min(start_idx + items_per_page, total_items)
+                    page_items = filtered_items[start_idx:end_idx]
+
+                    # Render cards for the current page
+                    for i in range(0, len(page_items), 2):
                         col1, col2 = st.columns(2)
                         
                         with col1:
-                            if i < len(filtered_items):
-                                k1, v1 = filtered_items[i]
+                            if i < len(page_items):
+                                k1, v1 = page_items[i]
                                 with st.container(border=True):
                                     st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;'>{v1['sector']}</span>", unsafe_allow_html=True)
                                     st.markdown(f"#### {v1['category']}")
                                     st.write(v1["description"] if v1["description"] else "Official IMDA pre-approved solution category.")
-                                    if st.button("Select Category →", key=f"manual_card_{i}", use_container_width=True):
+                                    if st.button("Select Category →", key=f"manual_card_{start_idx + i}", use_container_width=True):
                                         st.session_state.selected_category = k1
                                         st.session_state.selected_category_url = v1["url"]
                                         st.session_state.page = "Category Requirements"
                                         st.rerun()
 
                         with col2:
-                            if i + 1 < len(filtered_items):
-                                k2, v2 = filtered_items[i + 1]
+                            if i + 1 < len(page_items):
+                                k2, v2 = page_items[i + 1]
                                 with st.container(border=True):
                                     st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;'>{v2['sector']}</span>", unsafe_allow_html=True)
                                     st.markdown(f"#### {v2['category']}")
                                     st.write(v2["description"] if v2["description"] else "Official IMDA pre-approved solution category.")
-                                    if st.button("Select Category →", key=f"manual_card_{i+1}", use_container_width=True):
+                                    if st.button("Select Category →", key=f"manual_card_{start_idx + i + 1}", use_container_width=True):
                                         st.session_state.selected_category = k2
                                         st.session_state.selected_category_url = v2["url"]
                                         st.session_state.page = "Category Requirements"

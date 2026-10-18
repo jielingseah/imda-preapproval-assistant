@@ -25,10 +25,52 @@ def inject_custom_css():
             background-color: #ffffff !important;
         }
 
-        html, body, [class*="css"], [class*="st-"], 
+        /* Universal Typography Sync */
+        html, body, [class*="css"], [class*="st-"], [data-testid="stMarkdownContainer"],
         h1, h2, h3, h4, h5, h6, p, div, span, label, input, textarea, button, a {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            letter-spacing: -0.01em;
+            letter-spacing: -0.015em !important;
+        }
+
+        /* Proportional Heading Scale */
+        [data-testid="stMarkdownContainer"] h1, h1 {
+            font-size: 21px !important;
+            font-weight: 800 !important;
+            color: #2b0b2e !important;
+            line-height: 1.3 !important;
+            margin-top: 0.2rem !important;
+            margin-bottom: 0.4rem !important;
+        }
+
+        [data-testid="stMarkdownContainer"] h2, h2 {
+            font-size: 18px !important;
+            font-weight: 800 !important;
+            color: #2b0b2e !important;
+            line-height: 1.35 !important;
+            margin-top: 0.8rem !important;
+            margin-bottom: 0.4rem !important;
+        }
+
+        [data-testid="stMarkdownContainer"] h3, h3 {
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            color: #2b0b2e !important;
+            line-height: 1.4 !important;
+            margin-top: 0.8rem !important;
+            margin-bottom: 0.4rem !important;
+        }
+
+        [data-testid="stMarkdownContainer"] h4, h4 {
+            font-size: 14.5px !important;
+            font-weight: 700 !important;
+            color: #2b0b2e !important;
+            line-height: 1.4 !important;
+        }
+
+        [data-testid="stMarkdownContainer"] p {
+            font-size: 13px !important;
+            color: #555566 !important;
+            line-height: 1.5 !important;
         }
 
         html {
@@ -40,7 +82,7 @@ def inject_custom_css():
         }
         header {visibility: hidden;}
 
-        /* Sleek Top Government Masthead & Interactive Expandable Drawer */
+        /* Top Government Masthead & Interactive Expandable Drawer */
         .sg-masthead {
             background-color: #f0f0f0;
             border-bottom: 1px solid #e5e5e5;
@@ -110,7 +152,7 @@ def inject_custom_css():
             text-decoration: underline;
         }
 
-        /* Seamless Invisible Logo Overlay */
+        /* Invisible Logo Overlay */
         div.st-key-nav_logo_overlay_btn {
             margin-top: -40px !important;
             height: 38px !important;
@@ -138,6 +180,7 @@ def inject_custom_css():
             color: transparent !important;
         }
 
+        /* Logout Pill */
         button[key="header_logout_btn"] {
             background-color: #6a1a72 !important;
             color: #ffffff !important;
@@ -151,6 +194,7 @@ def inject_custom_css():
             color: #ffffff !important;
         }
 
+        /* Floating Back-to-Top Button */
         .floating-action-bar {
             position: fixed !important;
             bottom: 24px !important;
@@ -175,6 +219,7 @@ def inject_custom_css():
             color: #7a1d5a !important;
         }
 
+        /* Floating Copilot Button */
         div.st-key-floating_chat_button {
             position: fixed !important;
             bottom: 24px !important;
@@ -196,6 +241,7 @@ def inject_custom_css():
             box-shadow: 0 12px 30px rgba(88, 24, 69, 0.45) !important;
         }
 
+        /* Portal Badges and Cards */
         .portal-card-tag, .step-badge {
             font-size: 12.5px !important;
             font-weight: 800 !important;
@@ -229,7 +275,7 @@ def inject_custom_css():
             box-shadow: 0 10px 20px rgba(93, 26, 88, 0.08);
         }
         .portal-card-title {
-            font-size: 18px !important;
+            font-size: 16.5px !important;
             font-weight: 800 !important;
             color: #2b0b2e !important;
             margin-bottom: 8px !important;
@@ -244,16 +290,15 @@ def inject_custom_css():
             margin-bottom: 10px;
         }
 
-        /* ONLY TARGET THE SPECIFIC STEPPER CONTAINER */
+        /* Isolated Purple Stepper Box */
         div.st-key-stepper_isolated_container {
             background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%) !important;
             border-radius: 16px !important;
-            padding: 22px 24px 20px 24px !important;
+            padding: 20px 24px 18px 24px !important;
             margin-bottom: 24px !important;
             box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25) !important;
         }
 
-        /* Stepper buttons strictly inside that container */
         div.st-key-stepper_isolated_container div[class*="st-key-stepper_click_"] button {
             border: 1px solid rgba(255, 255, 255, 0.18) !important;
             box-shadow: none !important;
@@ -368,18 +413,18 @@ def render_brand_header(title: str, subtitle: str = None, badge: str = "Official
     render_top_navigation()
     
     badge_html = f'<span style="background: linear-gradient(135deg, #581845 0%, #d8232a 100%); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; float: right;">{badge}</span>'
-    st.markdown(f"<div>{badge_html}<h1 style='font-size: 24px; font-weight: 800; color: #2b0b2e; margin: 0;'>{title}</h1></div>", unsafe_allow_html=True)
+    st.markdown(f"<div>{badge_html}<h1>{title}</h1></div>", unsafe_allow_html=True)
     
     if subtitle:
-        st.markdown(f"<p style='color:#636375; font-size:13.5px; margin-top:4px; margin-bottom:18px;'>{subtitle}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color:#636375; font-size:13px; margin-top:2px; margin-bottom:18px;'>{subtitle}</p>", unsafe_allow_html=True)
 
 def render_hero_banner(heading: str, description: str):
     """Renders the purple-magenta mesh banner."""
     st.markdown(
         f"""
-        <div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%); color: #ffffff; padding: 30px 32px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">
-            <h2 style="font-size: 24px; font-weight: 800; color: #ffffff !important; margin: 0 0 8px 0;">{heading}</h2>
-            <p style="font-size: 14.5px; color: #f3d7e8; margin: 0; max-width: 85%; line-height: 1.5;">{description}</p>
+        <div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%); color: #ffffff; padding: 26px 28px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">
+            <div style="font-size: 20px; font-weight: 800; color: #ffffff; margin-bottom: 6px;">{heading}</div>
+            <div style="font-size: 13.5px; color: #f3d7e8; line-height: 1.5; max-width: 88%;">{description}</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -397,16 +442,12 @@ def render_purple_segmented_stepper(current_step: int):
         "4. Review & Summary"
     ]
 
-    # --- ACCURATE COMPLETION LOGIC ---
-    # Step 1: True only if a valid category has been chosen
     selected_cat = st.session_state.get("selected_category")
     is_step_1_done = bool(selected_cat and str(selected_cat).strip() != "")
 
-    # Step 2: True only if target category selected AND at least one question answered
     cat_answers = st.session_state.get("category_answers", {})
     is_step_2_done = bool(is_step_1_done and len(cat_answers) > 0)
 
-    # Step 3: True only if all core baseline fields are answered (not just search description)
     from assessment_module import BASELINE_PREREQUISITES_SCHEMA
     assessment_data = st.session_state.get("assessment", {})
     all_baseline_keys = [
@@ -417,16 +458,14 @@ def render_purple_segmented_stepper(current_step: int):
     ]
     is_step_3_done = all(assessment_data.get(k) is not None for k in all_baseline_keys)
 
-    # Step 4: True only if form submitted
     is_step_4_done = bool(st.session_state.get("form_submitted", False))
 
     completion_flags = [is_step_1_done, is_step_2_done, is_step_3_done, is_step_4_done]
 
-    # Isolated container using native st.container with key
     with st.container(key="stepper_isolated_container"):
         st.markdown(
             f"""
-            <div style="color: #f3d7e8; font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">
+            <div style="color: #f3d7e8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;">
                 Assessment Flow — Step {current_step + 1} of 4: {steps[current_step]}
             </div>
             """,
@@ -458,13 +497,11 @@ def render_purple_segmented_stepper(current_step: int):
                     btn_bg = "rgba(255, 255, 255, 0.08)"
                     font_weight = "500"
 
-                # Progress bar strip
                 st.markdown(
-                    f'<div style="height: 8px; border-radius: 999px; background-color: {bar_color}; margin-bottom: 8px;"></div>',
+                    f'<div style="height: 7px; border-radius: 999px; background-color: {bar_color}; margin-bottom: 8px;"></div>',
                     unsafe_allow_html=True
                 )
 
-                # Scoped button style
                 st.markdown(
                     f"""
                     <style>
@@ -485,7 +522,7 @@ def render_purple_segmented_stepper(current_step: int):
 
 def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
     """Renders portal cards with prominent badges and icons."""
-    icon_html = f"<span style='font-size: 22px;'>{icon}</span> " if icon else ""
+    icon_html = f"<span style='font-size: 20px;'>{icon}</span> " if icon else ""
     st.markdown(
         f"""
         <div class="portal-card">

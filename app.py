@@ -164,22 +164,6 @@ def render_floating_chat_modal():
 if st.session_state.show_chat_dialog:
     render_floating_chat_modal()
 
-# Persistent bottom-right floating trigger controls (↑ Top + 💬 Ask Copilot)
-with st.container():
-    st.markdown(
-        """
-        <div class="st-key-floating_top_trigger">
-            <a href="#page-top">↑ Top</a>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown('<div class="st-key-floating_chat_trigger">', unsafe_allow_html=True)
-    if st.button("💬 Ask Copilot", key="floating_chat_button"):
-        st.session_state.show_chat_dialog = True
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
 # =========================================================
 # PAGE 1: HOME PAGE
 # =========================================================
@@ -298,7 +282,7 @@ if st.session_state.page == "Home":
                 Use this self-assessment to verify all requirements upfront before submission.
                 """
             )
-            st.link_button("View Official IMDA Guide ↗", "[https://preapproval-guide.imda.gov.sg/](https://preapproval-guide.imda.gov.sg/)", use_container_width=True)
+            st.link_button("View Official IMDA Guide ↗", "https://preapproval-guide.imda.gov.sg/", use_container_width=True)
 
     with col_info2:
         with st.container(border=True):
@@ -309,7 +293,7 @@ if st.session_state.page == "Home":
                 track submission milestones, manage approved solution packages, and report SME deployments.
                 """
             )
-            st.link_button("Access Vendor Management Portal (VMP) ↗", "[https://services2-stg.imda.gov.sg/VMP/](https://services2-stg.imda.gov.sg/VMP/)", use_container_width=True)
+            st.link_button("Access Vendor Management Portal (VMP) ↗", "https://services2-stg.imda.gov.sg/VMP/", use_container_width=True)
 
     render_footer_disclaimer()
 
@@ -326,7 +310,7 @@ elif st.session_state.page == "Pre-Approval Assessment":
     render_footer_disclaimer()
 
 # =========================================================
-# PAGE 3: ABOUT US (UPDATED FOR 4-TIER ARCHITECTURE)
+# PAGE 3: ABOUT US
 # =========================================================
 
 elif st.session_state.page == "About Us":
@@ -397,7 +381,7 @@ elif st.session_state.page == "Methodology":
     with st.container(border=True):
         st.markdown("""
         The conversational copilot uses the `gemini-3.8-flash` model orchestrated through a Retrieval-Augmented Generation (RAG) pipeline:
-        - **Dynamic Context Injection:** Pulls live markdown data directly from `[https://preapproval-guide.imda.gov.sg/](https://preapproval-guide.imda.gov.sg/)`.
+        - **Dynamic Context Injection:** Pulls live markdown data directly from `https://preapproval-guide.imda.gov.sg/`.
         - **XML Boundary Delimitation:** All untrusted inputs are encapsulated within strict `<user_query>` and `<context>` XML tags to prevent context bleeding.
         - **Multi-Turn Session Memory:** Tracks conversation state within structured `<conversation_history>` envelopes to support sequential follow-up reasoning.
         - **Zero-Shot Semantic Matching:** Matches plain-language solution descriptions to exact official categories using strict JSON-like structured response parsing.
@@ -435,3 +419,20 @@ elif st.session_state.page == "Methodology":
             st.markdown("Parses live IMDA documentation, manages multi-turn RAG prompt templates, and executes grounded LLM generation with retry logic.")
 
     render_footer_disclaimer()
+
+# =========================================================
+# FLOATING ACTION CONTROLS (RENDERED AT VERY END TO PREVENT TOP GAP)
+# =========================================================
+
+st.markdown(
+    """
+    <div class="floating-action-bar">
+        <a href="#page-top" class="floating-top-link">↑ Top</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+if st.button("💬 Ask Copilot", key="floating_chat_button"):
+    st.session_state.show_chat_dialog = True
+    st.rerun()

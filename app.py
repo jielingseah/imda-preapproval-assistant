@@ -40,13 +40,15 @@ inject_custom_css()
 st.markdown('<div id="page-top"></div>', unsafe_allow_html=True)
 
 # =========================================================
-# ACCESS CONTROL (Strict Secrets Authentication)
+# ACCESS CONTROL (Strict Secrets Authentication + Role Toggle)
 # =========================================================
 
 def check_password():
     """Gives access only if correct password configured in Streamlit Secrets is provided."""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
+    if "user_role" not in st.session_state:
+        st.session_state.user_role = "Member of Public"
 
     if st.session_state.authenticated:
         return True
@@ -115,10 +117,19 @@ def check_password():
                     Prototype Access Gate
                 </h3>
                 <p style="font-size: 13px; color: #636375; line-height: 1.5; margin-bottom: 16px;">
-                    This is an authorized demonstration prototype under the IMDA SMEs Go Digital pilot. Please enter the passcode provided in LaunchPad.
+                    This is an authorized demonstration prototype under the IMDA SMEs Go Digital pilot. Please select your role and enter the passcode provided in LaunchPad.
                 </p>
                 """,
                 unsafe_allow_html=True
+            )
+
+            # Role Toggle
+            selected_role = st.radio(
+                "Access Role",
+                ["Member of Public", "Admin"],
+                index=0,
+                horizontal=True,
+                key="login_role_toggle"
             )
 
             pwd_input = st.text_input("Access Passcode", type="password", key="login_passcode", placeholder="Enter passcode...")
@@ -132,6 +143,7 @@ def check_password():
                     st.error("Authentication configuration error: 'APP_PASSWORD' is not set in Streamlit Secrets.")
                 elif user_entered == configured_pwd:
                     st.session_state.authenticated = True
+                    st.session_state.user_role = selected_role
                     st.rerun()
                 else:
                     st.error("Incorrect passcode. Please check your credentials.")

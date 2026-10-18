@@ -219,7 +219,7 @@ def inject_custom_css():
             color: #7a1d5a !important;
         }
 
-        /* Floating Copilot Button */
+        /* Fixed Ask Copilot Button in bottom right */
         div.st-key-floating_chat_button {
             position: fixed !important;
             bottom: 24px !important;
@@ -236,9 +236,23 @@ def inject_custom_css():
             border: 2px solid #ffffff !important;
             box-shadow: 0 8px 24px rgba(88, 24, 69, 0.35) !important;
         }
+        div.st-key-floating_chat_button button p,
+        div.st-key-floating_chat_button button span {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            font-weight: 700 !important;
+            opacity: 1 !important;
+        }
         div.st-key-floating_chat_button button:hover {
             transform: scale(1.04) translateY(-2px) !important;
             box-shadow: 0 12px 30px rgba(88, 24, 69, 0.45) !important;
+        }
+        div.st-key-floating_chat_button button:hover p,
+        div.st-key-floating_chat_button button:hover span {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
 
         /* Portal Badges and Cards */
@@ -313,9 +327,7 @@ def inject_custom_css():
             transform: translateY(-1px) !important;
         }
 
-        /* =========================================================
-           GLOBAL PURPLE ACTION & FORM SUBMIT BUTTONS
-           ========================================================= */
+        /* Global Purple Action & Form Submit Buttons */
         button[kind="primary"],
         button[data-testid="baseButton-primary"],
         div[data-testid="stFormSubmitButton"] button,

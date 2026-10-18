@@ -491,4 +491,29 @@ def render_purple_segmented_stepper(current_step: int):
     st.markdown("</div>", unsafe_allow_html=True)
 
 def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
-    """Renders portal cards with prominent badges
+    """Renders portal cards with prominent badges and icons."""
+    icon_html = f"<span style='font-size: 22px;'>{icon}</span> " if icon else ""
+    st.markdown(
+        f"""
+        <div class="portal-card">
+            <div>
+                <div class="portal-card-tag">{tag}</div>
+                <div class="portal-card-title">{icon_html}{title}</div>
+                <div class="portal-card-desc">{description}</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+def render_footer_disclaimer():
+    """Renders the prototype disclaimer at the bottom of each page."""
+    st.markdown(
+        """
+        <div class="prototype-footer">
+            <strong>⚠️ IMPORTANT NOTICE — Prototype:</strong> This web application is developed for demonstration purposes only under the IMDA SMEs Go Digital POC. 
+            The information provided here is NOT intended for actual business or regulatory decisions.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )

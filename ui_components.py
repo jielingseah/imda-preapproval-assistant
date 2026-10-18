@@ -35,25 +35,74 @@ def inject_custom_css():
         }
         header {visibility: hidden;}
 
-        /* Sleek Top Government Masthead */
+        /* Sleek Top Government Masthead & Interactive Expandable Drawer */
         .sg-masthead {
-            background-color: #f8f8f9;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #e5e5e5;
+            margin: 0 -5rem 12px -5rem;
+            font-size: 11.5px;
+            color: #484848;
+        }
+        .sg-masthead-summary {
             padding: 5px 24px;
-            font-size: 11px;
-            color: #555566;
             display: flex;
             align-items: center;
             gap: 6px;
-            border-bottom: 1px solid #eaeaf0;
-            margin: 0 -5rem 10px -5rem;
+            cursor: pointer;
+            user-select: none;
+            list-style: none;
+            outline: none;
+        }
+        .sg-masthead-summary::-webkit-details-marker {
+            display: none;
         }
         .sg-masthead-crest {
             color: #d8232a;
             font-weight: 700;
+            font-size: 13px;
         }
-        .sg-masthead a {
+        .sg-masthead-trigger {
             color: #2b5cb8;
-            text-decoration: none;
+            text-decoration: underline;
+            margin-left: 3px;
+            cursor: pointer;
+        }
+        .sg-masthead-trigger:hover {
+            color: #1a3c7a;
+        }
+        .sg-masthead-drawer {
+            background-color: #f0f0f0;
+            border-top: 1px solid #e0e0e0;
+            padding: 16px 24px 20px 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+        .sg-masthead-col {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .sg-masthead-icon {
+            font-size: 17px;
+            line-height: 1.2;
+            color: #333333;
+        }
+        .sg-masthead-text-title {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #222222;
+            margin-bottom: 3px;
+        }
+        .sg-masthead-text-desc {
+            font-size: 11.5px;
+            color: #555566;
+            line-height: 1.45;
+            margin: 0;
+        }
+        .sg-masthead-text-desc a {
+            color: #2b5cb8;
+            text-decoration: underline;
         }
 
         /* Seamless Invisible Logo Overlay (No weird box, no border) */
@@ -212,7 +261,7 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """Renders the top navigation bar with the dual-color logo clickable to Home."""
+    """Renders the top navigation bar with the expandable official SG banner and clickable logo."""
     pages = [
         "Pre-Approval Assessment",
         "About Us",
@@ -221,12 +270,37 @@ def render_top_navigation():
 
     current_page = st.session_state.get("page", "Home")
 
-    # Government Masthead
+    # Interactive Singapore Government Masthead (Expands in-place to reveal trusted sites verification)
     st.markdown(
         """
-        <div class="sg-masthead">
-            <span class="sg-masthead-crest">🇸🇬</span> A Singapore Government Agency Website &nbsp;<a href="#">How to identify ▾</a>
-        </div>
+        <details class="sg-masthead">
+            <summary class="sg-masthead-summary">
+                <span class="sg-masthead-crest">🇸🇬</span> 
+                <span>A Singapore Government Agency Website</span> 
+                <span class="sg-masthead-trigger">How to identify ▾</span>
+            </summary>
+            <div class="sg-masthead-drawer">
+                <div class="sg-masthead-col">
+                    <span class="sg-masthead-icon">🏛️</span>
+                    <div>
+                        <div class="sg-masthead-text-title">Official website links end with .gov.sg</div>
+                        <p class="sg-masthead-text-desc">
+                            Government agencies communicate via .gov.sg websites (e.g. go.gov.sg/open). 
+                            <a href="https://www.gov.sg/trusted-sites#govsites" target="_blank" rel="noopener noreferrer">Trusted websites ↗</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="sg-masthead-col">
+                    <span class="sg-masthead-icon">🔒</span>
+                    <div>
+                        <div class="sg-masthead-text-title">Secure websites use HTTPS</div>
+                        <p class="sg-masthead-text-desc">
+                            Look for a <strong>lock (🔒)</strong> or https:// as an added precaution. Share sensitive information only on official, secure websites.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </details>
         """,
         unsafe_allow_html=True
     )

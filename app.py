@@ -1,6 +1,11 @@
-import streamlit as st
+"""
+IMDA Pre-Approval Assistant — Application Orchestrator
+Full-width portal layout with zero sidebar usage.
+"""
+
 from datetime import datetime
 import pandas as pd
+import streamlit as st
 
 # 1. MUST BE THE VERY FIRST STREAMLIT CALL
 st.set_page_config(
@@ -10,13 +15,75 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. Imports after set_page_config
-from ui_components import render_portal_header, load_custom_css
+# 2. Imports from project modules
 from assessment_module import render_pre_approval_assessment
 from imda_knowledge import MODEL_NAME, crawl_imda_guide
 
-# 3. Load CSS styles
-load_custom_css()
+# ---------------------------------------------------------
+# Embedded Portal CSS & Header Styling
+# ---------------------------------------------------------
+st.markdown(
+    """
+    <style>
+        /* Modern wide portal styling */
+        .block-container {
+            max-width: 1180px;
+            padding-top: 1.5rem;
+            padding-bottom: 3rem;
+        }
+        .portal-header-box {
+            background: linear-gradient(135deg, #2b0b2e 0%, #4a154b 60%, #611f69 100%);
+            color: #ffffff;
+            padding: 24px 30px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 14px rgba(43, 11, 46, 0.15);
+        }
+        .portal-header-box h1 {
+            color: #ffffff !important;
+            font-size: 26px !important;
+            font-weight: 700 !important;
+            margin: 0 0 6px 0 !important;
+            letter-spacing: -0.3px;
+        }
+        .portal-header-box p {
+            color: #f1d5f5 !important;
+            font-size: 14px !important;
+            margin: 0 !important;
+        }
+        .role-pill-admin {
+            background: #ede9fe;
+            color: #5b21b6;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .role-pill-user {
+            background: #f1f5f9;
+            color: #334155;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            display: inline-block;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+def render_portal_header():
+    st.markdown(
+        """
+        <div class="portal-header-box">
+            <h1>🇸🇬 IMDA Pre-Approval Assistant</h1>
+            <p>SMEs Go Digital Programme — Solution Pre-Qualification & Verification Portal</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ---------------------------------------------------------
 # Session State Defaults
@@ -42,7 +109,7 @@ if "admin_view_mode" not in st.session_state:
 # View 1: Gated Authentication Screen
 # ---------------------------------------------------------
 if not st.session_state.authenticated:
-    render_header()
+    render_portal_header()
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
 
     _, col_center, _ = st.columns([1, 2, 1])
@@ -63,7 +130,6 @@ if not st.session_state.authenticated:
                 submitted = st.form_submit_button("Authenticate & Access →", type="primary", use_container_width=True)
 
                 if submitted:
-                    # Safely fetch secret with fallback
                     correct_pw = st.secrets.get("APP_PASSWORD", "demo123")
                     if passcode.strip() == correct_pw.strip():
                         st.session_state.authenticated = True
@@ -77,25 +143,19 @@ if not st.session_state.authenticated:
                 "Select **Vendor** to test the self-assessment funnel, or **Admin** to access officer operations."
             )
 
-    render_footer()
-    st.stop()  # Stop execution here until authenticated
+    st.stop()
 
 # ---------------------------------------------------------
 # View 2: Authenticated Main Portal (No Sidebar)
 # ---------------------------------------------------------
-render_header()
+render_portal_header()
 
 # Top Utility Bar (Role indicator, Admin switcher, Logout)
 with st.container():
     if st.session_state.user_role == "Admin":
         col_info, col_toggle, col_logout = st.columns([2.8, 4.2, 1.2])
         with col_info:
-            st.markdown(
-                "<span style='background:#ede9fe; color:#5b21b6; padding:4px 10px; border-radius:12px; font-size:12.5px; font-weight:600;'>"
-                "🛡️ Mode: IMDA Reviewing Officer (Admin)"
-                "</span>",
-                unsafe_allow_html=True
-            )
+            st.markdown("<span class='role-pill-admin'>🛡️ Mode: IMDA Reviewing Officer (Admin)</span>", unsafe_allow_html=True)
         with col_toggle:
             st.session_state.admin_view_mode = st.radio(
                 "Admin Navigation",
@@ -112,12 +172,7 @@ with st.container():
     else:
         col_info, _, col_logout = st.columns([4, 4, 1.2])
         with col_info:
-            st.markdown(
-                "<span style='background:#f1f5f9; color:#334155; padding:4px 10px; border-radius:12px; font-size:12.5px; font-weight:600;'>"
-                "👤 Mode: ICM Vendor Applicant"
-                "</span>",
-                unsafe_allow_html=True
-            )
+            st.markdown("<span class='role-pill-user'>👤 Mode: ICM Vendor Applicant</span>", unsafe_allow_html=True)
         with col_logout:
             if st.button("Log Out ↪", key="btn_top_logout", use_container_width=True):
                 st.session_state.authenticated = False
@@ -210,5 +265,3 @@ if st.session_state.user_role == "Admin" and st.session_state.admin_view_mode ==
             st.markdown(f"- **Officer Notification Route:** `{st.secrets.get('OFFICER_REVIEW_EMAIL', 'seah_jie_ling@imda.gov.sg')}`")
 else:
     render_pre_approval_assessment()
-
-render_footer()

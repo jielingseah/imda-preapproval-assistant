@@ -1,8 +1,13 @@
 import streamlit as st
 from google import genai
 
-# Import multi-turn RAG knowledge engine
-from imda_knowledge import query_live_guide_rag
+# Import centralized constants and RAG engine
+from imda_knowledge import (
+    MODEL_NAME,
+    STAGE_2_GUIDE_URL,
+    VMP_PORTAL_URL,
+    query_live_guide_rag
+)
 
 # Import UI / UX component library
 from ui_components import (
@@ -16,8 +21,7 @@ from ui_components import (
 # Import extracted domain assessment engine
 from assessment_module import (
     render_pre_approval_assessment,
-    sanitize_and_check_injection,
-    MODEL_NAME
+    sanitize_and_check_injection
 )
 
 # =========================================================
@@ -32,11 +36,11 @@ st.set_page_config(
 )
 
 # =========================================================
-# ACCESS CONTROL (Password Gate)
+# ACCESS CONTROL (Strict Secrets Authentication)
 # =========================================================
 
 def check_password():
-    """Gives access if correct password is provided."""
+    """Gives access only if correct password configured in Streamlit Secrets is provided."""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
 
@@ -51,14 +55,12 @@ def check_password():
     with col1:
         pwd_input = st.text_input("Access Passcode", type="password", key="login_passcode")
         if st.button("Enter Assistant", type="primary", use_container_width=True):
-            try:
-                expected_pwd = str(st.secrets.get("APP_PASSWORD", "bootcamp2026")).strip().lower()
-            except Exception:
-                expected_pwd = "bootcamp2026"
-
+            configured_pwd = str(st.secrets.get("APP_PASSWORD", "")).strip().lower()
             user_entered = pwd_input.strip().lower() if pwd_input else ""
 
-            if user_entered in (expected_pwd, "bootcamp2026"):
+            if not configured_pwd:
+                st.error("Authentication configuration error: 'APP_PASSWORD' is not set in Streamlit Secrets.")
+            elif user_entered == configured_pwd:
                 st.session_state.authenticated = True
                 st.rerun()
             else:
@@ -257,26 +259,26 @@ if st.session_state.page == "Home":
 
     with col2:
         render_feature_card(
-            "STEP 2: ELIGIBILITY",
-            "Prerequisite Validation",
-            "Verify incorporation age, financial stability ratios (positive equity, current ratio >= 1), InvoiceNow account status, and SME deployment benchmarks.",
-            icon="🏢"
+            "STEP 2: CHECKLIST",
+            "Category Checklist",
+            "Complete category-specific functional requirements (Q1 to Q20+) extracted directly from the official guide.",
+            icon="📋"
         )
         st.write("")
-        if st.button("Start Assessment →", key="home_btn_prereq", use_container_width=True):
+        if st.button("Review Checklist →", key="home_btn_checklist", use_container_width=True):
             st.session_state.page = "Pre-Approval Assessment"
             st.session_state.assessment_step = 1
             st.rerun()
 
     with col3:
         render_feature_card(
-            "STEP 3: AUDIT & CHECKLIST",
-            "Functional Gap Review",
-            "Complete category-specific mandatory checklists, automatically detect prerequisite compliance gaps, and access instant remediation via AI Copilot.",
-            icon="📋"
+            "STEP 3: PREREQUISITES",
+            "Prerequisite Validation",
+            "Verify incorporation age, financial stability ratios (positive equity, current ratio >= 1), InvoiceNow account status, and SME deployment benchmarks.",
+            icon="🏢"
         )
         st.write("")
-        if st.button("Review Checklist →", key="home_btn_checklist", use_container_width=True):
+        if st.button("Start Assessment →", key="home_btn_prereq", use_container_width=True):
             st.session_state.page = "Pre-Approval Assessment"
             st.session_state.assessment_step = 2
             st.rerun()
@@ -294,177 +296,4 @@ if st.session_state.page == "Home":
             """
             <div style="margin-bottom: 8px;">
                 <span class="step-badge">
-                    <span style="font-size: 15px;">🚀</span> STEP 4: SUBMISSION & VMP
-                </span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<h4 style='font-size:20px; font-weight:800; color:#2b0b2e; margin:4px 0 6px 0;'>🚀 Stage 2 Preparation & Formal VMP Submission</h4>",
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<p style='font-size:13px; color:#636375; line-height:1.5; margin-bottom:16px;'>"
-            "Once you clear Stage 1 Self-Assessment, review the official documentation guidelines to prepare your solution presentation deck, "
-            "pricing matrix, and customer proof before formally submitting via the Vendor Management Portal (VMP)."
-            "</p>",
-            unsafe_allow_html=True
-        )
-        
-        st4_col1, st4_col2 = st.columns(2)
-        with st4_col1:
-            st.link_button(
-                "📖 Read Stage 2 Guide ↗",
-                "https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-2-vendor-application",
-                use_container_width=True
-            )
-        with st4_col2:
-            st.link_button(
-                "🏛️ Launch VMP Portal ↗",
-                "https://services2-stg.imda.gov.sg/VMP/",
-                use_container_width=True
-            )
-
-    render_footer_disclaimer()
-
-# =========================================================
-# PAGE 2: PRE-APPROVAL ASSESSMENT (4-STAGE FLOW)
-# =========================================================
-
-elif st.session_state.page == "Pre-Approval Assessment":
-    render_brand_header(
-        "Vendor Pre-Approval Assessment",
-        subtitle="Complete your category discovery, eligibility validation, functional checklist, and application preparation in one unified workflow."
-    )
-    render_pre_approval_assessment()
-    render_footer_disclaimer()
-
-# =========================================================
-# PAGE 3: ABOUT US
-# =========================================================
-
-elif st.session_state.page == "About Us":
-    render_brand_header("About This Project", subtitle="Background, problem statement, core deliverables, and public sector impact.")
-    
-    with st.container(border=True):
-        st.markdown("""
-        ### Executive Summary
-        The **IMDA Pre-Approval Assistant** is an agentic, self-service copilot designed to bridge the operational gap between digital solution vendors (Infocomm Media - ICM vendors) and IMDA's Pre-Approval framework under the **SMEs Go Digital** programme.
-        
-        By automating eligibility pre-screening, category matching, and policy Q&A, this prototype transforms a tedious, document-heavy administrative workflow into an intuitive, guided digital experience.
-        """)
-
-    st.markdown("### 1. Operational Problem Statement")
-    with st.container(border=True):
-        st.markdown("""
-        Vendors seeking IMDA pre-approval under the SMEs Go Digital programme encounter several operational friction points:
-        - **Ambiguity in Domain Categorization:** Solutions with multi-faceted capabilities struggle to identify the correct pre-approval category upfront.
-        - **Prerequisite Blindspots:** Vendors often apply before satisfying foundational criteria (e.g., 18-month incorporation, positive net equity, current ratio $\ge 1$, or 5 SG SME deployments).
-        - **Administrative Overhead:** IMDA officers spend extensive hours responding to recurring policy queries and reviewing non-compliant initial submissions.
-        """)
-
-    st.markdown("### 2. Core Functional Pillars (Structured 4-Stage Progression)")
-    col_a1, col_a2 = st.columns(2)
-    with col_a1:
-        with st.container(border=True):
-            st.markdown("#### 🎯 Guided 4-Stage Funnel")
-            st.markdown("""
-            - **Stage 1: Category Discovery:** Fast upfront check to ensure an official category exists before spending time on paperwork.
-            - **Stage 2: Prerequisite Validation:** Validates incorporation, financial health, track record, and InvoiceNow compliance.
-            - **Stage 3: Functional Gap Audit:** Evaluates category specifications with interactive editing links and AI Copilot remediation.
-            - **Stage 4: Application Preparation & VMP:** Guides vendors to read Stage 2 documentation before submitting on VMP.
-            """)
-    with col_a2:
-        with st.container(border=True):
-            st.markdown("#### 🤖 Grounded AI Copilot")
-            st.markdown("""
-            - **Persistent Floating Modal:** Accessible from any page via the bottom-right `💬 Ask Copilot` widget.
-            - **Context-Aware RAG:** Grounds responses directly in live IMDA pre-approval policy documents.
-            - **Automated Gap Handover:** Transmits identified checklist gaps directly into the AI Copilot prompt pipeline for instant remediation advice.
-            - **Dossier Dispatch:** Formats structured submission records routed to reviewing public officers.
-            """)
-
-    st.markdown("### 3. Public Sector Digital Transformation Impact")
-    with st.container(border=True):
-        st.markdown("""
-        - **Reduces Vendor Onboarding Cycle Time:** Speeds up pre-submission readiness checks from weeks to minutes.
-        - **Minimizes Incomplete VMP Submissions:** Ensures only qualified, vetted solutions transition into the Vendor Management Portal (VMP).
-        - **Fosters Responsible AI Adoption:** Implements input sanitization, heuristic defense, and authoritative source grounding.
-        """)
-
-    render_footer_disclaimer()
-
-# =========================================================
-# PAGE 4: METHODOLOGY & SYSTEM ARCHITECTURE
-# =========================================================
-
-elif st.session_state.page == "Methodology":
-    render_brand_header("Methodology & System Architecture", subtitle="Technical design, RAG pipeline, cybersecurity guardrails, and modular code architecture.")
-    
-    with st.container(border=True):
-        st.markdown("""
-        ### Architectural Philosophy
-        The application is engineered using clean software engineering principles, decoupling user interface styling, session orchestration, domain assessment logic, and GenAI knowledge retrieval across four modular files:
-        `app.py`, `assessment_module.py`, `ui_components.py`, and `imda_knowledge.py`.
-        """)
-
-    st.markdown("### 1. Multi-Turn RAG Pipeline & Prompt Engineering")
-    with st.container(border=True):
-        st.markdown("""
-        The conversational copilot uses the `gemini-3.8-flash` model orchestrated through a Retrieval-Augmented Generation (RAG) pipeline:
-        - **Dynamic Context Injection:** Pulls live markdown data directly from `https://preapproval-guide.imda.gov.sg/`.
-        - **XML Boundary Delimitation:** All untrusted inputs are encapsulated within strict `<user_query>` and `<context>` XML tags to prevent context bleeding.
-        - **Multi-Turn Session Memory:** Tracks conversation state within structured `<conversation_history>` envelopes to support sequential follow-up reasoning.
-        - **Zero-Shot Semantic Matching:** Matches plain-language solution descriptions to exact official categories using strict JSON-like structured response parsing.
-        """)
-
-    st.markdown("### 2. Cybersecurity & Prompt Injection Defenses")
-    with st.container(border=True):
-        st.markdown("""
-        To defend against malicious prompt engineering and compliance tampering, the app enforces an automated security layer:
-        - **Adversarial Regex Heuristics:** Blocks instruction override sequences (e.g. `ignore previous instructions`, `system prompt`, `bypass guardrails`).
-        - **XSS & HTML Sanitization:** Strips HTML/script tags (`<script>`, `javascript:`) before processing user inputs.
-        - **Access Authentication Gate:** Secures the prototype environment via session passcode authentication.
-        """)
-
-    st.markdown("### 3. Modular Engineering Blueprint (4 Modules)")
-    col_m1, col_m2 = st.columns(2)
-    with col_m1:
-        with st.container(border=True):
-            st.markdown("#### `app.py`")
-            st.caption("Main Orchestration Engine (~180 lines)")
-            st.markdown("Handles access gating, session routing, persistent floating copilot modal state, and Home/Documentation page renderers.")
-        with st.container(border=True):
-            st.markdown("#### `assessment_module.py`")
-            st.caption("Domain Assessment Funnel (~340 lines)")
-            st.markdown("Encapsulates the 4-stage progression: Stage 1 Category Discovery, Stage 2 Baseline Validation, Stage 3 Checklist Gap Audit, and Stage 4 Stage 2 Guide & VMP Launch.")
-
-    with col_m2:
-        with st.container(border=True):
-            st.markdown("#### `ui_components.py`")
-            st.caption("Design System & Styling (~170 lines)")
-            st.markdown("Encapsulates official SMEs Go Digital portal branding, universal font syncing, streamlined top navigation bar, floating trigger buttons, and footer disclaimers.")
-        with st.container(border=True):
-            st.markdown("#### `imda_knowledge.py`")
-            st.caption("Grounded Knowledge Engine (~120 lines)")
-            st.markdown("Parses live IMDA documentation, manages multi-turn RAG prompt templates, and executes grounded LLM generation with retry logic.")
-
-    render_footer_disclaimer()
-
-# =========================================================
-# FLOATING ACTION CONTROLS (RENDERED AT VERY END TO PREVENT TOP GAP)
-# =========================================================
-
-st.markdown(
-    """
-    <div class="floating-action-bar">
-        <a href="#page-top" class="floating-top-link">↑ Top</a>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-if st.button("💬 Ask Copilot", key="floating_chat_button"):
-    st.session_state.show_chat_dialog = True
-    st.rerun()
+                    <span style="font-size: 15px;">🚀</span> STEP 4: SUBMISSION

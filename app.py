@@ -742,4 +742,239 @@ elif st.session_state.page == "Category Requirements":
                         with st.container(border=True):
                             st.write(f"**Q{question['number']}** — {question['question']}")
 
-            st.markdown("
+            st.markdown("---")
+
+            # 2. Automated Prerequisite Gap Detection
+            st.subheader("2. Automated Prerequisite Gap Detection")
+
+            front_assessment_labels = {
+                "incorporated": "Company incorporated in Singapore",
+                "operation": "Operation for at least 18 months",
+                "financial": "Financial stability (positive equity & ratio >= 1)",
+                "track_record": "Government agency track record",
+                "resources": "Sufficient quality resources",
+                "cooling": "Not serving 1-year IMDA cooling period",
+                "invoice_now": "InvoiceNow registered account",
+                "customer_track": "Deployed with >= 5 SG SMEs for >= 6 months",
+                "pricing": "Priced reasonably for SMEs",
+                "suitability": "Designed for SME needs",
+                "productivity": "Improves SME productivity",
+                "website": "Active website showcasing solution",
+                "dapdp": "Data protection & analytics compliance"
+            }
+
+            front_gaps = []
+            for k, label in front_assessment_labels.items():
+                val = st.session_state.assessment.get(k)
+                if val in ["No", "Not sure"] or (k == "cooling" and val == "Yes") or ("development" in str(val).lower()):
+                    front_gaps.append({"item": label, "status": val})
+
+            unmet_cat_questions = []
+            for question in mandatory:
+                ans = st.session_state.category_answers.get(question["number"])
+                if ans in ["No", "Not sure"]:
+                    unmet_cat_questions.append({
+                        "number": question["number"],
+                        "question": question["question"],
+                        "status": ans
+                    })
+
+            total_gaps_count = len(front_gaps) + len(unmet_cat_questions)
+
+            with st.container(border=True):
+                if total_gaps_count > 0:
+                    st.warning(f"⚠️ System detected **{total_gaps_count}** requirement gap(s) across your assessment:")
+                    if front_gaps:
+                        st.markdown("**Core Baseline & Track Record Gaps:**")
+                        for fg in front_gaps:
+                            st.markdown(f"- 🔴 **{fg['item']}** (Status: *{fg['status']}*)")
+
+                    if unmet_cat_questions:
+                        st.markdown(f"**Specific Category Requirements for {selected}:**")
+                        for uq in unmet_cat_questions:
+                            st.markdown(f"- ⚠️ **Q{uq['number']} ({uq['status']}):** {uq['question']}")
+                else:
+                    st.success("✅ Excellent! Your solution declared full compliance with both Baseline Eligibility and Category Specifications.")
+
+            st.markdown("---")
+
+            # 3. Contact Details & Vendor Enquiries Form
+            st.subheader("3. Contact Details & Vendor Enquiries")
+            st.caption("Provide your company contact information and any specific questions regarding unmet criteria or general onboarding.")
+
+            with st.container(border=True):
+                with st.form("vendor_submission_form"):
+                    col_c1, col_c2 = st.columns(2)
+                    with col_c1:
+                        company_name = st.text_input("Company Registered Name *", placeholder="e.g. Acme Tech Solutions Pte Ltd")
+                        contact_person = st.text_input("Contact Person Name *", placeholder="e.g. John Tan")
+                    with col_c2:
+                        contact_email = st.text_input("Corporate Email Address *", placeholder="e.g. john.tan@acme.com")
+                        contact_phone = st.text_input("Contact Number *", placeholder="e.g. +65 9123 4567")
+
+                    vendor_inquiry = st.text_area(
+                        "Questions / Notes on Unmet Requirements",
+                        placeholder="If you marked 'No' or 'Not sure' above, specify your planned roadmap, alternative workarounds, or questions for IMDA officers here.",
+                        height=120
+                    )
+
+                    submit_button = st.form_submit_button("Submit Assessment & Send Summary →", type="primary", use_container_width=True)
+
+            if submit_button:
+                if not company_name or not contact_person or not contact_email:
+                    st.error("Please fill in all mandatory contact fields (Company Name, Contact Person, and Email).")
+                    st.session_state.form_submitted = False
+                else:
+                    st.session_state.form_submitted = True
+                    st.session_state.sub_company = company_name
+                    st.session_state.sub_person = contact_person
+                    st.session_state.sub_email = contact_email
+                    st.session_state.sub_phone = contact_phone
+                    st.session_state.sub_inquiry = vendor_inquiry
+
+            # 4. Submission Summary Dossier
+            if st.session_state.get("form_submitted", False):
+                st.success("🎉 Assessment & Enquiries Submitted Successfully!")
+
+                with st.container(border=True):
+                    st.markdown("### 📋 Submission Summary Dossier")
+                    st.markdown(f"**Target Pre-Approval Category:** {selected}")
+                    st.markdown(f"**Company:** {st.session_state.sub_company} | **Contact:** {st.session_state.sub_person} ({st.session_state.sub_email}, {st.session_state.sub_phone})")
+
+                    if front_gaps or unmet_cat_questions:
+                        st.markdown("#### Detected Gaps for Officer Review:")
+                        for fg in front_gaps:
+                            st.markdown(f"- **Baseline Prerequisite ({fg['status']}):** {fg['item']}")
+                        for uq in unmet_cat_questions:
+                            st.markdown(f"- **Category Spec Q{uq['number']} ({uq['status']}):** {uq['question']}")
+                    else:
+                        st.markdown("✅ **Status:** 100% compliant across all evaluated criteria.")
+
+                    if st.session_state.sub_inquiry.strip():
+                        st.markdown("#### Applicant Inquiries:")
+                        st.write(st.session_state.sub_inquiry)
+
+                st.info(
+                    "📧 **Notification Routing:** This summary report and inquiry record have been prepared for dispatch to **`seah_jie_ling@imda.gov.sg`** for officer review."
+                )
+                st.warning(
+                    "ℹ️ **Prototype Notice:** Please note that this is a proof-of-concept demonstration environment. "
+                    "Live SMTP servers and automated email dispatch are intentionally not configured for this prototype session, "
+                    "and external emails will not be transmitted."
+                )
+
+                st.markdown("---")
+                with st.container(border=True):
+                    st.markdown("### 🤖 Want guidance on how to address your identified gaps?")
+                    st.write("You can chat with our AI Pre-Approval Copilot right now for instant, grounded recommendations on how to fulfill official IMDA policy requirements.")
+                    
+                    if st.button("💬 Open AI Assistant & Get Guidance →", type="primary", use_container_width=True):
+                        st.session_state.page = "AI Assistant"
+                        st.rerun()
+
+    render_footer_disclaimer()
+
+# =========================================================
+# AI ASSISTANT (RAG CHATBOT)
+# =========================================================
+
+elif st.session_state.page == "AI Assistant":
+    render_brand_header("Pre-Approved Solutions Assistant & Copilot", subtitle="Multi-turn conversation grounded in official IMDA documentation.")
+
+    col_info, col_btn = st.columns([4, 1])
+    with col_info:
+        if st.session_state.selected_category:
+            st.info(f"Target Category: **{st.session_state.selected_category}**")
+    with col_btn:
+        if st.button("🔄 Reset Chat", use_container_width=True):
+            st.session_state.chat_messages = [
+                {
+                    "role": "assistant",
+                    "content": "Conversation restarted. How can I help you navigate your pre-approval journey today?"
+                }
+            ]
+            st.rerun()
+
+    if st.session_state.assessment:
+        with st.expander("📊 View Your Readiness Audit Summary", expanded=False):
+            blockers = [k.replace("_", " ").title() for k, v in st.session_state.assessment.items() if v == "No"]
+            in_progress = [k.replace("_", " ").title() for k, v in st.session_state.assessment.items() if "development" in str(v)]
+            passed = [k for k, v in st.session_state.assessment.items() if v == "Yes"]
+            total_eval = len(st.session_state.assessment)
+            readiness_pct = int((len(passed) / total_eval) * 100) if total_eval > 0 else 0
+
+            render_kpi_dashboard(readiness_pct, len(blockers), len(in_progress))
+
+            if blockers:
+                st.error("Identified Gaps: " + ", ".join(blockers))
+
+    st.markdown("---")
+
+    for message in st.session_state.chat_messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if user_query := st.chat_input("Ask a question (e.g. Can a company registered in Malaysia apply?)"):
+        is_safe, sanitized_query = sanitize_and_check_injection(user_query)
+        if not is_safe:
+            st.error(sanitized_query)
+        else:
+            st.session_state.chat_messages.append({"role": "user", "content": sanitized_query})
+            with st.chat_message("user"):
+                st.markdown(sanitized_query)
+
+            client = get_gemini_client()
+            if client is None:
+                st.error("Gemini API key is not configured in Secrets.")
+            else:
+                with st.chat_message("assistant"):
+                    with st.spinner("Consulting official guide..."):
+                        assistant_response = query_live_guide_rag(
+                            client,
+                            user_query=sanitized_query,
+                            chat_history=st.session_state.chat_messages,
+                            user_assessment=st.session_state.assessment,
+                            selected_category=st.session_state.selected_category,
+                            model_name=MODEL_NAME
+                        )
+                        st.markdown(assistant_response)
+
+                st.session_state.chat_messages.append({"role": "assistant", "content": assistant_response})
+
+    render_footer_disclaimer()
+
+# =========================================================
+# ABOUT US & METHODOLOGY
+# =========================================================
+
+elif st.session_state.page == "About Us":
+    render_brand_header("About This Project", subtitle="Background, problem statement, and scope.")
+    with st.container(border=True):
+        st.markdown("""
+        The **IMDA Pre-Approval Assistant** is an agentic self-service copilot designed to bridge the operational gap between digital solution vendors and IMDA's Pre-Approval framework under the SMEs Go Digital programme.
+        """)
+
+    st.subheader("1. Problem Statement")
+    with st.container(border=True):
+        st.write("Vendors seeking pre-approval frequently encounter difficulties interpreting domain qualification criteria, identifying appropriate solution categories, and validating baseline prerequisites. This creates unnecessary manual back-and-forth for both vendors and officers.")
+
+    st.subheader("2. Project Objectives")
+    with st.container(border=True):
+        st.markdown("""
+        - **Empower Vendor Self-Discovery:** Provide instant, semantic category recommendations from plain English descriptions.
+        - **Upfront Gap Remediation:** Highlight operational roadblocks prior to formal submission.
+        - **Real-Time Grounded Knowledge:** Equip vendors with a full multi-turn conversational copilot grounded in the official online guide.
+        """)
+
+    render_footer_disclaimer()
+
+elif st.session_state.page == "Methodology":
+    render_brand_header("Methodology & System Architecture", subtitle="Prompt engineering pipelines and security controls.")
+    with st.container(border=True):
+        st.markdown("""
+        - **Adversarial Heuristic Defense:** User inputs pass through regex pattern matching to block instruction override attacks and prompt leaks.
+        - **XML Boundary Delimitation:** Untrusted text is strictly separated from system directives using `<user_query>` and `<context>` envelopes.
+        - **Multi-Turn Context Awareness:** Conversations retain prior turns within `<conversation_history>` blocks to handle sequential follow-ups.
+        """)
+
+    render_footer_disclaimer()

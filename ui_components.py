@@ -750,10 +750,11 @@ def render_footer_disclaimer():
     """Renders the prototype disclaimer at the bottom of each page."""
     st.markdown(
         """
-        <div class="prototype-footer">
-            <strong>⚠️ IMPORTANT NOTICE — Prototype:</strong> This web application is developed for demonstration purposes only under the IMDA SMEs Go Digital POC. 
-            The information provided here is NOT intended for actual business or regulatory decisions.
-        </div>
+       <div style="font-size: 12.5px; color: #636375; line-height: 1.6;">
+                <strong style="color: #2b0b2e;">IMPORTANT NOTICE:</strong> This web application is developed as a proof-of-concept prototype. The information provided here is NOT intended for actual usage and should not be relied upon for making any decisions, especially those related to financial, legal, or healthcare matters.<br><br>
+                Furthermore, please be aware that the LLM may generate inaccurate or incorrect information. You assume full responsibility for how you use any generated output.<br><br>
+                Always consult with qualified professionals for accurate and personalised advice.
+            </div>
         """,
         unsafe_allow_html=True
     )

@@ -2,8 +2,8 @@
 Assessment Module for IMDA Pre-Approval Assistant.
 Encapsulates:
 - Step 1: Category Discovery & Feasibility Pre-Check
-- Step 2: Category Functional Checklist (with real-time compliance badges)
-- Step 3: Baseline Prerequisite Validation (with real-time compliance badges)
+- Step 2: Category Functional Checklist (with real-time compliance badges & deep-link focus)
+- Step 3: Baseline Prerequisite Validation (with subtab selection & deep-link focus)
 - Step 4: Readiness Review, Gap Audit & Stage 2 / VMP Handover
 """
 
@@ -15,7 +15,6 @@ from urllib.parse import urljoin
 from google import genai
 from google.genai import types
 
-# Import centralized constants and RAG engine
 from imda_knowledge import (
     MODEL_NAME,
     BASE_URL,
@@ -26,7 +25,6 @@ from imda_knowledge import (
     query_live_guide_rag
 )
 
-# Import purple stepper from ui_components
 from ui_components import render_purple_segmented_stepper
 
 PAGE_SIZE = 6
@@ -38,10 +36,6 @@ def format_web_url(url: str) -> str:
     if url.endswith(".md"):
         return url[:-3]
     return url
-
-# =========================================================
-# REAL-TIME COMPLIANCE BADGE COMPONENT
-# =========================================================
 
 def render_compliance_badge(current_val: str | None, compliant_options: list[str]):
     """Renders a green tick when compliant or amber warning triangle when non-compliant."""
@@ -70,10 +64,6 @@ def render_compliance_badge(current_val: str | None, compliant_options: list[str
             """,
             unsafe_allow_html=True
         )
-
-# =========================================================
-# UNIFIED BASELINE PREREQUISITES SCHEMA (SINGLE SOURCE OF TRUTH)
-# =========================================================
 
 BASELINE_PREREQUISITES_SCHEMA = {
     "corporate": [
@@ -182,10 +172,6 @@ BASELINE_PREREQUISITES_SCHEMA = {
     ]
 }
 
-# =========================================================
-# SECURITY: PROMPT INJECTION DEFENSE
-# =========================================================
-
 def sanitize_and_check_injection(user_input: str) -> tuple[bool, str]:
     if not user_input or not user_input.strip():
         return False, "Input cannot be empty."
@@ -207,10 +193,6 @@ def sanitize_and_check_injection(user_input: str) -> tuple[bool, str]:
 
     sanitized = user_input.replace("<", "&lt;").replace(">", "&gt;")
     return True, sanitized
-
-# =========================================================
-# DATA FETCHING & PARSING
-# =========================================================
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
 def fetch_text(url: str) -> str:
@@ -272,7 +254,6 @@ def get_category_catalogue():
     return categories
 
 def resolve_category_info(selected_category_name: str, fallback_url: str = None) -> dict:
-    """Safely retrieves category information with fallback and fuzzy-key matching."""
     catalogue = get_category_catalogue()
     
     if selected_category_name in catalogue:
@@ -428,12 +409,7 @@ def parse_category_matches(answer: str, catalogue: dict):
 
     return results[:3]
 
-# =========================================================
-# REUSABLE MANUAL DIRECTORY BROWSER COMPONENT
-# =========================================================
-
 def render_manual_catalogue_browser(key_prefix: str = "manual"):
-    """Renders sector filters, search, and category selection cards."""
     try:
         catalogue = get_category_catalogue()
         if not catalogue:
@@ -523,10 +499,6 @@ def render_manual_catalogue_browser(key_prefix: str = "manual"):
     except Exception as e:
         st.error(f"Error loading directory: {e}")
 
-# =========================================================
-# TEST MODE UTILITIES
-# =========================================================
-
 def populate_test_sample_data():
     """Dynamically sets every requirement in the category checklist and baseline schema to compliant."""
     target_category_key = "Early Childhood: Pre-School Management System"
@@ -536,7 +508,6 @@ def populate_test_sample_data():
     st.session_state.selected_category = target_category_key
     st.session_state.selected_category_url = target_url
 
-    # 1. Dynamically populate ALL mandatory questions for this category (including Q8)
     reqs = get_category_requirements(target_url)
     answers = {}
     if reqs:
@@ -549,7 +520,6 @@ def populate_test_sample_data():
     
     st.session_state.category_answers = answers
 
-    # 2. Baseline Prerequisites Answers (all compliant from schema)
     schema_answers = {}
     for section_items in BASELINE_PREREQUISITES_SCHEMA.values():
         for item in section_items:
@@ -557,7 +527,6 @@ def populate_test_sample_data():
 
     st.session_state.assessment = schema_answers
 
-    # 3. Contact Details
     st.session_state.sub_company = "Alpha Digital Singapore Pte Ltd"
     st.session_state.sub_person = "Alex Tan"
     st.session_state.sub_email = "alex.tan@alphadigital.sg"
@@ -577,10 +546,7 @@ def clear_all_assessment_data():
     st.session_state.selected_category_url = None
     st.session_state.form_submitted = False
     st.session_state.assessment_step = 0
-
-# =========================================================
-# STEP 1: CATEGORY DISCOVERY & FEASIBILITY PRE-CHECK
-# =========================================================
+    st.session_state.target_focus_key = None
 
 def render_step_1_discovery():
     st.markdown("### 🔍 Step 1: Solution Category Discovery & Feasibility Pre-Check")
@@ -652,7 +618,6 @@ def render_step_1_discovery():
                         st.session_state.assessment_step = 1
                         st.rerun()
 
-            # --- FALLBACK: When none of the AI recommendations match ---
             st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
             with st.container(border=True):
                 st.markdown(
@@ -673,10 +638,6 @@ def render_step_1_discovery():
 
     with tab_manual:
         render_manual_catalogue_browser(key_prefix="manual_tab")
-
-# =========================================================
-# STEP 2: CATEGORY FUNCTIONAL CHECKLIST
-# =========================================================
 
 def render_step_2_checklist():
     st.markdown("### 📋 Step 2: Category Functional Checklist")
@@ -712,16 +673,33 @@ def render_step_2_checklist():
     mandatory = [q for q in requirements if q["mandatory"]]
     preferred = [q for q in requirements if not q["mandatory"]]
 
+    target_focus = st.session_state.get("target_focus_key")
+
     if not mandatory:
         st.info("No explicit checklist questions were found for this category. You may verify details on the official IMDA page above and proceed to prerequisite validation.")
     else:
         for question in mandatory:
-            key = f"category_q_{question['number']}"
-            existing_ans = st.session_state.category_answers.get(question["number"])
+            q_num = str(question['number'])
+            key = f"category_q_{q_num}"
+            existing_ans = st.session_state.category_answers.get(q_num)
             ans_opts = ["Yes", "No", "Not sure"]
             ans_idx = ans_opts.index(existing_ans) if existing_ans in ans_opts else None
 
+            is_focused = (target_focus == f"cat_q_{q_num}")
+
+            st.markdown(f'<div id="anchor_cat_q_{q_num}"></div>', unsafe_allow_html=True)
+
             with st.container(border=True):
+                if is_focused:
+                    st.markdown(
+                        """
+                        <div style='background-color: #fff0f0; border-left: 4px solid #d8232a; padding: 6px 10px; margin-bottom: 8px; border-radius: 4px;'>
+                            <strong style='color: #d8232a; font-size: 12px;'>👉 Focus: Please update this requirement</strong>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
                 q_col1, q_col2 = st.columns([5.2, 1.8])
                 with q_col1:
                     st.markdown(f"**Q{question['number']}** — {question['question']}")
@@ -736,8 +714,24 @@ def render_step_2_checklist():
                     label_visibility="collapsed"
                 )
                 if chosen_q is not None and chosen_q != existing_ans:
-                    st.session_state.category_answers[question["number"]] = chosen_q
+                    st.session_state.category_answers[q_num] = chosen_q
+                    st.session_state.target_focus_key = None
                     st.rerun()
+
+        if target_focus and target_focus.startswith("cat_q_"):
+            st.markdown(
+                f"""
+                <script>
+                    setTimeout(function() {{
+                        var el = document.getElementById("anchor_{target_focus}");
+                        if (el) {{
+                            el.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                        }}
+                    }}, 250);
+                </script>
+                """,
+                unsafe_allow_html=True
+            )
 
         if preferred:
             with st.expander(f"View {len(preferred)} Preferred Requirements"):
@@ -750,15 +744,13 @@ def render_step_2_checklist():
     with col_b1:
         if st.button("← Back to Step 1: Category Discovery", use_container_width=True):
             st.session_state.assessment_step = 0
+            st.session_state.target_focus_key = None
             st.rerun()
     with col_b2:
         if st.button("Proceed to Step 3: Prerequisite Validation →", type="primary", use_container_width=True):
             st.session_state.assessment_step = 2
+            st.session_state.target_focus_key = None
             st.rerun()
-
-# =========================================================
-# STEP 3: BASELINE PREREQUISITE VALIDATION
-# =========================================================
 
 def render_step_3_prerequisites():
     st.markdown("### 🏢 Step 3: Baseline Prerequisite Validation")
@@ -767,12 +759,40 @@ def render_step_3_prerequisites():
     if st.session_state.get("selected_category"):
         st.info(f"Target Category: **{st.session_state.selected_category}**")
 
-    t1, t2, t3 = st.tabs(["1. Corporate & Financials", "2. SME Deployment Track Record", "3. Solution Suitability"])
+    tab_names = ["1. Corporate & Financials", "2. SME Deployment Track Record", "3. Solution Suitability"]
+    current_tab_idx = st.session_state.get("prereq_tab_idx", 0)
 
-    with t1:
+    selected_tab_name = st.radio(
+        "Section",
+        tab_names,
+        index=current_tab_idx,
+        horizontal=True,
+        key="prereq_subtab_radio",
+        label_visibility="collapsed"
+    )
+    st.session_state.prereq_tab_idx = tab_names.index(selected_tab_name)
+    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+
+    target_focus = st.session_state.get("target_focus_key")
+
+    if st.session_state.prereq_tab_idx == 0:
         for item in BASELINE_PREREQUISITES_SCHEMA["corporate"]:
+            k = item["key"]
+            is_focused = (target_focus == f"prereq_{k}")
+
+            st.markdown(f'<div id="anchor_prereq_{k}"></div>', unsafe_allow_html=True)
             with st.container(border=True):
-                current_val = st.session_state.assessment.get(item["key"])
+                if is_focused:
+                    st.markdown(
+                        """
+                        <div style='background-color: #fff0f0; border-left: 4px solid #d8232a; padding: 6px 10px; margin-bottom: 8px; border-radius: 4px;'>
+                            <strong style='color: #d8232a; font-size: 12px;'>👉 Focus: Please update this prerequisite</strong>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                current_val = st.session_state.assessment.get(k)
                 idx = item["options"].index(current_val) if current_val in item["options"] else None
 
                 b_col1, b_col2 = st.columns([5.2, 1.8])
@@ -782,20 +802,35 @@ def render_step_3_prerequisites():
                     render_compliance_badge(current_val, item["compliant_values"])
 
                 chosen = st.radio(
-                    f"Radio for {item['key']}",
+                    f"Radio for {k}",
                     item["options"],
                     index=idx,
-                    key=f"vendor_{item['key']}",
+                    key=f"vendor_{k}",
                     label_visibility="collapsed"
                 )
                 if chosen is not None and chosen != current_val:
-                    st.session_state.assessment[item["key"]] = chosen
+                    st.session_state.assessment[k] = chosen
+                    st.session_state.target_focus_key = None
                     st.rerun()
 
-    with t2:
+    elif st.session_state.prereq_tab_idx == 1:
         ind_item = BASELINE_PREREQUISITES_SCHEMA["deployment"][0]
+        ind_k = ind_item["key"]
+        is_ind_focused = (target_focus == f"prereq_{ind_k}")
+
+        st.markdown(f'<div id="anchor_prereq_{ind_k}"></div>', unsafe_allow_html=True)
         with st.container(border=True):
-            current_ind = st.session_state.assessment.get(ind_item["key"])
+            if is_ind_focused:
+                st.markdown(
+                    """
+                    <div style='background-color: #fff0f0; border-left: 4px solid #d8232a; padding: 6px 10px; margin-bottom: 8px; border-radius: 4px;'>
+                        <strong style='color: #d8232a; font-size: 12px;'>👉 Focus: Please update this prerequisite</strong>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            current_ind = st.session_state.assessment.get(ind_k)
             ind_idx = ind_item["options"].index(current_ind) if current_ind in ind_item["options"] else None
 
             bi_col1, bi_col2 = st.columns([5.2, 1.8])
@@ -805,20 +840,35 @@ def render_step_3_prerequisites():
                 render_compliance_badge(current_ind, ind_item["compliant_values"])
 
             chosen_ind = st.radio(
-                f"Radio for {ind_item['key']}",
+                f"Radio for {ind_k}",
                 ind_item["options"],
                 index=ind_idx,
-                key=f"vendor_{ind_item['key']}",
+                key=f"vendor_{ind_k}",
                 label_visibility="collapsed"
             )
             if chosen_ind is not None and chosen_ind != current_ind:
-                st.session_state.assessment[ind_item["key"]] = chosen_ind
+                st.session_state.assessment[ind_k] = chosen_ind
+                st.session_state.target_focus_key = None
                 st.rerun()
 
         if st.session_state.assessment.get("industries") == "One or few industries":
             cust_item = BASELINE_PREREQUISITES_SCHEMA["deployment"][1]
+            cust_k = cust_item["key"]
+            is_cust_focused = (target_focus == f"prereq_{cust_k}")
+
+            st.markdown(f'<div id="anchor_prereq_{cust_k}"></div>', unsafe_allow_html=True)
             with st.container(border=True):
-                current_track = st.session_state.assessment.get(cust_item["key"])
+                if is_cust_focused:
+                    st.markdown(
+                        """
+                        <div style='background-color: #fff0f0; border-left: 4px solid #d8232a; padding: 6px 10px; margin-bottom: 8px; border-radius: 4px;'>
+                            <strong style='color: #d8232a; font-size: 12px;'>👉 Focus: Please update this prerequisite</strong>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                current_track = st.session_state.assessment.get(cust_k)
                 track_idx = cust_item["options"].index(current_track) if current_track in cust_item["options"] else None
 
                 bt_col1, bt_col2 = st.columns([5.2, 1.8])
@@ -828,20 +878,35 @@ def render_step_3_prerequisites():
                     render_compliance_badge(current_track, cust_item["compliant_values"])
 
                 chosen_track = st.radio(
-                    f"Radio for {cust_item['key']}",
+                    f"Radio for {cust_k}",
                     cust_item["options"],
                     index=track_idx,
-                    key=f"vendor_{cust_item['key']}",
+                    key=f"vendor_{cust_k}",
                     label_visibility="collapsed"
                 )
                 if chosen_track is not None and chosen_track != current_track:
-                    st.session_state.assessment[cust_item["key"]] = chosen_track
+                    st.session_state.assessment[cust_k] = chosen_track
+                    st.session_state.target_focus_key = None
                     st.rerun()
 
-    with t3:
+    elif st.session_state.prereq_tab_idx == 2:
         for item in BASELINE_PREREQUISITES_SCHEMA["solution"]:
+            sk = item["key"]
+            is_sol_focused = (target_focus == f"prereq_{sk}")
+
+            st.markdown(f'<div id="anchor_prereq_{sk}"></div>', unsafe_allow_html=True)
             with st.container(border=True):
-                current_val = st.session_state.assessment.get(item["key"])
+                if is_sol_focused:
+                    st.markdown(
+                        """
+                        <div style='background-color: #fff0f0; border-left: 4px solid #d8232a; padding: 6px 10px; margin-bottom: 8px; border-radius: 4px;'>
+                            <strong style='color: #d8232a; font-size: 12px;'>👉 Focus: Please update this prerequisite</strong>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                current_val = st.session_state.assessment.get(sk)
                 idx = item["options"].index(current_val) if current_val in item["options"] else None
 
                 bs_col1, bs_col2 = st.columns([5.2, 1.8])
@@ -851,48 +916,61 @@ def render_step_3_prerequisites():
                     render_compliance_badge(current_val, item["compliant_values"])
 
                 chosen_sol = st.radio(
-                    f"Radio for {item['key']}",
+                    f"Radio for {sk}",
                     item["options"],
                     index=idx,
-                    key=f"solution_{item['key']}",
+                    key=f"solution_{sk}",
                     label_visibility="collapsed"
                 )
                 if chosen_sol is not None and chosen_sol != current_val:
-                    st.session_state.assessment[item["key"]] = chosen_sol
+                    st.session_state.assessment[sk] = chosen_sol
+                    st.session_state.target_focus_key = None
                     st.rerun()
+
+    if target_focus and target_focus.startswith("prereq_"):
+        st.markdown(
+            f"""
+            <script>
+                setTimeout(function() {{
+                    var el = document.getElementById("anchor_{target_focus}");
+                    if (el) {{
+                        el.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                    }}
+                }}, 250);
+            </script>
+            """,
+            unsafe_allow_html=True
+        )
 
     st.markdown("")
     col_b1, col_b2 = st.columns(2)
     with col_b1:
         if st.button("← Back to Step 2: Category Checklist", use_container_width=True):
             st.session_state.assessment_step = 1
+            st.session_state.target_focus_key = None
             st.rerun()
     with col_b2:
         if st.button("Proceed to Step 4: Review & Summary →", type="primary", use_container_width=True):
             st.session_state.assessment_step = 3
+            st.session_state.target_focus_key = None
             st.rerun()
-
-# =========================================================
-# STEP 4: READINESS REVIEW, GAP AUDIT & STAGE 2 / VMP HANDOVER
-# =========================================================
 
 def render_step_4_review_and_submit():
     st.markdown("### 📊 Step 4: Readiness Review, Gap Audit & Submission Summary")
     selected = st.session_state.get("selected_category", "Not selected")
 
-    # 1. Evaluate Baseline Gaps strictly using the unified schema
     front_gaps = []
-    for section_items in BASELINE_PREREQUISITES_SCHEMA.values():
+    for section_name, section_items in BASELINE_PREREQUISITES_SCHEMA.items():
+        tab_idx_map = {"corporate": 0, "deployment": 1, "solution": 2}
         for item in section_items:
             k = item["key"]
             val = st.session_state.assessment.get(k)
-            # Evaluate customer_track only if industry specifies one or few industries
             if k == "customer_track" and st.session_state.assessment.get("industries") != "One or few industries":
                 continue
             if val and val not in item["compliant_values"]:
-                front_gaps.append({"key": k, "item": item["label"], "status": val})
+                front_gaps.append({"key": k, "item": item["label"], "status": val, "tab_idx": tab_idx_map[section_name]})
             elif not val:
-                front_gaps.append({"key": k, "item": item["label"], "status": "Unanswered"})
+                front_gaps.append({"key": k, "item": item["label"], "status": "Unanswered", "tab_idx": tab_idx_map[section_name]})
 
     unmet_cat_questions = []
     for q_num, ans in st.session_state.category_answers.items():
@@ -901,7 +979,6 @@ def render_step_4_review_and_submit():
 
     total_gaps_count = len(front_gaps) + len(unmet_cat_questions)
 
-    # 2. Automated Gap Detection Box
     with st.container(border=True):
         if total_gaps_count > 0:
             st.warning(f"⚠️ System detected **{total_gaps_count}** requirement gap(s) across your assessment:")
@@ -909,30 +986,32 @@ def render_step_4_review_and_submit():
             if unmet_cat_questions:
                 st.markdown(f"**Category Functional Checklist Gaps for {selected}:**")
                 for uq in unmet_cat_questions:
-                    gap_c1, gap_c2 = st.columns([5, 1])
+                    gap_c1, gap_c2 = st.columns([5.2, 1.3])
                     with gap_c1:
                         st.markdown(f"- ⚠️ **Q{uq['number']} ({uq['status']})**")
                     with gap_c2:
                         if st.button("Edit ✏️", key=f"edit_cat_q_{uq['number']}", use_container_width=True):
                             st.session_state.assessment_step = 1
+                            st.session_state.target_focus_key = f"cat_q_{uq['number']}"
                             st.rerun()
 
             if front_gaps:
                 st.markdown("**Baseline Prerequisite Gaps:**")
                 for fg_idx, fg in enumerate(front_gaps):
-                    gap_col1, gap_col2 = st.columns([5, 1])
+                    gap_col1, gap_col2 = st.columns([5.2, 1.3])
                     with gap_col1:
                         st.markdown(f"- 🔴 **{fg['item']}** (Status: *{fg['status']}*)")
                     with gap_col2:
                         if st.button("Edit ✏️", key=f"edit_gap_{fg_idx}", use_container_width=True):
                             st.session_state.assessment_step = 2
+                            st.session_state.prereq_tab_idx = fg["tab_idx"]
+                            st.session_state.target_focus_key = f"prereq_{fg['key']}"
                             st.rerun()
         else:
             st.success("✅ **Full Compliance:** Your solution meets all evaluated baseline prerequisites and category functional requirements!")
 
     st.markdown("---")
 
-    # 3. Contact Details & Vendor Enquiries Form
     st.subheader("Vendor Contact Details & Pre-Submission Inquiry")
     with st.container(border=True):
         with st.form("vendor_submission_form"):
@@ -965,7 +1044,6 @@ def render_step_4_review_and_submit():
             st.session_state.sub_phone = contact_phone
             st.session_state.sub_inquiry = vendor_inquiry
 
-    # 4. Post-Submission Actions
     if st.session_state.get("form_submitted", False):
         st.success("🎉 Assessment Summary Generated Successfully!")
 
@@ -993,7 +1071,6 @@ def render_step_4_review_and_submit():
 
         st.markdown("---")
 
-        # 5. Outcome-Based Next Steps
         if total_gaps_count > 0:
             with st.container(border=True):
                 st.markdown("### 🤖 Recommended Next Steps: Address Your Identified Gaps")
@@ -1055,14 +1132,10 @@ def render_step_4_review_and_submit():
     st.markdown("")
     if st.button("← Back to Step 3: Prerequisite Validation", use_container_width=True):
         st.session_state.assessment_step = 2
+        st.session_state.target_focus_key = None
         st.rerun()
 
-# =========================================================
-# MASTER CONTROLLER: PRE-APPROVAL ASSESSMENT (4 STEPS)
-# =========================================================
-
 def render_pre_approval_assessment():
-    """Renders the master 4-step assessment funnel with purple segmented stepper."""
     with st.container():
         ctrl_col1, ctrl_col2, _ = st.columns([2.2, 1.8, 3.5])
         with ctrl_col1:
@@ -1078,7 +1151,6 @@ def render_pre_approval_assessment():
 
     st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
-    # Render the purple segmented stepper (replaces default st.progress and st.radio)
     render_purple_segmented_stepper(st.session_state.assessment_step)
 
     if st.session_state.assessment_step == 0:

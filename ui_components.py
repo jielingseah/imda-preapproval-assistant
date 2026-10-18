@@ -6,7 +6,7 @@ Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.s
 import streamlit as st
 
 def inject_custom_css():
-    """Injects universal Plus Jakarta Sans font and SMEs Go Digital official portal styles."""
+    """Injects universal Plus Jakarta Sans font, floating copilot widget styles, and SMEs Go Digital branding."""
     st.markdown(
         """
         <style>
@@ -46,22 +46,7 @@ def inject_custom_css():
             text-decoration: none;
         }
 
-        /* Uniform Navigation Link Buttons */
-        div[data-testid="column"] button {
-            height: 36px !important;
-            min-height: 36px !important;
-            max-height: 36px !important;
-            padding: 0px 8px !important;
-            font-size: 12px !important;
-            font-weight: 600 !important;
-            border-radius: 6px !important;
-            white-space: nowrap !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
-
-        /* EXACT STYLING: Sleek Lilac Search Pill */
+        /* Sleek Lilac Search Pill */
         div[data-testid="column"]:has(button[key="header_search_btn"]) button,
         button[key="header_search_btn"] {
             background-color: #f1e6f5 !important;
@@ -78,7 +63,7 @@ def inject_custom_css():
             color: #420f34 !important;
         }
 
-        /* EXACT STYLING: Sleek Deep Purple Log in / Logout Pill */
+        /* Sleek Deep Purple Logout Pill */
         div[data-testid="column"]:has(button[key="header_logout_btn"]) button,
         button[key="header_logout_btn"] {
             background-color: #6a1a72 !important;
@@ -93,6 +78,27 @@ def inject_custom_css():
         button[key="header_logout_btn"]:hover {
             background-color: #521358 !important;
             color: #ffffff !important;
+        }
+
+        /* Floating Chatbot Launch Trigger Button in Bottom-Right Corner */
+        div.st-key-floating_chat_trigger button {
+            position: fixed !important;
+            bottom: 26px !important;
+            right: 28px !important;
+            z-index: 999999 !important;
+            border-radius: 50px !important;
+            padding: 12px 22px !important;
+            background: linear-gradient(135deg, #581845 0%, #7a1d5a 50%, #d8232a 100%) !important;
+            color: #ffffff !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            border: 2px solid #ffffff !important;
+            box-shadow: 0 8px 24px rgba(88, 24, 69, 0.35) !important;
+            transition: all 0.25s ease-in-out !important;
+        }
+        div.st-key-floating_chat_trigger button:hover {
+            transform: scale(1.05) translateY(-2px) !important;
+            box-shadow: 0 12px 30px rgba(88, 24, 69, 0.45) !important;
         }
 
         /* Portal Cards */
@@ -137,27 +143,6 @@ def inject_custom_css():
             margin-bottom: 10px;
         }
 
-        /* Readiness Metric Tiles */
-        .metric-tile {
-            background: #faf7f9;
-            border: 1px solid #ebdbe5;
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-        }
-        .metric-number {
-            font-size: 28px;
-            font-weight: 800;
-            color: #5d1a58;
-        }
-        .metric-label {
-            font-size: 11.5px;
-            font-weight: 700;
-            color: #6c6c7d;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
         /* Footer Prototype Notice */
         .prototype-footer {
             margin-top: 50px;
@@ -175,13 +160,10 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """Renders the top navigation header bar matching the official portal layout."""
+    """Renders the streamlined 4-item top navigation header bar."""
     pages = [
         "Home",
-        "Self-Assessment",
-        "AI Category Finder",
-        "Category Requirements",
-        "AI Assistant",
+        "Pre-Approval Assessment",
         "About Us",
         "Methodology"
     ]
@@ -198,13 +180,13 @@ def render_top_navigation():
         unsafe_allow_html=True
     )
 
-    # 10-column layout: Logo + 7 Nav Pages + Search Pill + Logout Pill
-    cols = st.columns([1.8, 1.0, 1.3, 1.3, 1.4, 1.1, 0.9, 1.0, 1.0, 0.9])
+    # Clean layout: Logo + 4 Nav items + Search Pill + Logout Pill
+    cols = st.columns([2.5, 1.2, 2.3, 1.2, 1.3, 1.1, 1.0])
 
     with cols[0]:
         st.markdown(
             """
-            <div style="padding-top: 5px;">
+            <div style="padding-top: 4px;">
                 <span style="font-size: 22px; font-weight: 800; color: #581845; letter-spacing: -0.5px;">SMEs</span><span style="font-size: 22px; font-weight: 800; color: #d8232a; letter-spacing: -0.5px;">godigital ↗</span>
             </div>
             """,
@@ -219,19 +201,20 @@ def render_top_navigation():
                 st.session_state.page = page_name
                 st.rerun()
 
-    with cols[8]:
+    with cols[5]:
         if st.button("Search 🔍", key="header_search_btn", use_container_width=True):
-            st.session_state.page = "AI Category Finder"
+            st.session_state.page = "Pre-Approval Assessment"
+            st.session_state.assessment_step = 1  # jump straight to discovery
             st.rerun()
 
-    with cols[9]:
+    with cols[6]:
         if st.button("Log out", key="header_logout_btn", use_container_width=True):
             st.session_state.authenticated = False
             st.rerun()
 
-    st.markdown("<div style='border-bottom: 1px solid #eaeaef; margin-top: 10px; margin-bottom: 22px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='border-bottom: 1px solid #eaeaef; margin-top: 8px; margin-bottom: 22px;'></div>", unsafe_allow_html=True)
 
-def render_brand_header(title: str, subtitle: str = None, badge: str = "Prototype"):
+def render_brand_header(title: str, subtitle: str = None, badge: str = "Official Prototype"):
     """Renders the top navigation header and section title."""
     render_top_navigation()
     
@@ -267,40 +250,6 @@ def render_feature_card(tag: str, title: str, description: str):
         """,
         unsafe_allow_html=True
     )
-
-def render_kpi_dashboard(readiness_pct: int, gaps: int, in_progress: int):
-    """Renders readiness indicator tiles."""
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown(
-            f"""
-            <div class="metric-tile">
-                <div class="metric-number" style="color: {'#16a34a' if readiness_pct >= 80 else '#c2410c'};">{readiness_pct}%</div>
-                <div class="metric-label">Readiness Score</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-    with col2:
-        st.markdown(
-            f"""
-            <div class="metric-tile">
-                <div class="metric-number" style="color: {'#d8232a' if gaps > 0 else '#16a34a'};">{gaps}</div>
-                <div class="metric-label">Prerequisite Gaps</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-    with col3:
-        st.markdown(
-            f"""
-            <div class="metric-tile">
-                <div class="metric-number" style="color: #5d1a58;">{in_progress}</div>
-                <div class="metric-label">In-Progress Items</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
 
 def render_footer_disclaimer():
     """Renders the prototype disclaimer at the bottom of each page."""

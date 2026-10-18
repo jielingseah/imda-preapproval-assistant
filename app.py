@@ -165,7 +165,7 @@ if st.session_state.show_chat_dialog:
     render_floating_chat_modal()
 
 # =========================================================
-# PAGE 1: HOME PAGE (4-STAGE PROGRESSION)
+# PAGE 1: HOME PAGE (STRUCTURED STAGE 1 & STAGE 2)
 # =========================================================
 
 if st.session_state.page == "Home":
@@ -180,17 +180,29 @@ if st.session_state.page == "Home":
         "The SMEs Go Digital programme supports SMEs in adopting pre-approved digital solutions with grant support. Use this copilot to check your category feasibility, assess corporate eligibility, and prepare your formal submission."
     )
 
-    st.markdown("<h3 style='font-size:20px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>The Pre-Approval Journey (Stage 1)</h3>", unsafe_allow_html=True)
+    # ---------------------------------------------------------
+    # SECTION 1: THE PRE-APPROVAL JOURNEY (STAGE 1: VENDOR SELF-ASSESSMENT)
+    # ---------------------------------------------------------
+    st.markdown("<h3 style='font-size:21px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>The Pre-Approval Journey (Stage 1: Vendor Self-Assessment)</h3>", unsafe_allow_html=True)
 
     # Step 1: Full-Width Prominent Category Pre-Check Card
     with st.container(border=True):
-        st.markdown("<span style='background:#f7eaf3; color:#7a1d5a; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700;'>STEP 1: DISCOVERY & FEASIBILITY</span>", unsafe_allow_html=True)
         st.markdown(
-            "<h4 style='font-weight:700; color:#2b0b2e; margin:6px 0 4px 0;'>🔍 Solution Category Pre-Check</h4>",
+            """
+            <div style="margin-bottom: 8px;">
+                <span class="step-badge">
+                    <span style="font-size: 15px;">🔍</span> STEP 1: DISCOVERY & FEASIBILITY
+                </span>
+            </div>
+            """,
             unsafe_allow_html=True
         )
         st.markdown(
-            "<p style='font-size:12.5px; color:#636375; margin-bottom:12px; line-height:1.5;'>"
+            "<h4 style='font-size:20px; font-weight:800; color:#2b0b2e; margin:4px 0 6px 0;'>🔍 Solution Category Pre-Check</h4>",
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            "<p style='font-size:13px; color:#636375; margin-bottom:14px; line-height:1.5;'>"
             "Check if your solution fits an official IMDA category before starting self-assessment. "
             "If your product does not fall under an existing pre-approved category, it is not eligible under this programme."
             "</p>",
@@ -211,7 +223,7 @@ if st.session_state.page == "Home":
                     st.session_state.assessment["solution_description"] = home_query.strip()
                     st.session_state.auto_trigger_search = True
                     st.session_state.page = "Pre-Approval Assessment"
-                    st.session_state.assessment_step = 0  # Step 1 is index 0 in the 4-step wizard
+                    st.session_state.assessment_step = 0
                     st.rerun()
 
         st.markdown("<p style='font-size:11.5px; color:#777788; margin-top:8px; margin-bottom:4px;'>💡 Or click a sample prompt to try:</p>", unsafe_allow_html=True)
@@ -240,45 +252,79 @@ if st.session_state.page == "Home":
 
     st.markdown("<div style='margin-bottom: 14px;'></div>", unsafe_allow_html=True)
 
-    # Steps 2, 3, and 4 in Balanced 3-Column Grid Below
-    col2, col3, col4 = st.columns(3)
+    # Balanced 2-Column Grid for Stage 1: Step 2 & Step 3
+    col2, col3 = st.columns(2)
 
     with col2:
         render_feature_card(
             "STEP 2: ELIGIBILITY",
             "Prerequisite Validation",
-            "Verify incorporation age, financial ratios (positive equity, current ratio >= 1), and SME deployment benchmarks."
+            "Verify incorporation age, financial stability ratios (positive equity, current ratio >= 1), InvoiceNow account status, and SME deployment benchmarks.",
+            icon="🏢"
         )
         st.write("")
         if st.button("Start Assessment →", key="home_btn_prereq", use_container_width=True):
             st.session_state.page = "Pre-Approval Assessment"
-            st.session_state.assessment_step = 1  # Step 2 is index 1
+            st.session_state.assessment_step = 1
             st.rerun()
 
     with col3:
         render_feature_card(
             "STEP 3: AUDIT & CHECKLIST",
             "Functional Gap Review",
-            "Complete mandatory functional criteria, audit compliance gaps, and access instant remediation via AI Copilot."
+            "Complete category-specific mandatory checklists, automatically detect prerequisite compliance gaps, and access instant remediation via AI Copilot.",
+            icon="📋"
         )
         st.write("")
         if st.button("Review Checklist →", key="home_btn_checklist", use_container_width=True):
             st.session_state.page = "Pre-Approval Assessment"
-            st.session_state.assessment_step = 2  # Step 3 is index 2
+            st.session_state.assessment_step = 2
             st.rerun()
 
-    with col4:
-        with st.container(border=True):
-            st.markdown("<span style='background:#f7eaf3; color:#7a1d5a; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;'>STEP 4: SUBMISSION & VMP</span>", unsafe_allow_html=True)
-            st.markdown("<h4 style='font-size:17px; font-weight:700; color:#2b0b2e; margin:6px 0;'>Stage 2 Preparation & VMP</h4>", unsafe_allow_html=True)
-            st.markdown(
-                "<p style='font-size:12.5px; color:#636375; line-height:1.45; margin-bottom:12px;'>"
-                "Read the official guide to prepare required decks, templates, and audit evidence before logging in to the Vendor Management Portal (VMP) to submit."
-                "</p>",
-                unsafe_allow_html=True
+    st.markdown("<div style='margin-top: 28px; margin-bottom: 14px;'></div>", unsafe_allow_html=True)
+
+    # ---------------------------------------------------------
+    # SECTION 2: THE PRE-APPROVAL JOURNEY (STAGE 2: VENDOR APPLICATION)
+    # ---------------------------------------------------------
+    st.markdown("<h3 style='font-size:21px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>The Pre-Approval Journey (Stage 2: Vendor Application)</h3>", unsafe_allow_html=True)
+
+    # Step 4: Dedicated Full-Width Balanced Action Card
+    with st.container(border=True):
+        st.markdown(
+            """
+            <div style="margin-bottom: 8px;">
+                <span class="step-badge">
+                    <span style="font-size: 15px;">🚀</span> STEP 4: SUBMISSION & VMP
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            "<h4 style='font-size:20px; font-weight:800; color:#2b0b2e; margin:4px 0 6px 0;'>🚀 Stage 2 Preparation & Formal VMP Submission</h4>",
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            "<p style='font-size:13px; color:#636375; line-height:1.5; margin-bottom:16px;'>"
+            "Once you clear Stage 1 Self-Assessment, review the official documentation guidelines to prepare your solution presentation deck, "
+            "pricing matrix, and customer proof before formally submitting via the Vendor Management Portal (VMP)."
+            "</p>",
+            unsafe_allow_html=True
+        )
+        
+        st4_col1, st4_col2 = st.columns(2)
+        with st4_col1:
+            st.link_button(
+                "📖 Read Stage 2 Guide ↗",
+                "https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-2-vendor-application",
+                use_container_width=True
             )
-            st.link_button("📖 Read Stage 2 Guide ↗", "https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-2-vendor-application", use_container_width=True)
-            st.link_button("🏛️ Launch VMP Portal ↗", "https://services2-stg.imda.gov.sg/VMP/", use_container_width=True)
+        with st4_col2:
+            st.link_button(
+                "🏛️ Launch VMP Portal ↗",
+                "https://services2-stg.imda.gov.sg/VMP/",
+                use_container_width=True
+            )
 
     render_footer_disclaimer()
 

@@ -747,14 +747,16 @@ def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
     )
 
 def render_footer_disclaimer():
-    """Renders the prototype disclaimer at the bottom of each page."""
-    st.markdown(
-        """
-       <div style="font-size: 12.5px; color: #636375; line-height: 1.6;">
+    """Renders the required proof-of-concept prototype disclaimer inside an expandable divider."""
+    st.markdown("<div style='margin-top: 32px;'></div>", unsafe_allow_html=True)
+    with st.expander("⚠️ IMPORTANT NOTICE — Proof-of-Concept Prototype Disclaimer", expanded=False):
+        st.markdown(
+            """
+            <div style="font-size: 12.5px; color: #636375; line-height: 1.6;">
                 <strong style="color: #2b0b2e;">IMPORTANT NOTICE:</strong> This web application is developed as a proof-of-concept prototype. The information provided here is NOT intended for actual usage and should not be relied upon for making any decisions, especially those related to financial, legal, or healthcare matters.<br><br>
                 Furthermore, please be aware that the LLM may generate inaccurate or incorrect information. You assume full responsibility for how you use any generated output.<br><br>
                 Always consult with qualified professionals for accurate and personalised advice.
             </div>
-        """,
-        unsafe_allow_html=True
-    )
+            """,
+            unsafe_allow_html=True
+        )

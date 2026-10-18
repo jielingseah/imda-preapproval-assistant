@@ -313,10 +313,14 @@ def inject_custom_css():
             transform: translateY(-1px) !important;
         }
 
-        /* Global Purple Action Buttons (Includes st.form_submit_button) */
+        /* =========================================================
+           GLOBAL PURPLE ACTION & FORM SUBMIT BUTTONS
+           ========================================================= */
         button[kind="primary"],
         button[data-testid="baseButton-primary"],
-        button[data-testid="stFormSubmitButton"] {
+        div[data-testid="stFormSubmitButton"] button,
+        div[data-testid="stFormSubmitButton"] button[kind="primary"],
+        div[data-testid="stFormSubmitButton"] button[data-testid="baseButton-primary"] {
             background: linear-gradient(130deg, #581845 0%, #7a1d5a 50%, #9a1f52 100%) !important;
             color: #ffffff !important;
             border: 1px solid #7a1d5a !important;
@@ -326,22 +330,27 @@ def inject_custom_css():
             box-shadow: 0 4px 12px rgba(88, 24, 69, 0.25) !important;
             transition: all 0.2s ease !important;
         }
+
         button[kind="primary"]:hover,
         button[data-testid="baseButton-primary"]:hover,
-        button[data-testid="stFormSubmitButton"]:hover {
+        div[data-testid="stFormSubmitButton"] button:hover {
             background: linear-gradient(130deg, #481237 0%, #68174c 50%, #871946 100%) !important;
             color: #ffffff !important;
+            border-color: #581845 !important;
             transform: translateY(-1px) !important;
             box-shadow: 0 6px 16px rgba(88, 24, 69, 0.35) !important;
         }
+
         button[kind="primary"] p,
         button[kind="primary"] span,
         button[data-testid="baseButton-primary"] p,
         button[data-testid="baseButton-primary"] span,
-        button[data-testid="stFormSubmitButton"] p,
-        button[data-testid="stFormSubmitButton"] span {
+        div[data-testid="stFormSubmitButton"] button p,
+        div[data-testid="stFormSubmitButton"] button span {
             color: #ffffff !important;
             -webkit-text-fill-color: #ffffff !important;
+            background: transparent !important;
+            background-color: transparent !important;
         }
 
         button[kind="secondary"],
@@ -354,17 +363,21 @@ def inject_custom_css():
             font-size: 13.5px !important;
             transition: all 0.2s ease !important;
         }
+
         button[kind="secondary"]:hover,
         button[data-testid="baseButton-secondary"]:hover {
             background-color: #f7eaf3 !important;
             border-color: #7a1d5a !important;
             color: #7a1d5a !important;
         }
+
         button[kind="secondary"] p,
         button[kind="secondary"] span,
         button[data-testid="baseButton-secondary"] p,
         button[data-testid="baseButton-secondary"] span {
             color: #581845 !important;
+            background: transparent !important;
+            background-color: transparent !important;
         }
 
         /* Purple Sub-Tab Segmented Strip */
@@ -547,7 +560,6 @@ def render_purple_segmented_stepper(current_step: int):
                 is_active = (idx == current_step)
                 is_done = completion_flags[idx]
 
-                # Automatic green logic: even if active, if satisfied it turns green
                 if is_done:
                     bar_color = "#00e676"
                     prefix = "✓ "
@@ -575,7 +587,6 @@ def render_purple_segmented_stepper(current_step: int):
                     unsafe_allow_html=True
                 )
 
-                # Fix: inner p and span have background: transparent to prevent box highlights
                 st.markdown(
                     f"""
                     <style>

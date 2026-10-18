@@ -401,4 +401,80 @@ def render_purple_segmented_stepper(current_step: int):
         st.markdown('<div class="stepper-marker" style="display:none;"></div>', unsafe_allow_html=True)
         st.markdown(
             f"""
-            <div style="color: #f3d7e8;
+            <div style="color: #f3d7e8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;">
+                Assessment Flow — Step {current_step + 1} of 4: {steps[current_step]}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        cols = st.columns(4)
+        for idx, name in enumerate(steps):
+            with cols[idx]:
+                is_active = (idx == current_step)
+                is_done = completion_flags[idx]
+
+                if is_active:
+                    bar_bg = "#ff4081"
+                    prefix = "● "
+                    btn_bg = "rgba(255, 64, 129, 0.16)"
+                elif is_done:
+                    bar_bg = "#00e676"
+                    prefix = "✓ "
+                    btn_bg = "rgba(0, 230, 118, 0.12)"
+                else:
+                    bar_bg = "rgba(255, 255, 255, 0.22)"
+                    prefix = ""
+                    btn_bg = "transparent"
+
+                st.markdown(
+                    f"""
+                    <style>
+                    div.st-key-stepper_click_{idx} button {{
+                        background-color: {btn_bg} !important;
+                    }}
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                st.markdown(
+                    f"""
+                    <div style="height: 8px; border-radius: 999px; background-color: {bar_bg}; margin-bottom: 6px;"></div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                btn_display_text = f"{prefix}{name}"
+                if st.button(btn_display_text, key=f"stepper_click_{idx}", use_container_width=True):
+                    st.session_state.assessment_step = idx
+                    st.session_state.target_focus_key = None
+                    st.rerun()
+
+def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
+    """Renders portal cards with prominent badges and icons."""
+    icon_html = f"<span style='font-size: 22px;'>{icon}</span> " if icon else ""
+    st.markdown(
+        f"""
+        <div class="portal-card">
+            <div>
+                <div class="portal-card-tag">{tag}</div>
+                <div class="portal-card-title">{icon_html}{title}</div>
+                <div class="portal-card-desc">{description}</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+def render_footer_disclaimer():
+    """Renders the prototype disclaimer at the bottom of each page."""
+    st.markdown(
+        """
+        <div class="prototype-footer">
+            <strong>⚠️ IMPORTANT NOTICE — Prototype:</strong> This web application is developed for demonstration purposes only under the IMDA SMEs Go Digital POC. 
+            The information provided here is NOT intended for actual business or regulatory decisions.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )

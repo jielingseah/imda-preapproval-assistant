@@ -6,7 +6,7 @@ Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.s
 import streamlit as st
 
 def inject_custom_css():
-    """Injects SMEs Go Digital official portal theme styling, including sidebar upgrades."""
+    """Injects SMEs Go Digital official portal theme styling and hides default sidebar."""
     st.markdown(
         """
         <style>
@@ -15,6 +15,11 @@ def inject_custom_css():
         html, body, [class*="css"] {
             font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
             color: #1a1a24;
+        }
+
+        /* Hide Streamlit default sidebar completely */
+        [data-testid="stSidebar"] {
+            display: none !important;
         }
 
         /* Top Government Masthead */
@@ -27,7 +32,7 @@ def inject_custom_css():
             align-items: center;
             gap: 8px;
             border-bottom: 1px solid #e2e2e8;
-            margin: -6rem -5rem 1.5rem -5rem;
+            margin: -6rem -5rem 1rem -5rem;
         }
         .sg-masthead-crest {
             color: #d8232a;
@@ -45,30 +50,30 @@ def inject_custom_css():
             display: flex;
             align-items: baseline;
             gap: 14px;
-            padding: 8px 0 16px 0;
+            padding: 6px 0 12px 0;
             border-bottom: 1px solid #ebebf2;
-            margin-bottom: 22px;
+            margin-bottom: 15px;
         }
         .logo-smes {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 800;
             color: #581845;
             letter-spacing: -0.5px;
             line-height: 1;
         }
         .logo-godigital {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 800;
             color: #d8232a;
             letter-spacing: -0.5px;
             line-height: 1;
         }
         .logo-subtitle {
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 600;
             color: #6c6c7d;
             border-left: 2px solid #d0d0dc;
-            padding-left: 12px;
+            padding-left: 10px;
             margin-left: 4px;
         }
         .brand-badge {
@@ -87,67 +92,34 @@ def inject_custom_css():
         .smes-banner {
             background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%);
             color: #ffffff;
-            padding: 36px 36px;
-            border-radius: 18px;
-            margin-bottom: 28px;
-            box-shadow: 0 12px 28px -6px rgba(61, 12, 63, 0.28);
+            padding: 32px 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);
             position: relative;
             overflow: hidden;
         }
-        .smes-banner::after {
-            content: "";
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 320px;
-            height: 320px;
-            background: radial-gradient(circle, rgba(216, 35, 42, 0.25) 0%, rgba(255,255,255,0) 70%);
-            pointer-events: none;
-        }
         .smes-banner h2 {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 800;
             color: #ffffff !important;
-            margin: 0 0 10px 0;
-            letter-spacing: -0.5px;
+            margin: 0 0 8px 0;
         }
         .smes-banner p {
-            font-size: 15px;
+            font-size: 14.5px;
             color: #f3d7e8;
             margin: 0;
             max-width: 85%;
-            line-height: 1.55;
-            font-weight: 400;
-        }
-
-        /* Pill Search Box simulation on home banner */
-        .smes-search-pill {
-            margin-top: 20px;
-            background: #ffffff;
-            border-radius: 999px;
-            padding: 6px 8px 6px 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            width: 90%;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-        }
-        .smes-search-btn {
-            background-color: #5d1a58;
-            color: #ffffff;
-            padding: 7px 20px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 700;
+            line-height: 1.5;
         }
 
         /* Portal Cards */
         .portal-card {
             background-color: #ffffff;
             border: 1px solid #ebebf2;
-            border-radius: 14px;
-            padding: 24px;
-            min-height: 195px;
+            border-radius: 12px;
+            padding: 22px;
+            min-height: 185px;
             box-shadow: 0 4px 12px rgba(26, 26, 36, 0.04);
             transition: all 0.25s ease-in-out;
             display: flex;
@@ -156,8 +128,8 @@ def inject_custom_css():
         }
         .portal-card:hover {
             border-color: #7a1d5a;
-            box-shadow: 0 12px 24px rgba(93, 26, 88, 0.12);
-            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(93, 26, 88, 0.1);
+            transform: translateY(-2px);
         }
         .portal-card-tag {
             font-size: 11px;
@@ -167,20 +139,20 @@ def inject_custom_css():
             padding: 3px 8px;
             border-radius: 6px;
             width: fit-content;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             text-transform: uppercase;
         }
         .portal-card-title {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
             color: #2b0b2e;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .portal-card-desc {
-            font-size: 13px;
+            font-size: 12.5px;
             color: #636375;
-            line-height: 1.5;
-            margin-bottom: 12px;
+            line-height: 1.45;
+            margin-bottom: 10px;
         }
 
         /* Readiness Audit Metric Tiles */
@@ -188,108 +160,74 @@ def inject_custom_css():
             background: #faf7f9;
             border: 1px solid #ebdbe5;
             border-radius: 12px;
-            padding: 18px;
+            padding: 16px;
             text-align: center;
         }
         .metric-number {
-            font-size: 30px;
+            font-size: 28px;
             font-weight: 800;
             color: #5d1a58;
         }
         .metric-label {
-            font-size: 12px;
+            font-size: 11.5px;
             font-weight: 700;
             color: #6c6c7d;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        /* Buttons matching the portal */
-        button[kind="primary"] {
-            background: linear-gradient(135deg, #581845 0%, #7a1d5a 100%) !important;
-            border: none !important;
-            color: #ffffff !important;
-            border-radius: 999px !important;
-            font-weight: 700 !important;
-            padding: 8px 24px !important;
-            box-shadow: 0 4px 12px rgba(88, 24, 69, 0.25) !important;
-            transition: all 0.2s ease !important;
-        }
-        button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #7a1d5a 0%, #d8232a 100%) !important;
-            box-shadow: 0 6px 16px rgba(216, 35, 42, 0.3) !important;
-            transform: translateY(-1px);
-        }
-
-        button[kind="secondary"] {
-            border: 1.5px solid #d0c0cc !important;
-            color: #581845 !important;
-            border-radius: 999px !important;
-            font-weight: 600 !important;
-            background-color: #ffffff !important;
-        }
-        button[kind="secondary"]:hover {
-            border-color: #581845 !important;
-            background-color: #faf2f7 !important;
-            color: #3d0c3f !important;
-        }
-
-        /* =========================================================
-           SIDEBAR STYLING UPGRADES (SMEs Go Digital Theme)
-           ========================================================= */
-        [data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #faf7f9 0%, #f4eff3 100%);
-            border-right: 1px solid #ebdbe5;
-            padding-top: 1rem;
-        }
-        
-        /* Sidebar headers & captions */
-        [data-testid="stSidebar"] h3 {
-            color: #581845 !important;
-            font-weight: 800 !important;
-            letter-spacing: -0.3px;
-        }
-        [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {
-            color: #636375;
-        }
-
-        /* Sidebar Radio Navigation Options */
-        [data-testid="stSidebar"] .stRadio label {
-            background-color: #ffffff;
-            border: 1px solid #ebdbe5;
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin-bottom: 6px;
-            transition: all 0.2s ease;
-            width: 100%;
-            font-weight: 600;
-            color: #4a154b !important;
-        }
-        [data-testid="stSidebar"] .stRadio label:hover {
-            background-color: #f7eaf3;
-            border-color: #7a1d5a;
-        }
-
-        /* Logout / Lock Button inside Sidebar */
-        [data-testid="stSidebar"] button {
-            border-radius: 999px !important;
-            border: 1.5px solid #d8232a !important;
-            color: #d8232a !important;
-            font-weight: 700 !important;
-            background-color: #ffffff !important;
-            transition: all 0.2s ease !important;
-        }
-        [data-testid="stSidebar"] button:hover {
-            background-color: #fce8e8 !important;
-            color: #b51c22 !important;
+        /* Footer Prototype Notice Styling */
+        .prototype-footer {
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #f8f8fa;
+            border-top: 1px solid #e2e2e8;
+            border-radius: 10px;
+            text-align: center;
+            color: #6c6c7d;
+            font-size: 12px;
         }
         </style>
         """,
         unsafe_allow_html=True
     )
 
+def render_top_navigation():
+    """Renders top navigation banner with clean buttons and logout on the right."""
+    pages = [
+        "Home",
+        "Self-Assessment",
+        "AI Category Finder",
+        "Category Requirements",
+        "AI Assistant (RAG Chatbot)",
+        "About Us",
+        "Methodology"
+    ]
+
+    current_page = st.session_state.get("page", "Home")
+
+    # Render top banner menu using columns
+    cols = st.columns([len(pages), 1.2])
+    
+    with cols[0]:
+        nav_cols = st.columns(len(pages))
+        for idx, page_name in enumerate(pages):
+            with nav_cols[idx]:
+                is_active = (current_page == page_name)
+                btn_type = "primary" if is_active else "secondary"
+                if st.button(page_name, key=f"top_nav_{idx}", type=btn_type, use_container_width=True):
+                    st.session_state.page = page_name
+                    st.rerun()
+
+    with cols[1]:
+        if st.button("🔒 Logout", key="top_logout_btn", use_container_width=True):
+            st.session_state.authenticated = False
+            st.rerun()
+
+    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+
 def render_brand_header(title: str, subtitle: str = None, badge: str = "Prototype"):
-    """Renders the top Singapore Government Masthead & SMEs Go Digital logo header."""
+    """Renders the top Singapore Government Masthead, Logo, and Top Navigation Banner."""
     badge_html = f'<span class="brand-badge">{badge}</span>' if badge else ""
     st.markdown(
         f"""
@@ -306,8 +244,9 @@ def render_brand_header(title: str, subtitle: str = None, badge: str = "Prototyp
         """,
         unsafe_allow_html=True
     )
+    render_top_navigation()
     if subtitle:
-        st.markdown(f"<p style='color:#636375; font-size:14px; margin-top:-12px; margin-bottom:18px;'>{subtitle}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color:#636375; font-size:13.5px; margin-top:-4px; margin-bottom:16px;'>{subtitle}</p>", unsafe_allow_html=True)
 
 def render_hero_banner(heading: str, description: str):
     """Renders the official purple-magenta mesh banner seen on smesgodigital.gov.sg."""
@@ -316,11 +255,6 @@ def render_hero_banner(heading: str, description: str):
         <div class="smes-banner">
             <h2>{heading}</h2>
             <p>{description}</p>
-            <div class="smes-search-pill">
-                <span style="color:#7a1d5a; font-weight:700;">🔍</span>
-                <span style="color:#777788; font-size:13.5px; flex-grow:1;">Search pre-approved categories, eligibility criteria, grants...</span>
-                <span class="smes-search-btn">Search</span>
-            </div>
         </div>
         """,
         unsafe_allow_html=True
@@ -342,7 +276,7 @@ def render_feature_card(tag: str, title: str, description: str):
     )
 
 def render_kpi_dashboard(readiness_pct: int, gaps: int, in_progress: int):
-    """Renders the readiness indicator tiles using the portal palette."""
+    """Renders readiness indicator tiles."""
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown(
@@ -374,3 +308,15 @@ def render_kpi_dashboard(readiness_pct: int, gaps: int, in_progress: int):
             """,
             unsafe_allow_html=True
         )
+
+def render_footer_disclaimer():
+    """Renders the prototype disclaimer at the bottom of each page."""
+    st.markdown(
+        """
+        <div class="prototype-footer">
+            <strong>⚠️ IMPORTANT NOTICE — Prototype:</strong> This web application is developed for demonstration purposes only under the IMDA SMEs Go Digital POC. 
+            The information provided here is NOT intended for actual business or regulatory decisions.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )

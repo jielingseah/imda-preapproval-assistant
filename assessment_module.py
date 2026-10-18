@@ -398,7 +398,7 @@ def populate_test_sample_data():
     st.session_state.selected_category = target_category_key
     st.session_state.selected_category_url = target_url
 
-    # 1. Dynamically populate ALL mandatory questions for this category
+    # 1. Dynamically populate ALL mandatory questions for this category (including Q8)
     reqs = get_category_requirements(target_url)
     answers = {}
     if reqs:
@@ -498,7 +498,7 @@ def render_step_1_discovery():
                     if st.button("Confirm & Proceed to Category Functional Checklist →", key=f"select_ai_cat_{index}", use_container_width=True):
                         st.session_state.selected_category = category_key
                         st.session_state.selected_category_url = category["url"]
-                        st.session_state.assessment_step = 1  # Step 2 Checklist
+                        st.session_state.assessment_step = 1
                         st.rerun()
 
     with tab_manual:
@@ -826,7 +826,7 @@ def render_step_4_review_and_submit():
 
         st.markdown("---")
 
-      # 5. Adaptive Next Steps
+        # 5. Outcome-Based Next Steps
         if total_gaps_count > 0:
             with st.container(border=True):
                 st.markdown("### 🤖 Recommended Next Steps: Address Your Identified Gaps")
@@ -870,30 +870,6 @@ def render_step_4_review_and_submit():
                     "Your solution meets all evaluated baseline criteria and category functional requirements! "
                     "Follow the official **Stage 2: Vendor Application** guide to prepare your solution deck, "
                     "pricing matrix, and customer proof before submitting through the **Vendor Management Portal (VMP)**."
-                )
-                col_d1, col_d2 = st.columns(2)
-                with col_d1:
-                    st.link_button(
-                        "📖 Read Stage 2 Guide ↗",
-                        STAGE_2_GUIDE_URL,
-                        use_container_width=True
-                    )
-                with col_d2:
-                    st.link_button(
-                        "🏛️ Launch VMP Portal ↗",
-                        VMP_PORTAL_URL,
-                        use_container_width=True
-                    )
-
-        else:
-            with st.container(border=True):
-                st.markdown("### 🚀 Decision Path 2: Ready for Stage 2 Application & VMP Submission")
-                st.write(
-                    """
-                    Your solution meets all evaluated baseline criteria and category functional requirements!
-                    Your next step is to read the official **Stage 2: Vendor Application** guide to prepare your solution 
-                    deck, pricing matrix, and customer proof, then formally submit your application through the **Vendor Management Portal (VMP)**.
-                    """
                 )
                 col_d1, col_d2 = st.columns(2)
                 with col_d1:

@@ -35,7 +35,7 @@ def inject_custom_css():
         }
         header {visibility: hidden;}
 
-        /* Sleek Top Government Masthead without awkward negative margins */
+        /* Sleek Top Government Masthead */
         .sg-masthead {
             background-color: #f8f8f9;
             padding: 5px 24px;
@@ -117,7 +117,7 @@ def inject_custom_css():
             box-shadow: 0 12px 30px rgba(88, 24, 69, 0.45) !important;
         }
 
-        /* Enlarged, Prominent Step Badges */
+        /* Prominent Step Badges */
         .portal-card-tag, .step-badge {
             font-size: 12.5px !important;
             font-weight: 800 !important;
@@ -184,7 +184,7 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """Renders the streamlined top navigation header bar."""
+    """Renders the top navigation header bar."""
     pages = [
         "Home",
         "Pre-Approval Assessment",

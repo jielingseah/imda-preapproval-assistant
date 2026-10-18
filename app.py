@@ -395,18 +395,32 @@ if st.session_state.page == "Home":
         if st.button("Open AI Chatbot →", type="primary", use_container_width=True):
             st.session_state.page = "AI Assistant (RAG Chatbot)"
             st.rerun()
-
 # =========================================================
-# SELF-ASSESSMENT (MODERN TABBED WIZARD & CARD LAYOUT)
+# SELF-ASSESSMENT (ROBUST MOBILE-FRIENDLY WIZARD)
 # =========================================================
 
 elif st.session_state.page == "Self-Assessment":
     render_brand_header("Vendor Self-Assessment", subtitle="Prerequisite validation against mandatory onboarding standards.")
-    st.progress(0.33, text="Validation in Progress — Step 1 of 3")
+    
+    # Initialize wizard step if not present
+    if "assessment_step" not in st.session_state:
+        st.session_state.assessment_step = 0
 
-    t1, t2, t3 = st.tabs(["1. Vendor Eligibility", "2. Solution Track Record", "3. Solution Eligibility"])
+    steps = ["1. Vendor Eligibility", "2. Solution Track Record", "3. Solution Eligibility"]
+    
+    # Progress bar calculation
+    progress_vals = [0.33, 0.66, 1.0]
+    st.progress(progress_vals[st.session_state.assessment_step], text=f"Validation in Progress — Step {st.session_state.assessment_step + 1} of 3")
 
-    with t1:
+    # Radio button selection for tabs to guarantee mobile touch response
+    selected_tab = st.radio("Assessment Section", steps, index=st.session_state.assessment_step, horizontal=True, key="assessment_wizard_radio")
+    
+    # Sync radio selection back to state index
+    st.session_state.assessment_step = steps.index(selected_tab)
+
+    st.markdown("---")
+
+    if st.session_state.assessment_step == 0:
         st.markdown("### 🏢 Vendor Eligibility Standards")
         st.caption("Confirm foundational corporate and financial prerequisites.")
 
@@ -427,10 +441,13 @@ elif st.session_state.page == "Self-Assessment":
                 st.session_state.assessment[key] = st.radio(question, options, index=idx, key=f"vendor_{key}")
 
         st.markdown("")
-        if st.button("Save & Continue to Track Record →", type="primary", use_container_width=True):
-            st.rerun()
+        col_b1, col_b2 = st.columns([1, 1])
+        with col_b2:
+            if st.button("Save & Continue to Track Record →", type="primary", use_container_width=True):
+                st.session_state.assessment_step = 1
+                st.rerun()
 
-    with t2:
+    elif st.session_state.assessment_step == 1:
         st.markdown("### 📊 Solution Track Record & Deployment")
         st.caption("Specify market reach and SME customer base metrics.")
 
@@ -459,10 +476,17 @@ elif st.session_state.page == "Self-Assessment":
                 )
 
         st.markdown("")
-        if st.button("Save & Continue to Solution Eligibility →", type="primary", use_container_width=True):
-            st.rerun()
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.button("← Previous Step", use_container_width=True):
+                st.session_state.assessment_step = 0
+                st.rerun()
+        with col_b2:
+            if st.button("Save & Continue to Solution Eligibility →", type="primary", use_container_width=True):
+                st.session_state.assessment_step = 2
+                st.rerun()
 
-    with t3:
+    elif st.session_state.assessment_step == 2:
         st.markdown("### ⚙️ Solution Specifications & Value")
         st.caption("Verify pricing, suitability, productivity impact, and compliance.")
 
@@ -481,9 +505,15 @@ elif st.session_state.page == "Self-Assessment":
                 st.session_state.assessment[key] = st.radio(question, options, index=idx, key=f"solution_{key}")
 
         st.markdown("---")
-        if st.button("Complete Assessment & Find Solution Category →", type="primary", use_container_width=True):
-            st.session_state.page = "AI Category Finder"
-            st.rerun()
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.button("← Previous Step", use_container_width=True):
+                st.session_state.assessment_step = 1
+                st.rerun()
+        with col_b2:
+            if st.button("Complete Assessment & Find Solution Category →", type="primary", use_container_width=True):
+                st.session_state.page = "AI Category Finder"
+                st.rerun()
 
 # =========================================================
 # AI CATEGORY FINDER & INTERACTIVE MANUAL BROWSER

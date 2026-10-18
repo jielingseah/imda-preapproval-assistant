@@ -393,12 +393,16 @@ def inject_custom_css():
             background: transparent !important;
         }
 
-        /* Global Purple Action & Form Submit Buttons */
+        /* =========================================================
+           GLOBAL PURPLE ACTION, SUBMIT & LINK BUTTONS
+           ========================================================= */
         button[kind="primary"],
         button[data-testid="baseButton-primary"],
+        a[data-testid="baseButton-primary"],
         div[data-testid="stFormSubmitButton"] button,
         div[data-testid="stFormSubmitButton"] button[kind="primary"],
-        div[data-testid="stFormSubmitButton"] button[data-testid="baseButton-primary"] {
+        div[data-testid="stLinkButton"] a[kind="primary"],
+        div[data-testid="stLinkButton"] a[data-testid="baseButton-primary"] {
             background: linear-gradient(130deg, #581845 0%, #7a1d5a 50%, #9a1f52 100%) !important;
             color: #ffffff !important;
             border: 1px solid #7a1d5a !important;
@@ -407,24 +411,34 @@ def inject_custom_css():
             font-size: 13.5px !important;
             box-shadow: 0 4px 12px rgba(88, 24, 69, 0.25) !important;
             transition: all 0.2s ease !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
 
         button[kind="primary"]:hover,
         button[data-testid="baseButton-primary"]:hover,
-        div[data-testid="stFormSubmitButton"] button:hover {
+        a[data-testid="baseButton-primary"]:hover,
+        div[data-testid="stFormSubmitButton"] button:hover,
+        div[data-testid="stLinkButton"] a[kind="primary"]:hover,
+        div[data-testid="stLinkButton"] a[data-testid="baseButton-primary"]:hover {
             background: linear-gradient(130deg, #481237 0%, #68174c 50%, #871946 100%) !important;
             color: #ffffff !important;
             border-color: #581845 !important;
             transform: translateY(-1px) !important;
             box-shadow: 0 6px 16px rgba(88, 24, 69, 0.35) !important;
+            text-decoration: none !important;
         }
 
         button[kind="primary"] p,
         button[kind="primary"] span,
-        button[data-testid="baseButton-primary"] p,
-        button[data-testid="baseButton-primary"] span,
+        a[data-testid="baseButton-primary"] p,
+        a[data-testid="baseButton-primary"] span,
         div[data-testid="stFormSubmitButton"] button p,
-        div[data-testid="stFormSubmitButton"] button span {
+        div[data-testid="stFormSubmitButton"] button span,
+        div[data-testid="stLinkButton"] a p,
+        div[data-testid="stLinkButton"] a span {
             color: #ffffff !important;
             -webkit-text-fill-color: #ffffff !important;
             background: transparent !important;
@@ -432,7 +446,9 @@ def inject_custom_css():
         }
 
         button[kind="secondary"],
-        button[data-testid="baseButton-secondary"] {
+        button[data-testid="baseButton-secondary"],
+        a[data-testid="baseButton-secondary"],
+        div[data-testid="stLinkButton"] a[kind="secondary"] {
             background-color: #ffffff !important;
             color: #581845 !important;
             border: 1.5px solid #d0c4d8 !important;
@@ -440,19 +456,25 @@ def inject_custom_css():
             font-weight: 700 !important;
             font-size: 13.5px !important;
             transition: all 0.2s ease !important;
+            text-decoration: none !important;
         }
 
         button[kind="secondary"]:hover,
-        button[data-testid="baseButton-secondary"]:hover {
+        button[data-testid="baseButton-secondary"]:hover,
+        a[data-testid="baseButton-secondary"]:hover,
+        div[data-testid="stLinkButton"] a[kind="secondary"]:hover {
             background-color: #f7eaf3 !important;
             border-color: #7a1d5a !important;
             color: #7a1d5a !important;
+            text-decoration: none !important;
         }
 
         button[kind="secondary"] p,
         button[kind="secondary"] span,
-        button[data-testid="baseButton-secondary"] p,
-        button[data-testid="baseButton-secondary"] span {
+        a[data-testid="baseButton-secondary"] p,
+        a[data-testid="baseButton-secondary"] span,
+        div[data-testid="stLinkButton"] a[kind="secondary"] p,
+        div[data-testid="stLinkButton"] a[kind="secondary"] span {
             color: #581845 !important;
             background: transparent !important;
             background-color: transparent !important;

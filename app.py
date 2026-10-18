@@ -1,7 +1,7 @@
 import streamlit as st
 from google import genai
 
-# Import centralized constants and RAG engine
+# Centralized constants and RAG engine
 from imda_knowledge import (
     MODEL_NAME,
     STAGE_2_GUIDE_URL,
@@ -9,7 +9,7 @@ from imda_knowledge import (
     query_live_guide_rag
 )
 
-# Import UI / UX component library
+# UI/UX Design System
 from ui_components import (
     inject_custom_css,
     render_brand_header,
@@ -18,11 +18,9 @@ from ui_components import (
     render_footer_disclaimer
 )
 
-# Import extracted domain assessment engine
-from assessment_module import (
-    render_pre_approval_assessment,
-    sanitize_and_check_injection
-)
+# Assessment Domain Engine & Security Service
+from assessment_service import sanitize_and_check_injection
+from assessment_module import render_pre_approval_assessment
 
 # =========================================================
 # APP CONFIG (Wide Modern Portal Layout)
@@ -97,6 +95,7 @@ defaults = {
     "sub_phone": "",
     "sub_inquiry": "",
     "show_chat_dialog": False,
+    "prereq_tab_idx": 0,
     "chat_messages": [
         {
             "role": "assistant",
@@ -165,7 +164,6 @@ def render_floating_chat_modal():
 
 if st.session_state.show_chat_dialog:
     render_floating_chat_modal()
-    # Auto-reset so tab transitions do not re-open the dialog
     st.session_state.show_chat_dialog = False
 
 # =========================================================
@@ -176,299 +174,4 @@ if st.session_state.page == "Home":
     render_brand_header(
         "IMDA Pre-Approval Assistant",
         subtitle="Empowering Infocomm Media (ICM) vendors to navigate pre-approval, assess readiness, and prepare submissions for the Vendor Management Portal (VMP).",
-        badge="Official Prototype"
-    )
-
-    render_hero_banner(
-        "Accelerate Your SMEs Go Digital Pre-Approval",
-        "The SMEs Go Digital programme supports SMEs in adopting pre-approved digital solutions with grant support. Use this copilot to check your category feasibility, assess corporate eligibility, and prepare your formal submission."
-    )
-
-    # ---------------------------------------------------------
-    # SECTION 1: THE PRE-APPROVAL JOURNEY (STAGE 1: VENDOR SELF-ASSESSMENT)
-    # ---------------------------------------------------------
-    st.markdown("<h3 style='font-size:21px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>The Pre-Approval Journey (Stage 1: Vendor Self-Assessment)</h3>", unsafe_allow_html=True)
-
-    # Step 1: Full-Width Prominent Category Pre-Check Card
-    with st.container(border=True):
-        st.markdown(
-            """
-            <div style="margin-bottom: 8px;">
-                <span class="step-badge">
-                    <span style="font-size: 15px;">🔍</span> STEP 1: DISCOVERY & FEASIBILITY
-                </span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<h4 style='font-size:20px; font-weight:800; color:#2b0b2e; margin:4px 0 6px 0;'>🔍 Solution Category Pre-Check</h4>",
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<p style='font-size:13px; color:#636375; margin-bottom:14px; line-height:1.5;'>"
-            "Check if your solution fits an official IMDA category before starting self-assessment. "
-            "If your product does not fall under an existing pre-approved category, it is not eligible under this programme."
-            "</p>",
-            unsafe_allow_html=True
-        )
-        
-        home_search_col1, home_search_col2 = st.columns([5, 1.4])
-        with home_search_col1:
-            home_query = st.text_input(
-                "Search query",
-                placeholder='e.g., "my solution helps manage pre-school operations" or "my solution manages SEO/SEM digital marketing campaigns"',
-                label_visibility="collapsed",
-                key="home_hero_search_input"
-            )
-        with home_search_col2:
-            if st.button("Check Category →", type="primary", use_container_width=True):
-                if home_query.strip():
-                    st.session_state.assessment["solution_description"] = home_query.strip()
-                    st.session_state.auto_trigger_search = True
-                    st.session_state.page = "Pre-Approval Assessment"
-                    st.session_state.assessment_step = 0
-                    st.rerun()
-
-        st.markdown("<p style='font-size:11.5px; color:#777788; margin-top:8px; margin-bottom:4px;'>💡 Or click a sample prompt to try:</p>", unsafe_allow_html=True)
-        s_col1, s_col2, s_col3 = st.columns(3)
-        with s_col1:
-            if st.button("🏫 Pre-School Operations", key="sample_prompt_1", use_container_width=True):
-                st.session_state.assessment["solution_description"] = "My solution helps manage pre-school operations, student attendance, parent communications, and fee collection."
-                st.session_state.auto_trigger_search = True
-                st.session_state.page = "Pre-Approval Assessment"
-                st.session_state.assessment_step = 0
-                st.rerun()
-        with s_col2:
-            if st.button("📈 SEO/SEM Digital Marketing", key="sample_prompt_2", use_container_width=True):
-                st.session_state.assessment["solution_description"] = "My solution manages SEO/SEM digital marketing campaigns, keyword bidding, and client conversion analytics."
-                st.session_state.auto_trigger_search = True
-                st.session_state.page = "Pre-Approval Assessment"
-                st.session_state.assessment_step = 0
-                st.rerun()
-        with s_col3:
-            if st.button("🔒 Cloud Cybersecurity", key="sample_prompt_3", use_container_width=True):
-                st.session_state.assessment["solution_description"] = "My solution provides endpoint anti-malware, firewall protection, and automated threat detection for SME laptops."
-                st.session_state.auto_trigger_search = True
-                st.session_state.page = "Pre-Approval Assessment"
-                st.session_state.assessment_step = 0
-                st.rerun()
-
-    st.markdown("<div style='margin-bottom: 14px;'></div>", unsafe_allow_html=True)
-
-    # Balanced 2-Column Grid for Stage 1: Step 2 & Step 3
-    col2, col3 = st.columns(2)
-
-    with col2:
-        render_feature_card(
-            "STEP 2: CHECKLIST",
-            "Category Checklist",
-            "Complete category-specific functional requirements (Q1 to Q20+) extracted directly from the official guide.",
-            icon="📋"
-        )
-        st.write("")
-        if st.button("Review Checklist →", key="home_btn_checklist", use_container_width=True):
-            st.session_state.page = "Pre-Approval Assessment"
-            st.session_state.assessment_step = 1
-            st.rerun()
-
-    with col3:
-        render_feature_card(
-            "STEP 3: PREREQUISITES",
-            "Prerequisite Validation",
-            "Verify incorporation age, financial stability ratios (positive equity, current ratio >= 1), InvoiceNow account status, and SME deployment benchmarks.",
-            icon="🏢"
-        )
-        st.write("")
-        if st.button("Start Assessment →", key="home_btn_prereq", use_container_width=True):
-            st.session_state.page = "Pre-Approval Assessment"
-            st.session_state.assessment_step = 2
-            st.rerun()
-
-    st.markdown("<div style='margin-top: 28px; margin-bottom: 14px;'></div>", unsafe_allow_html=True)
-
-    # ---------------------------------------------------------
-    # SECTION 2: THE PRE-APPROVAL JOURNEY (STAGE 2: VENDOR APPLICATION)
-    # ---------------------------------------------------------
-    st.markdown("<h3 style='font-size:21px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>The Pre-Approval Journey (Stage 2: Vendor Application)</h3>", unsafe_allow_html=True)
-
-    # Step 4: Dedicated Full-Width Balanced Action Card
-    with st.container(border=True):
-        st.markdown(
-            """
-            <div style="margin-bottom: 8px;">
-                <span class="step-badge">
-                    <span style="font-size: 15px;">🚀</span> STEP 4: SUBMISSION & VMP
-                </span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<h4 style='font-size:20px; font-weight:800; color:#2b0b2e; margin:4px 0 6px 0;'>🚀 Stage 2 Preparation & Formal VMP Submission</h4>",
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<p style='font-size:13px; color:#636375; line-height:1.5; margin-bottom:16px;'>"
-            "Once you clear Stage 1 Self-Assessment, review the official documentation guidelines to prepare your solution presentation deck, "
-            "pricing matrix, and customer proof before formally submitting via the Vendor Management Portal (VMP)."
-            "</p>",
-            unsafe_allow_html=True
-        )
-        
-        st4_col1, st4_col2 = st.columns(2)
-        with st4_col1:
-            st.link_button(
-                "📖 Read Stage 2 Guide ↗",
-                STAGE_2_GUIDE_URL,
-                use_container_width=True
-            )
-        with st4_col2:
-            st.link_button(
-                "🏛️ Launch VMP Portal ↗",
-                VMP_PORTAL_URL,
-                use_container_width=True
-            )
-
-    render_footer_disclaimer()
-
-# =========================================================
-# PAGE 2: PRE-APPROVAL ASSESSMENT (4-STAGE FLOW)
-# =========================================================
-
-elif st.session_state.page == "Pre-Approval Assessment":
-    render_brand_header(
-        "Vendor Pre-Approval Assessment",
-        subtitle="Complete your category discovery, functional checklist, eligibility validation, and application preparation in one unified workflow."
-    )
-    render_pre_approval_assessment()
-    render_footer_disclaimer()
-
-# =========================================================
-# PAGE 3: ABOUT US
-# =========================================================
-
-elif st.session_state.page == "About Us":
-    render_brand_header("About This Project", subtitle="Background, problem statement, core deliverables, and public sector impact.")
-    
-    with st.container(border=True):
-        st.markdown("""
-        ### Executive Summary
-        The **IMDA Pre-Approval Assistant** is an agentic, self-service copilot designed to bridge the operational gap between digital solution vendors (Infocomm Media - ICM vendors) and IMDA's Pre-Approval framework under the **SMEs Go Digital** programme.
-        
-        By automating eligibility pre-screening, category matching, and policy Q&A, this prototype transforms a tedious, document-heavy administrative workflow into an intuitive, guided digital experience.
-        """)
-
-    st.markdown("### 1. Operational Problem Statement")
-    with st.container(border=True):
-        st.markdown("""
-        Vendors seeking IMDA pre-approval under the SMEs Go Digital programme encounter several operational friction points:
-        - **Ambiguity in Domain Categorization:** Solutions with multi-faceted capabilities struggle to identify the correct pre-approval category upfront.
-        - **Prerequisite Blindspots:** Vendors often apply before satisfying foundational criteria (e.g., 18-month incorporation, positive net equity, current ratio $\\ge 1$, or 5 SG SME deployments).
-        - **Administrative Overhead:** IMDA officers spend extensive hours responding to recurring policy queries and reviewing non-compliant initial submissions.
-        """)
-
-    st.markdown("### 2. Core Functional Pillars (Structured 4-Stage Progression)")
-    col_a1, col_a2 = st.columns(2)
-    with col_a1:
-        with st.container(border=True):
-            st.markdown("#### 🎯 Guided 4-Stage Funnel")
-            st.markdown("""
-            - **Stage 1: Category Discovery:** Fast upfront check to ensure an official category exists before spending time on paperwork.
-            - **Stage 2: Category Functional Checklist:** Mandatory requirement extraction and compliance evaluation.
-            - **Stage 3: Prerequisite Validation:** Validates incorporation, financial health, track record, and InvoiceNow compliance.
-            - **Stage 4: Review & Application Preparation:** Automatic gap detection, Copilot remediation, and VMP readiness guidance.
-            """)
-    with col_a2:
-        with st.container(border=True):
-            st.markdown("#### 🤖 Grounded AI Copilot")
-            st.markdown("""
-            - **Persistent Floating Modal:** Accessible from any page via the bottom-right `💬 Ask Copilot` widget.
-            - **Context-Aware RAG:** Grounds responses directly in live IMDA pre-approval policy documents.
-            - **Automated Gap Handover:** Transmits identified checklist gaps directly into the AI Copilot prompt pipeline for instant remediation advice.
-            - **Dossier Dispatch:** Formats structured submission records routed to reviewing public officers.
-            """)
-
-    st.markdown("### 3. Public Sector Digital Transformation Impact")
-    with st.container(border=True):
-        st.markdown("""
-        - **Reduces Vendor Onboarding Cycle Time:** Speeds up pre-submission readiness checks from weeks to minutes.
-        - **Minimizes Incomplete VMP Submissions:** Ensures only qualified, vetted solutions transition into the Vendor Management Portal (VMP).
-        - **Fosters Responsible AI Adoption:** Implements input sanitization, heuristic defense, and authoritative source grounding.
-        """)
-
-    render_footer_disclaimer()
-
-# =========================================================
-# PAGE 4: METHODOLOGY & SYSTEM ARCHITECTURE
-# =========================================================
-
-elif st.session_state.page == "Methodology":
-    render_brand_header("Methodology & System Architecture", subtitle="Technical design, RAG pipeline, cybersecurity guardrails, and modular code architecture.")
-    
-    with st.container(border=True):
-        st.markdown("""
-        ### Architectural Philosophy
-        The application is engineered using clean software engineering principles, decoupling user interface styling, session orchestration, domain assessment logic, and GenAI knowledge retrieval across four modular files:
-        `app.py`, `assessment_module.py`, `ui_components.py`, and `imda_knowledge.py`.
-        """)
-
-    st.markdown("### 1. Multi-Turn RAG Pipeline & Prompt Engineering")
-    with st.container(border=True):
-        st.markdown("""
-        The conversational copilot uses the `gemini-3.8-flash` model orchestrated through a Retrieval-Augmented Generation (RAG) pipeline:
-        - **Dynamic Context Injection:** Pulls live markdown data directly from `https://preapproval-guide.imda.gov.sg/`.
-        - **XML Boundary Delimitation:** All untrusted inputs are encapsulated within strict `<user_query>` and `<context>` XML tags to prevent context bleeding.
-        - **Multi-Turn Session Memory:** Tracks conversation state within structured `<conversation_history>` envelopes to support sequential follow-up reasoning.
-        - **Zero-Shot Semantic Matching:** Matches plain-language solution descriptions to exact official categories using strict JSON-like structured response parsing.
-        """)
-
-    st.markdown("### 2. Cybersecurity & Prompt Injection Defenses")
-    with st.container(border=True):
-        st.markdown("""
-        To defend against malicious prompt engineering and compliance tampering, the app enforces an automated security layer:
-        - **Adversarial Regex Heuristics:** Blocks instruction override sequences (e.g. `ignore previous instructions`, `system prompt`, `bypass guardrails`).
-        - **XSS & HTML Sanitization:** Strips HTML/script tags (`<script>`, `javascript:`) before processing user inputs.
-        - **Access Authentication Gate:** Secures the prototype environment via session passcode authentication.
-        """)
-
-    st.markdown("### 3. Modular Engineering Blueprint (4 Modules)")
-    col_m1, col_m2 = st.columns(2)
-    with col_m1:
-        with st.container(border=True):
-            st.markdown("#### `app.py`")
-            st.caption("Main Orchestration Engine (~180 lines)")
-            st.markdown("Handles access gating, session routing, persistent floating copilot modal state, and Home/Documentation page renderers.")
-        with st.container(border=True):
-            st.markdown("#### `assessment_module.py`")
-            st.caption("Domain Assessment Funnel (~340 lines)")
-            st.markdown("Encapsulates the 4-stage progression: Stage 1 Category Discovery, Stage 2 Category Checklist, Stage 3 Baseline Validation, and Stage 4 Review & VMP Launch.")
-
-    with col_m2:
-        with st.container(border=True):
-            st.markdown("#### `ui_components.py`")
-            st.caption("Design System & Styling (~170 lines)")
-            st.markdown("Encapsulates official SMEs Go Digital portal branding, universal font syncing, streamlined top navigation bar, floating trigger buttons, and footer disclaimers.")
-        with st.container(border=True):
-            st.markdown("#### `imda_knowledge.py`")
-            st.caption("Grounded Knowledge Engine (~120 lines)")
-            st.markdown("Parses live IMDA documentation, centralizes portal endpoints/models, manages multi-turn RAG prompt templates, and executes grounded LLM generation.")
-
-    render_footer_disclaimer()
-
-# =========================================================
-# FLOATING ACTION CONTROLS (RENDERED AT VERY END TO PREVENT TOP GAP)
-# =========================================================
-
-st.markdown(
-    """
-    <div class="floating-action-bar">
-        <a href="#page-top" class="floating-top-link">↑ Top</a>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-if st.button("💬 Ask Copilot", key="floating_chat_button"):
-    st.session_state.show_chat_dialog = True
-    st.rerun()
+        badge

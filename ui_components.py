@@ -33,6 +33,7 @@ def inject_custom_css():
         }
         header {visibility: hidden;}
 
+        /* Sleek Top Government Masthead & Interactive Expandable Drawer */
         .sg-masthead {
             background-color: #f0f0f0;
             border-bottom: 1px solid #e5e5e5;
@@ -102,6 +103,7 @@ def inject_custom_css():
             text-decoration: underline;
         }
 
+        /* Seamless Invisible Logo Overlay */
         div.st-key-nav_logo_overlay_btn {
             margin-top: -40px !important;
             height: 38px !important;
@@ -129,6 +131,7 @@ def inject_custom_css():
             color: transparent !important;
         }
 
+        /* Sleek Deep Purple Logout Pill */
         button[key="header_logout_btn"] {
             background-color: #6a1a72 !important;
             color: #ffffff !important;
@@ -142,6 +145,7 @@ def inject_custom_css():
             color: #ffffff !important;
         }
 
+        /* True Fixed Floating Anchor Buttons (Bottom Right) */
         .floating-action-bar {
             position: fixed !important;
             bottom: 24px !important;
@@ -166,6 +170,7 @@ def inject_custom_css():
             color: #7a1d5a !important;
         }
 
+        /* Fixed Ask Copilot Button in bottom right */
         div.st-key-floating_chat_button {
             position: fixed !important;
             bottom: 24px !important;
@@ -187,6 +192,7 @@ def inject_custom_css():
             box-shadow: 0 12px 30px rgba(88, 24, 69, 0.45) !important;
         }
 
+        /* Portal Badges and Cards */
         .portal-card-tag, .step-badge {
             font-size: 12.5px !important;
             font-weight: 800 !important;
@@ -235,20 +241,38 @@ def inject_custom_css():
             margin-bottom: 10px;
         }
 
-        /* Direct styling for Stepper Action Buttons */
+        /* =========================================================
+           ENTIRE STEPPER GRID ENCLOSED IN PURPLE GRADIENT
+           ========================================================= */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.stepper-box-marker),
+        div[data-testid="stVerticalBlock"]:has(.stepper-box-marker) {
+            background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%) !important;
+            border-radius: 16px !important;
+            border: none !important;
+            padding: 22px 24px 20px 24px !important;
+            margin-bottom: 22px !important;
+            box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25) !important;
+        }
+
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.stepper-box-marker) > div {
+            background: transparent !important;
+            border: none !important;
+        }
+
         div[class*="st-key-stepper_click_"] button {
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border: 1px solid rgba(255, 255, 255, 0.16) !important;
             box-shadow: none !important;
             cursor: pointer !important;
             transition: all 0.2s ease !important;
             text-align: center !important;
-            padding: 7px 12px !important;
+            padding: 8px 12px !important;
             border-radius: 8px !important;
-            font-size: 12.5px !important;
+            font-size: 13px !important;
+            width: 100% !important;
         }
         div[class*="st-key-stepper_click_"] button:hover {
             background-color: rgba(255, 255, 255, 0.22) !important;
-            border-color: rgba(255, 255, 255, 0.4) !important;
+            border-color: rgba(255, 255, 255, 0.45) !important;
             transform: translateY(-1px) !important;
         }
 
@@ -368,8 +392,8 @@ def render_hero_banner(heading: str, description: str):
 
 def render_purple_segmented_stepper(current_step: int):
     """
-    Renders an interactive 4-step progress bar entirely inside the Home purple banner.
-    Each bar is directly clickable with strict completion validation.
+    Renders the 4-step progress bar and clickable buttons entirely enclosed inside the purple banner.
+    Accurately validates completion state so sections only show green when genuinely answered.
     """
     steps = [
         "1. Discovery",
@@ -378,85 +402,76 @@ def render_purple_segmented_stepper(current_step: int):
         "4. Review & Summary"
     ]
 
-    # Strict completion check based on actual answers
     is_step_1_done = bool(st.session_state.get("selected_category"))
     cat_answers = st.session_state.get("category_answers", {})
-    is_step_2_done = bool(is_step_1_done and len(cat_answers) > 0)
+    is_step_2_done = bool(is_step_1_done and cat_answers and len(cat_answers) > 0)
     
     assessment_data = st.session_state.get("assessment", {})
-    valid_prereqs = [k for k in assessment_data.keys() if k != "solution_description"]
-    is_step_3_done = bool(len(valid_prereqs) >= 5)
+    answered_keys = [k for k, v in assessment_data.items() if k != "solution_description" and v]
+    is_step_3_done = bool(len(answered_keys) >= 6)
     
     is_step_4_done = bool(st.session_state.get("form_submitted", False))
 
     completion_flags = [is_step_1_done, is_step_2_done, is_step_3_done, is_step_4_done]
 
-    # Open the guaranteed solid purple banner card
-    st.markdown(
-        f"""
-        <div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%);
-                    border-radius: 16px; padding: 22px 24px 18px 24px; margin-bottom: 20px;
-                    box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">
-            <div style="color: #f3d7e8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">
+    with st.container(border=True):
+        st.markdown('<span class="stepper-box-marker" style="display:none;"></span>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style="color: #f3d7e8; font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">
                 Assessment Flow — Step {current_step + 1} of 4: {steps[current_step]}
             </div>
-        """,
-        unsafe_allow_html=True
-    )
+            """,
+            unsafe_allow_html=True
+        )
 
-    # 4 Columns nested inside the purple banner
-    cols = st.columns(4)
-    for idx, name in enumerate(steps):
-        with cols[idx]:
-            is_active = (idx == current_step)
-            is_done = completion_flags[idx]
+        cols = st.columns(4)
+        for idx, name in enumerate(steps):
+            with cols[idx]:
+                is_active = (idx == current_step)
+                is_done = completion_flags[idx]
 
-            if is_active:
-                bar_color = "#ff4081"
-                prefix = "● "
-                text_color = "#ffffff"
-                btn_bg = "rgba(255, 64, 129, 0.28)"
-                font_weight = "800"
-            elif is_done:
-                bar_color = "#00e676"
-                prefix = "✓ "
-                text_color = "#e8f5e9"
-                btn_bg = "rgba(0, 230, 118, 0.20)"
-                font_weight = "700"
-            else:
-                bar_color = "rgba(255, 255, 255, 0.22)"
-                prefix = ""
-                text_color = "rgba(243, 215, 232, 0.55)"
-                btn_bg = "rgba(255, 255, 255, 0.06)"
-                font_weight = "500"
+                if is_active:
+                    bar_color = "#ff4081"
+                    prefix = "● "
+                    text_color = "#ffffff"
+                    btn_bg = "rgba(255, 64, 129, 0.35)"
+                    font_weight = "800"
+                elif is_done:
+                    bar_color = "#00e676"
+                    prefix = "✓ "
+                    text_color = "#e8f5e9"
+                    btn_bg = "rgba(0, 230, 118, 0.22)"
+                    font_weight = "700"
+                else:
+                    bar_color = "rgba(255, 255, 255, 0.22)"
+                    prefix = ""
+                    text_color = "rgba(243, 215, 232, 0.65)"
+                    btn_bg = "rgba(255, 255, 255, 0.08)"
+                    font_weight = "500"
 
-            # Progress bar line visual
-            st.markdown(
-                f'<div style="height: 8px; border-radius: 999px; background-color: {bar_color}; margin-bottom: 8px;"></div>',
-                unsafe_allow_html=True
-            )
+                st.markdown(
+                    f'<div style="height: 8px; border-radius: 999px; background-color: {bar_color}; margin-bottom: 8px;"></div>',
+                    unsafe_allow_html=True
+                )
 
-            # Interactive button styled directly inside the purple mesh
-            st.markdown(
-                f"""
-                <style>
-                div.st-key-stepper_click_{idx} button {{
-                    background-color: {btn_bg} !important;
-                    color: {text_color} !important;
-                    font-weight: {font_weight} !important;
-                }}
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
+                st.markdown(
+                    f"""
+                    <style>
+                    div.st-key-stepper_click_{idx} button {{
+                        background-color: {btn_bg} !important;
+                        color: {text_color} !important;
+                        font-weight: {font_weight} !important;
+                    }}
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-            if st.button(f"{prefix}{name}", key=f"stepper_click_{idx}", use_container_width=True):
-                st.session_state.assessment_step = idx
-                st.session_state.target_focus_key = None
-                st.rerun()
-
-    # Close the purple card
-    st.markdown("</div>", unsafe_allow_html=True)
+                if st.button(f"{prefix}{name}", key=f"stepper_click_{idx}", use_container_width=True):
+                    st.session_state.assessment_step = idx
+                    st.session_state.target_focus_key = None
+                    st.rerun()
 
 def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
     """Renders portal cards with prominent badges and icons."""

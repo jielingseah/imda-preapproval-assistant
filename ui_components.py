@@ -56,28 +56,31 @@ def inject_custom_css():
             text-decoration: none;
         }
 
-        /* Clickable Brand Logo Container & Invisible Button Overlay */
-        .brand-logo-container {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-            padding-top: 4px;
+        /* Seamless Invisible Logo Overlay (No weird box, no border) */
+        div.st-key-nav_logo_overlay_btn {
+            margin-top: -40px !important;
+            height: 38px !important;
+            width: 195px !important;
         }
-        button[key="nav_logo_overlay_btn"] {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
+        div.st-key-nav_logo_overlay_btn button {
             background: transparent !important;
             border: none !important;
-            color: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+            height: 38px !important;
+            width: 195px !important;
             cursor: pointer !important;
-            z-index: 10 !important;
+            color: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
-        button[key="nav_logo_overlay_btn"]:hover {
+        div.st-key-nav_logo_overlay_btn button:hover,
+        div.st-key-nav_logo_overlay_btn button:focus,
+        div.st-key-nav_logo_overlay_btn button:active {
             background: transparent !important;
             border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
             color: transparent !important;
         }
 
@@ -209,7 +212,7 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """Renders the top navigation bar with the dual-color brand logo clickable directly to Home."""
+    """Renders the top navigation bar with the dual-color logo clickable to Home."""
     pages = [
         "Pre-Approval Assessment",
         "About Us",
@@ -228,19 +231,19 @@ def render_top_navigation():
         unsafe_allow_html=True
     )
 
-    # Columns: Clickable Brand Logo (3.6) + 3 Nav items (2.5, 1.3, 1.4) + Logout Pill (1.0)
+    # Columns: Brand Logo (3.6) + 3 Nav items (2.5, 1.3, 1.4) + Logout Pill (1.0)
     cols = st.columns([3.6, 2.5, 1.3, 1.4, 1.0])
 
     with cols[0]:
         st.markdown(
             """
-            <div class="brand-logo-container">
+            <div style="height: 38px; padding-top: 4px; pointer-events: none;">
                 <span style="font-size: 22px; font-weight: 800; color: #581845; letter-spacing: -0.5px;">SMEs</span><span style="font-size: 22px; font-weight: 800; color: #d8232a; letter-spacing: -0.5px;">godigital ↗</span>
             </div>
             """,
             unsafe_allow_html=True
         )
-        if st.button(" ", key="nav_logo_overlay_btn", help="Go to Home"):
+        if st.button(" ", key="nav_logo_overlay_btn"):
             st.session_state.page = "Home"
             st.session_state.show_chat_dialog = False
             st.rerun()

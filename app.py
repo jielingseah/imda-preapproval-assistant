@@ -9,24 +9,25 @@ from google.genai import types
 # Import the multi-turn RAG engine
 from imda_knowledge import query_live_guide_rag
 
-# Import extracted UI / UX component library
+# Import extracted UI / UX component library including footer disclaimer
 from ui_components import (
     inject_custom_css,
     render_brand_header,
     render_hero_banner,
     render_feature_card,
-    render_kpi_dashboard
+    render_kpi_dashboard,
+    render_footer_disclaimer
 )
 
 # =========================================================
-# APP CONFIG
+# APP CONFIG (Collapsed Sidebar for Wide Modern Layout)
 # =========================================================
 
 st.set_page_config(
     page_title="IMDA Pre-Approval Assistant | SMEs Go Digital",
     page_icon="🤖",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # =========================================================
@@ -113,6 +114,8 @@ def sanitize_and_check_injection(user_input: str) -> tuple[bool, str]:
 defaults = {
     "page": "Home",
     "assessment": {},
+    "assessment_step": 0,
+    "catalog_page": 1,
     "category_suggestions": [],
     "selected_category": None,
     "selected_category_url": None,
@@ -319,46 +322,6 @@ def parse_category_matches(answer, catalogue):
     return results[:3]
 
 # =========================================================
-# NAVIGATION & SIDEBAR
-# =========================================================
-
-pages = [
-    "Home",
-    "Self-Assessment",
-    "AI Category Finder",
-    "Category Requirements",
-    "AI Assistant (RAG Chatbot)",
-    "About Us",
-    "Methodology"
-]
-
-st.sidebar.markdown("### SMEs Go Digital")
-st.sidebar.caption("IMDA Pre-Approval Copilot")
-
-current_page = st.session_state.get("page", "Home")
-default_idx = pages.index(current_page) if current_page in pages else 0
-
-selected_page = st.sidebar.radio("Navigate", pages, index=default_idx)
-st.session_state.page = selected_page
-
-st.sidebar.markdown("---")
-if st.sidebar.button("🔒 Logout / Lock App", use_container_width=True):
-    st.session_state.authenticated = False
-    st.rerun()
-
-st.sidebar.markdown("---")
-with st.sidebar.expander("⚠️ IMPORTANT NOTICE — Prototype", expanded=False):
-    st.caption(
-        """
-        **Proof-of-Concept Prototype:**
-        This web application is developed for demonstration purposes only.
-        The information provided here is NOT intended for actual usage and should not be relied upon
-        for making business or regulatory decisions.
-        """
-    )
-st.sidebar.caption("IMDA SMEs Go Digital POC")
-
-# =========================================================
 # HOME PAGE (HERO SEARCH & VMP / PRE-APPROVAL ONBOARDING)
 # =========================================================
 
@@ -376,8 +339,8 @@ if st.session_state.page == "Home":
 
     # 1. Main Page Hero Search Bar
     with st.container(border=True):
-        st.markdown("### 🔍 Search Official Pre-Approved Categories & Solutions")
-        st.caption("Enter keywords (e.g., 'Cloud Accounting', 'Cybersecurity', 'POS System') or describe your software to find matching categories instantly.")
+        st.markdown("<h4 style='font-weight:700; color:#2b0b2e; margin:0 0 6px 0;'>🔍 Search Official Pre-Approved Categories & Solutions</h4>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size:12.5px; color:#636375; margin-bottom:12px;'>Enter keywords (e.g., 'Cloud Accounting', 'Cybersecurity', 'POS System') or describe your software to find matching categories instantly.</p>", unsafe_allow_html=True)
         
         home_search_col1, home_search_col2 = st.columns([5, 1])
         with home_search_col1:
@@ -410,7 +373,7 @@ if st.session_state.page == "Home":
                 financial criteria, customer track record, and operational requirements prior to application.
                 """
             )
-            st.link_button("View Official IMDA Guide ↗", "https://preapproval-guide.imda.gov.sg", use_container_width=True)
+            st.link_button("View Official IMDA Guide ↗", "[https://preapproval-guide.imda.gov.sg](https://preapproval-guide.imda.gov.sg)", use_container_width=True)
 
     with col_info2:
         with st.container(border=True):
@@ -423,12 +386,12 @@ if st.session_state.page == "Home":
                 Use this copilot to detect gaps in your compliance early so that your formal submission through the VMP proceeds smoothly without delays.
                 """
             )
-            st.link_button("Access Vendor Management Portal (VMP) ↗", "https://services2-stg.imda.gov.sg/VMP/Home", use_container_width=True)
+            st.link_button("Access Vendor Management Portal (VMP) ↗", "[https://services2-stg.imda.gov.sg/VMP/Home](https://services2-stg.imda.gov.sg/VMP/Home)", use_container_width=True)
 
     st.markdown("---")
 
     # 3. Interactive Journey Cards
-    st.subheader("Explore the Pre-Approval Journey")
+    st.markdown("<h3 style='font-size:20px; font-weight:800; color:#2b0b2e; margin-bottom:14px;'>Explore the Pre-Approval Journey</h3>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     with col1:
         render_feature_card(
@@ -460,10 +423,11 @@ if st.session_state.page == "Home":
         )
         st.write("")
         if st.button("Launch Copilot →", key="home_btn_chat", type="primary", use_container_width=True):
-            st.session_state.page = "AI Assistant (RAG Chatbot)"
+            st.session_state.page = "AI Assistant"
             st.rerun()
 
     render_footer_disclaimer()
+
 # =========================================================
 # SELF-ASSESSMENT (ROBUST MOBILE-FRIENDLY WIZARD)
 # =========================================================
@@ -471,20 +435,11 @@ if st.session_state.page == "Home":
 elif st.session_state.page == "Self-Assessment":
     render_brand_header("Vendor Self-Assessment", subtitle="Prerequisite validation against mandatory onboarding standards.")
     
-    # Initialize wizard step if not present
-    if "assessment_step" not in st.session_state:
-        st.session_state.assessment_step = 0
-
     steps = ["1. Vendor Eligibility", "2. Solution Track Record", "3. Solution Eligibility"]
-    
-    # Progress bar calculation
     progress_vals = [0.33, 0.66, 1.0]
     st.progress(progress_vals[st.session_state.assessment_step], text=f"Validation in Progress — Step {st.session_state.assessment_step + 1} of 3")
 
-    # Radio button selection for tabs to guarantee mobile touch response
     selected_tab = st.radio("Assessment Section", steps, index=st.session_state.assessment_step, horizontal=True, key="assessment_wizard_radio")
-    
-    # Sync radio selection back to state index
     st.session_state.assessment_step = steps.index(selected_tab)
 
     st.markdown("---")
@@ -584,17 +539,16 @@ elif st.session_state.page == "Self-Assessment":
                 st.session_state.page = "AI Category Finder"
                 st.rerun()
 
+    render_footer_disclaimer()
+
 # =========================================================
 # AI CATEGORY FINDER & PAGINATED MANUAL BROWSER
 # =========================================================
 
 elif st.session_state.page == "AI Category Finder":
-    # Force view to top on load/rerun
     st.markdown('<script>window.scrollTo(0, 0);</script>', unsafe_allow_html=True)
-
     render_brand_header("Solution Category Discovery", subtitle="Identify your pre-approved solution category using AI semantic matching or manual directory browsing.")
 
-    # Either / Or Tabs for Cleaner Layout
     tab_ai, tab_manual = st.tabs(["🤖 AI Semantic Matcher", "🔍 Manual Directory Browser"])
 
     with tab_ai:
@@ -623,7 +577,6 @@ elif st.session_state.page == "AI Category Finder":
                         matches = parse_category_matches(result["answer"], result["catalogue"])
                         st.session_state.category_suggestions = matches
 
-        # Display AI Suggestions if available
         if st.session_state.category_suggestions:
             st.markdown("---")
             st.markdown("<h5 style='font-size: 16px; font-weight: 700; color: #581845;'>💡 AI Recommended Matches</h5>", unsafe_allow_html=True)
@@ -658,7 +611,6 @@ elif st.session_state.page == "AI Category Finder":
 
                 search_query = st.text_input("Search categories by keyword", placeholder="e.g. Cybersecurity, Invoicing, POS...", key="cat_search_query")
 
-                # Filter items
                 filtered_items = []
                 for k, v in catalogue.items():
                     if selected_sector != "All Sectors" and v["sector"] != selected_sector:
@@ -668,12 +620,11 @@ elif st.session_state.page == "AI Category Finder":
                     filtered_items.append((k, v))
 
                 total_items = len(filtered_items)
-                items_per_page = 6  # 3 rows of 2 cards
+                items_per_page = 6
 
                 if total_items > 0:
                     total_pages = max(1, (total_items + items_per_page - 1) // items_per_page)
 
-                    # Initialize or clamp pagination state
                     if "catalog_page" not in st.session_state:
                         st.session_state.catalog_page = 1
                     if st.session_state.catalog_page > total_pages:
@@ -681,12 +632,10 @@ elif st.session_state.page == "AI Category Finder":
 
                     st.markdown(f"<p style='font-size: 12px; color: #777788; margin-top: 8px;'>Showing {total_items} matching categories (Page {st.session_state.catalog_page} of {total_pages})</p>", unsafe_allow_html=True)
 
-                    # Slice items for current page
                     start_idx = (st.session_state.catalog_page - 1) * items_per_page
                     end_idx = min(start_idx + items_per_page, total_items)
                     page_items = filtered_items[start_idx:end_idx]
 
-                    # Render cards for the current page
                     for i in range(0, len(page_items), 2):
                         col1, col2 = st.columns(2)
                         
@@ -716,7 +665,6 @@ elif st.session_state.page == "AI Category Finder":
                                         st.session_state.page = "Category Requirements"
                                         st.rerun()
 
-                    # Numbered Hyperlink Pagination Row
                     st.markdown("---")
                     page_cols = st.columns(min(total_pages, 10))
                     for p_num in range(1, total_pages + 1):
@@ -733,8 +681,10 @@ elif st.session_state.page == "AI Category Finder":
         except Exception as e:
             st.error(f"Error loading interactive catalogue: {e}")
 
+    render_footer_disclaimer()
+
 # =========================================================
-# CATEGORY REQUIREMENTS & GAP AUDIT / SUBMISSION (CARD LAYOUT)
+# CATEGORY REQUIREMENTS & GAP AUDIT / SUBMISSION
 # =========================================================
 
 elif st.session_state.page == "Category Requirements":
@@ -792,231 +742,4 @@ elif st.session_state.page == "Category Requirements":
                         with st.container(border=True):
                             st.write(f"**Q{question['number']}** — {question['question']}")
 
-            st.markdown("---")
-
-            # 2. Automated Prerequisite Gap Detection
-            st.subheader("2. Automated Prerequisite Gap Detection")
-
-            front_assessment_labels = {
-                "incorporated": "Company incorporated in Singapore",
-                "operation": "Operation for at least 18 months",
-                "financial": "Financial stability (positive equity & ratio >= 1)",
-                "track_record": "Government agency track record",
-                "resources": "Sufficient quality resources",
-                "cooling": "Not serving 1-year IMDA cooling period",
-                "invoice_now": "InvoiceNow registered account",
-                "customer_track": "Deployed with >= 5 SG SMEs for >= 6 months",
-                "pricing": "Priced reasonably for SMEs",
-                "suitability": "Designed for SME needs",
-                "productivity": "Improves SME productivity",
-                "website": "Active website showcasing solution",
-                "dapdp": "Data protection & analytics compliance"
-            }
-
-            front_gaps = []
-            for k, label in front_assessment_labels.items():
-                val = st.session_state.assessment.get(k)
-                if val in ["No", "Not sure"] or (k == "cooling" and val == "Yes") or ("development" in str(val).lower()):
-                    front_gaps.append({"item": label, "status": val})
-
-            unmet_cat_questions = []
-            for question in mandatory:
-                ans = st.session_state.category_answers.get(question["number"])
-                if ans in ["No", "Not sure"]:
-                    unmet_cat_questions.append({
-                        "number": question["number"],
-                        "question": question["question"],
-                        "status": ans
-                    })
-
-            total_gaps_count = len(front_gaps) + len(unmet_cat_questions)
-
-            with st.container(border=True):
-                if total_gaps_count > 0:
-                    st.warning(f"⚠️ System detected **{total_gaps_count}** requirement gap(s) across your assessment:")
-                    if front_gaps:
-                        st.markdown("**Core Baseline & Track Record Gaps:**")
-                        for fg in front_gaps:
-                            st.markdown(f"- 🔴 **{fg['item']}** (Status: *{fg['status']}*)")
-
-                    if unmet_cat_questions:
-                        st.markdown(f"**Specific Category Requirements for {selected}:**")
-                        for uq in unmet_cat_questions:
-                            st.markdown(f"- ⚠️ **Q{uq['number']} ({uq['status']}):** {uq['question']}")
-                else:
-                    st.success("✅ Excellent! Your solution declared full compliance with both Baseline Eligibility and Category Specifications.")
-
-            st.markdown("---")
-
-            # 3. Contact Details & Vendor Enquiries Form in Card
-            st.subheader("3. Contact Details & Vendor Enquiries")
-            st.caption("Provide your company contact information and any specific questions regarding unmet criteria or general onboarding.")
-
-            with st.container(border=True):
-                with st.form("vendor_submission_form"):
-                    col_c1, col_c2 = st.columns(2)
-                    with col_c1:
-                        company_name = st.text_input("Company Registered Name *", placeholder="e.g. Acme Tech Solutions Pte Ltd")
-                        contact_person = st.text_input("Contact Person Name *", placeholder="e.g. John Tan")
-                    with col_c2:
-                        contact_email = st.text_input("Corporate Email Address *", placeholder="e.g. john.tan@acme.com")
-                        contact_phone = st.text_input("Contact Number *", placeholder="e.g. +65 9123 4567")
-
-                    vendor_inquiry = st.text_area(
-                        "Questions / Notes on Unmet Requirements",
-                        placeholder="If you marked 'No' or 'Not sure' above, specify your planned roadmap, alternative workarounds, or questions for IMDA officers here.",
-                        height=120
-                    )
-
-                    submit_button = st.form_submit_button("Submit Assessment & Send Summary →", type="primary", use_container_width=True)
-
-            if submit_button:
-                if not company_name or not contact_person or not contact_email:
-                    st.error("Please fill in all mandatory contact fields (Company Name, Contact Person, and Email).")
-                    st.session_state.form_submitted = False
-                else:
-                    st.session_state.form_submitted = True
-                    st.session_state.sub_company = company_name
-                    st.session_state.sub_person = contact_person
-                    st.session_state.sub_email = contact_email
-                    st.session_state.sub_phone = contact_phone
-                    st.session_state.sub_inquiry = vendor_inquiry
-
-            # 4. Submission Summary Dossier & Chatbot Recommendation (Rendered OUTSIDE form)
-            if st.session_state.get("form_submitted", False):
-                st.success("🎉 Assessment & Enquiries Submitted Successfully!")
-
-                with st.container(border=True):
-                    st.markdown("### 📋 Submission Summary Dossier")
-                    st.markdown(f"**Target Pre-Approval Category:** {selected}")
-                    st.markdown(f"**Company:** {st.session_state.sub_company} | **Contact:** {st.session_state.sub_person} ({st.session_state.sub_email}, {st.session_state.sub_phone})")
-
-                    if front_gaps or unmet_cat_questions:
-                        st.markdown("#### Detected Gaps for Officer Review:")
-                        for fg in front_gaps:
-                            st.markdown(f"- **Baseline Prerequisite ({fg['status']}):** {fg['item']}")
-                        for uq in unmet_cat_questions:
-                            st.markdown(f"- **Category Spec Q{uq['number']} ({uq['status']}):** {uq['question']}")
-                    else:
-                        st.markdown("✅ **Status:** 100% compliant across all evaluated criteria.")
-
-                    if st.session_state.sub_inquiry.strip():
-                        st.markdown("#### Applicant Inquiries:")
-                        st.write(st.session_state.sub_inquiry)
-
-                st.info(
-                    "📧 **Notification Routing:** This summary report and inquiry record have been prepared for dispatch to **`seah_jie_ling@imda.gov.sg`** for officer review."
-                )
-                st.warning(
-                    "ℹ️ **Prototype Notice:** Please note that this is a proof-of-concept demonstration environment. "
-                    "Live SMTP servers and automated email dispatch are intentionally not configured for this prototype session, "
-                    "and external emails will not be transmitted."
-                )
-
-                st.markdown("---")
-                with st.container(border=True):
-                    st.markdown("### 🤖 Want guidance on how to address your identified gaps?")
-                    st.write("You can chat with our AI Pre-Approval Copilot right now for instant, grounded recommendations on how to fulfill official IMDA policy requirements.")
-                    
-                    if st.button("💬 Open AI Assistant & Get Guidance →", type="primary", use_container_width=True):
-                        st.session_state.page = "AI Assistant (RAG Chatbot)"
-                        st.rerun()
-
-# =========================================================
-# AI ASSISTANT (RAG CHATBOT)
-# =========================================================
-
-elif st.session_state.page == "AI Assistant (RAG Chatbot)":
-    render_brand_header("Pre-Approved Solutions Assistant & Copilot", subtitle="Multi-turn conversation grounded in official IMDA documentation.")
-
-    col_info, col_btn = st.columns([4, 1])
-    with col_info:
-        if st.session_state.selected_category:
-            st.info(f"Target Category: **{st.session_state.selected_category}**")
-    with col_btn:
-        if st.button("🔄 Reset Chat", use_container_width=True):
-            st.session_state.chat_messages = [
-                {
-                    "role": "assistant",
-                    "content": "Conversation restarted. How can I help you navigate your pre-approval journey today?"
-                }
-            ]
-            st.rerun()
-
-    if st.session_state.assessment:
-        with st.expander("📊 View Your Readiness Audit Summary", expanded=False):
-            blockers = [k.replace("_", " ").title() for k, v in st.session_state.assessment.items() if v == "No"]
-            in_progress = [k.replace("_", " ").title() for k, v in st.session_state.assessment.items() if "development" in str(v)]
-            passed = [k for k, v in st.session_state.assessment.items() if v == "Yes"]
-            total_eval = len(st.session_state.assessment)
-            readiness_pct = int((len(passed) / total_eval) * 100) if total_eval > 0 else 0
-
-            render_kpi_dashboard(readiness_pct, len(blockers), len(in_progress))
-
-            if blockers:
-                st.error("Identified Gaps: " + ", ".join(blockers))
-
-    st.markdown("---")
-
-    for message in st.session_state.chat_messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    if user_query := st.chat_input("Ask a question (e.g. Can a company registered in Malaysia apply?)"):
-        is_safe, sanitized_query = sanitize_and_check_injection(user_query)
-        if not is_safe:
-            st.error(sanitized_query)
-        else:
-            st.session_state.chat_messages.append({"role": "user", "content": sanitized_query})
-            with st.chat_message("user"):
-                st.markdown(sanitized_query)
-
-            client = get_gemini_client()
-            if client is None:
-                st.error("Gemini API key is not configured in Secrets.")
-            else:
-                with st.chat_message("assistant"):
-                    with st.spinner("Consulting official guide..."):
-                        assistant_response = query_live_guide_rag(
-                            client,
-                            user_query=sanitized_query,
-                            chat_history=st.session_state.chat_messages,
-                            user_assessment=st.session_state.assessment,
-                            selected_category=st.session_state.selected_category,
-                            model_name=MODEL_NAME
-                        )
-                        st.markdown(assistant_response)
-
-                st.session_state.chat_messages.append({"role": "assistant", "content": assistant_response})
-
-# =========================================================
-# ABOUT US & METHODOLOGY (CARD LAYOUTS)
-# =========================================================
-
-elif st.session_state.page == "About Us":
-    render_brand_header("About This Project", subtitle="Background, problem statement, and scope.")
-    with st.container(border=True):
-        st.markdown("""
-        The **IMDA Pre-Approval Assistant** is an agentic self-service copilot designed to bridge the operational gap between digital solution vendors and IMDA's Pre-Approval framework under the SMEs Go Digital programme.
-        """)
-
-    st.subheader("1. Problem Statement")
-    with st.container(border=True):
-        st.write("Vendors seeking pre-approval frequently encounter difficulties interpreting domain qualification criteria, identifying appropriate solution categories, and validating baseline prerequisites. This creates unnecessary manual back-and-forth for both vendors and officers.")
-
-    st.subheader("2. Project Objectives")
-    with st.container(border=True):
-        st.markdown("""
-        - **Empower Vendor Self-Discovery:** Provide instant, semantic category recommendations from plain English descriptions.
-        - **Upfront Gap Remediation:** Highlight operational roadblocks prior to formal submission.
-        - **Real-Time Grounded Knowledge:** Equip vendors with a full multi-turn conversational copilot grounded in the official online guide.
-        """)
-
-elif st.session_state.page == "Methodology":
-    render_brand_header("Methodology & System Architecture", subtitle="Prompt engineering pipelines and security controls.")
-    with st.container(border=True):
-        st.markdown("""
-        - **Adversarial Heuristic Defense:** User inputs pass through regex pattern matching to block instruction override attacks and prompt leaks.
-        - **XML Boundary Delimitation:** Untrusted text is strictly separated from system directives using `<user_query>` and `<context>` envelopes.
-        - **Multi-Turn Context Awareness:** Conversations retain prior turns within `<conversation_history>` blocks to handle sequential follow-ups.
-        """)
+            st.markdown("

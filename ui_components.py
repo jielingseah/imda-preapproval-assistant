@@ -6,41 +6,46 @@ Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.s
 import streamlit as st
 
 def inject_custom_css():
-    """Injects universal Plus Jakarta Sans font, floating widgets, and SMEs Go Digital branding."""
+    """Injects universal font, trims top whitespace, and fixes floating elements."""
     st.markdown(
         """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
-        /* UNIVERSAL FONT SYNC */
+        /* Remove default Streamlit top blank space */
+        .block-container {
+            padding-top: 0rem !important;
+            padding-bottom: 3rem !important;
+            max-width: 95% !important;
+        }
+
+        /* Universal Font Sync */
         html, body, [class*="css"], [class*="st-"], 
         h1, h2, h3, h4, h5, h6, p, div, span, label, input, textarea, button, a {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             letter-spacing: -0.01em;
         }
 
-        /* Smooth native anchor scrolling */
         html {
             scroll-behavior: smooth !important;
         }
 
-        /* Hide Streamlit default sidebar and header decorations */
         [data-testid="stSidebar"] {
             display: none !important;
         }
         header {visibility: hidden;}
 
-        /* Top Government Masthead */
+        /* Sleek Top Government Masthead without awkward negative margins */
         .sg-masthead {
             background-color: #f8f8f9;
-            padding: 4px 16px;
+            padding: 5px 24px;
             font-size: 11px;
             color: #555566;
             display: flex;
             align-items: center;
             gap: 6px;
             border-bottom: 1px solid #eaeaf0;
-            margin: -6rem -5rem 0.8rem -5rem;
+            margin: 0 -5rem 10px -5rem;
         }
         .sg-masthead-crest {
             color: #d8232a;
@@ -52,7 +57,6 @@ def inject_custom_css():
         }
 
         /* Sleek Lilac Search Pill */
-        div[data-testid="column"]:has(button[key="header_search_btn"]) button,
         button[key="header_search_btn"] {
             background-color: #f1e6f5 !important;
             color: #581845 !important;
@@ -60,16 +64,13 @@ def inject_custom_css():
             border-radius: 50px !important;
             font-weight: 700 !important;
             font-size: 13px !important;
-            padding: 0 16px !important;
         }
-        div[data-testid="column"]:has(button[key="header_search_btn"]) button:hover,
         button[key="header_search_btn"]:hover {
             background-color: #e5d4ec !important;
             color: #420f34 !important;
         }
 
         /* Sleek Deep Purple Logout Pill */
-        div[data-testid="column"]:has(button[key="header_logout_btn"]) button,
         button[key="header_logout_btn"] {
             background-color: #6a1a72 !important;
             color: #ffffff !important;
@@ -77,22 +78,22 @@ def inject_custom_css():
             border-radius: 50px !important;
             font-weight: 700 !important;
             font-size: 13px !important;
-            padding: 0 18px !important;
         }
-        div[data-testid="column"]:has(button[key="header_logout_btn"]) button:hover,
         button[key="header_logout_btn"]:hover {
             background-color: #521358 !important;
             color: #ffffff !important;
         }
 
-        /* Floating Back to Top Button */
-        div.st-key-floating_top_trigger a {
+        /* True Fixed Floating Anchor Buttons (Bottom Right) */
+        .floating-action-bar {
             position: fixed !important;
-            bottom: 26px !important;
-            right: 175px !important;
-            z-index: 999999 !important;
+            bottom: 24px !important;
+            right: 180px !important;
+            z-index: 999998 !important;
+        }
+        .floating-top-link {
             border-radius: 50px !important;
-            padding: 10px 18px !important;
+            padding: 9px 18px !important;
             background-color: #ffffff !important;
             color: #581845 !important;
             font-size: 13px !important;
@@ -100,37 +101,33 @@ def inject_custom_css():
             border: 1.5px solid #d0c4d8 !important;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
             text-decoration: none !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            transition: all 0.2s ease-in-out !important;
+            display: inline-block !important;
         }
-        div.st-key-floating_top_trigger a:hover {
+        .floating-top-link:hover {
             background-color: #f7eaf3 !important;
             border-color: #7a1d5a !important;
             color: #7a1d5a !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 8px 18px rgba(88, 24, 69, 0.15) !important;
         }
 
-        /* Floating Chatbot Launch Trigger Button */
-        div.st-key-floating_chat_trigger button {
+        /* Fixed Ask Copilot Button in bottom right */
+        div.st-key-floating_chat_button {
             position: fixed !important;
-            bottom: 26px !important;
+            bottom: 24px !important;
             right: 28px !important;
             z-index: 999999 !important;
+        }
+        div.st-key-floating_chat_button button {
             border-radius: 50px !important;
-            padding: 11px 22px !important;
+            padding: 10px 22px !important;
             background: linear-gradient(135deg, #581845 0%, #7a1d5a 50%, #d8232a 100%) !important;
             color: #ffffff !important;
             font-size: 13.5px !important;
             font-weight: 700 !important;
             border: 2px solid #ffffff !important;
             box-shadow: 0 8px 24px rgba(88, 24, 69, 0.35) !important;
-            transition: all 0.25s ease-in-out !important;
         }
-        div.st-key-floating_chat_trigger button:hover {
-            transform: scale(1.05) translateY(-2px) !important;
+        div.st-key-floating_chat_button button:hover {
+            transform: scale(1.04) translateY(-2px) !important;
             box-shadow: 0 12px 30px rgba(88, 24, 69, 0.45) !important;
         }
 
@@ -142,15 +139,9 @@ def inject_custom_css():
             padding: 22px;
             min-height: 185px;
             box-shadow: 0 4px 12px rgba(26, 26, 36, 0.04);
-            transition: all 0.25s ease-in-out;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-        }
-        .portal-card:hover {
-            border-color: #7a1d5a;
-            box-shadow: 0 10px 20px rgba(93, 26, 88, 0.1);
-            transform: translateY(-2px);
         }
         .portal-card-tag {
             font-size: 11px;
@@ -178,8 +169,8 @@ def inject_custom_css():
 
         /* Footer Prototype Notice */
         .prototype-footer {
-            margin-top: 50px;
-            padding: 20px;
+            margin-top: 40px;
+            padding: 18px;
             background-color: #f8f8fa;
             border-top: 1px solid #e2e2e8;
             border-radius: 10px;
@@ -237,7 +228,7 @@ def render_top_navigation():
     with cols[5]:
         if st.button("Search 🔍", key="header_search_btn", use_container_width=True):
             st.session_state.page = "Pre-Approval Assessment"
-            st.session_state.assessment_step = 1  # jump straight to discovery
+            st.session_state.assessment_step = 1
             st.rerun()
 
     with cols[6]:

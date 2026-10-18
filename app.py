@@ -359,42 +359,111 @@ with st.sidebar.expander("⚠️ IMPORTANT NOTICE — Prototype", expanded=False
 st.sidebar.caption("IMDA SMEs Go Digital POC")
 
 # =========================================================
-# HOME PAGE
+# HOME PAGE (HERO SEARCH & VMP / PRE-APPROVAL ONBOARDING)
 # =========================================================
 
 if st.session_state.page == "Home":
     render_brand_header(
         "IMDA Pre-Approval Assistant",
-        subtitle="Accelerate your pre-approval journey with self-assessment checks, AI category discovery, and grounded guidance.",
+        subtitle="Empowering Infocomm Media (ICM) vendors to navigate pre-approval, assess readiness, and prepare submissions for the Vendor Management Portal (VMP).",
         badge="Official Prototype"
     )
 
     render_hero_banner(
-        "Accelerate Your Pre-Approval Readiness",
-        "Verify your eligibility, discover official solution categories with AI, and engage in real-time guidance grounded in official IMDA policy documentation."
+        "Accelerate Your SMEs Go Digital Pre-Approval",
+        "The SMEs Go Digital programme supports SMEs in adopting pre-approved digital solutions with grant support. Use this copilot to assess your corporate eligibility, identify matching solution categories, and prepare your formal submission."
     )
 
+    # 1. Main Page Hero Search Bar
+    with st.container(border=True):
+        st.markdown("### 🔍 Search Official Pre-Approved Categories & Solutions")
+        st.caption("Enter keywords (e.g., 'Cloud Accounting', 'Cybersecurity', 'POS System') or describe your software to find matching categories instantly.")
+        
+        home_search_col1, home_search_col2 = st.columns([5, 1])
+        with home_search_col1:
+            home_query = st.text_input(
+                "Search query",
+                placeholder="What digital capabilities does your solution offer?",
+                label_visibility="collapsed",
+                key="home_hero_search_input"
+            )
+        with home_search_col2:
+            if st.button("Find Solution →", type="primary", use_container_width=True):
+                if home_query.strip():
+                    st.session_state.assessment["solution_description"] = home_query.strip()
+                    st.session_state.page = "AI Category Finder"
+                    st.rerun()
+
+    st.markdown("---")
+
+    # 2. About the Pre-Approval Framework & VMP Integration
+    col_info1, col_info2 = st.columns(2)
+    with col_info1:
+        with st.container(border=True):
+            st.markdown("#### 📘 About the IMDA Pre-Approval Guide")
+            st.write(
+                """
+                Under the **SMEs Go Digital** initiative, pre-approved solutions are vetted for quality, 
+                market readiness, and track record. Eligible SMEs adopting these solutions can receive grant support (such as PSG).
+                
+                This assistant automates **Stage 1: Vendor Self-Assessment**, helping digital solution vendors verify foundational 
+                financial criteria, customer track record, and operational requirements prior to application.
+                """
+            )
+            st.link_button("View Official IMDA Guide ↗", "https://preapproval-guide.imda.gov.sg", use_container_width=True)
+
+    with col_info2:
+        with st.container(border=True):
+            st.markdown("#### 🏛️ Vendor Management Portal (VMP)")
+            st.write(
+                """
+                The **Vendor Management Portal (VMP)** is IMDA's official platform where tech vendors formally submit applications, 
+                track submission milestones, manage approved solution packages, and report SME deployments.
+                
+                Use this copilot to detect gaps in your compliance early so that your formal submission through the VMP proceeds smoothly without delays.
+                """
+            )
+            st.link_button("Access Vendor Management Portal (VMP) ↗", "https://services2-stg.imda.gov.sg/VMP/Home", use_container_width=True)
+
+    st.markdown("---")
+
+    # 3. Interactive Journey Cards
+    st.subheader("Explore the Pre-Approval Journey")
     col1, col2, col3 = st.columns(3)
     with col1:
-        render_feature_card("Eligibility", "Vendor Self-Assessment", "Verify financial viability, track record benchmarks, and SME readiness.")
+        render_feature_card(
+            "Stage 1: Eligibility",
+            "Vendor Self-Assessment",
+            "Verify incorporation age, financial ratios (positive equity, current ratio >= 1), and SME deployment benchmarks."
+        )
         st.write("")
-        if st.button("Start Assessment →", use_container_width=True):
+        if st.button("Start Assessment →", key="home_btn_assess", use_container_width=True):
             st.session_state.page = "Self-Assessment"
             st.rerun()
 
     with col2:
-        render_feature_card("AI Tool", "Category Finder", "Zero-shot semantic matching against the live IMDA directory using Gemini.")
+        render_feature_card(
+            "Stage 2: Discovery",
+            "AI Category Finder",
+            "Semantic category matching powered by Gemini or browse the interactive directory with numbered pagination."
+        )
         st.write("")
-        if st.button("Find Category →", use_container_width=True):
+        if st.button("Browse Categories →", key="home_btn_cat", use_container_width=True):
             st.session_state.page = "AI Category Finder"
             st.rerun()
 
     with col3:
-        render_feature_card("Copilot", "Pre-Approval Assistant", "Full multi-turn conversational agent with real-time official guide citations.")
+        render_feature_card(
+            "Stage 3: Guidance",
+            "AI Assistant (RAG Chatbot)",
+            "Engage our conversational copilot grounded in real-time IMDA pre-approval documentation."
+        )
         st.write("")
-        if st.button("Open AI Chatbot →", type="primary", use_container_width=True):
+        if st.button("Launch Copilot →", key="home_btn_chat", type="primary", use_container_width=True):
             st.session_state.page = "AI Assistant (RAG Chatbot)"
             st.rerun()
+
+    render_footer_disclaimer()
 # =========================================================
 # SELF-ASSESSMENT (ROBUST MOBILE-FRIENDLY WIZARD)
 # =========================================================

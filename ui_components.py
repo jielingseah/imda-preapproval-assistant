@@ -1,12 +1,13 @@
 """
 UI/UX Component & Style Library for IMDA Pre-Approval Assistant.
 Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.sg) portal.
+Centralized repository for all CSS rules, layouts, typography, and branded components.
 """
 
 import streamlit as st
 
 def inject_custom_css():
-    """Centralized stylesheet containing ALL application typography, layouts, and component themes."""
+    """Centralized stylesheet containing ALL application typography, layouts, utility classes, and component themes."""
     st.markdown(
         """
         <style>
@@ -81,6 +82,33 @@ def inject_custom_css():
             display: none !important;
         }
         header {visibility: hidden;}
+
+        /* Semantic Section Headings & Spacers */
+        .portal-section-heading {
+            font-size: 18px !important;
+            font-weight: 800 !important;
+            color: #2b0b2e !important;
+            margin-bottom: 14px !important;
+        }
+        .portal-section-subtext {
+            font-size: 13px !important;
+            color: #636375 !important;
+            margin-bottom: 14px !important;
+            line-height: 1.5 !important;
+        }
+        .portal-hint-text {
+            font-size: 11.5px !important;
+            color: #777788 !important;
+            margin-top: 8px !important;
+            margin-bottom: 4px !important;
+        }
+        .portal-spacer-sm {
+            margin-bottom: 14px !important;
+        }
+        .portal-spacer-md {
+            margin-top: 24px !important;
+            margin-bottom: 14px !important;
+        }
 
         /* Top Government Masthead & Interactive Expandable Drawer */
         .sg-masthead {
@@ -672,7 +700,6 @@ def render_purple_segmented_stepper(current_step: int):
                     unsafe_allow_html=True
                 )
 
-                # Class wraps the button; styled cleanly in inject_custom_css()
                 with st.container():
                     st.markdown(f'<div class="{state_class}">', unsafe_allow_html=True)
                     if st.button(f"{prefix}{name}", key=f"stepper_click_{idx}", use_container_width=True):

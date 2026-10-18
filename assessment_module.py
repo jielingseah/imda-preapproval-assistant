@@ -2,8 +2,8 @@
 Assessment Module for IMDA Pre-Approval Assistant.
 Encapsulates:
 - Step 1: Category Discovery & Feasibility Pre-Check
-- Step 2: Category Functional Checklist
-- Step 3: Baseline Prerequisite Validation
+- Step 2: Category Functional Checklist (with real-time compliance badges)
+- Step 3: Baseline Prerequisite Validation (with real-time compliance badges)
 - Step 4: Readiness Review, Gap Audit & Stage 2 / VMP Handover
 """
 
@@ -27,6 +27,46 @@ from imda_knowledge import (
 )
 
 PAGE_SIZE = 6
+
+def format_web_url(url: str) -> str:
+    """Converts raw markdown URLs into clean browser-facing website links by stripping .md."""
+    if not url:
+        return ""
+    if url.endswith(".md"):
+        return url[:-3]
+    return url
+
+# =========================================================
+# REAL-TIME COMPLIANCE BADGE COMPONENT
+# =========================================================
+
+def render_compliance_badge(current_val: str | None, compliant_options: list[str]):
+    """Renders a green tick when compliant or amber warning triangle when non-compliant."""
+    if not current_val:
+        st.markdown(
+            "<span style='font-size: 11px; color: #888899;'>⚪ <em>Pending response</em></span>",
+            unsafe_allow_html=True
+        )
+    elif current_val in compliant_options:
+        st.markdown(
+            """
+            <span style='background-color: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf; 
+            padding: 3px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;'>
+                ✅ Compliant
+            </span>
+            """,
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            """
+            <span style='background-color: #fef9e7; color: #b7950b; border: 1px solid #f9e79f; 
+            padding: 3px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;'>
+                ⚠️ Non-compliant / Potential Gap
+            </span>
+            """,
+            unsafe_allow_html=True
+        )
 
 # =========================================================
 # UNIFIED BASELINE PREREQUISITES SCHEMA (SINGLE SOURCE OF TRUTH)
@@ -656,11 +696,12 @@ def render_step_2_checklist():
         st.success(f"Target Category: **{selected}**")
         st.write(category.get("description", "Multi-functional system that streamlines operations and administration."))
         if resolved_url and resolved_url.startswith("http"):
-            st.link_button("Open official IMDA requirements page ↗", resolved_url)
+            clean_web_link = format_web_url(resolved_url)
+            st.link_button("Open official IMDA requirements page ↗", clean_web_link)
 
     st.markdown("---")
     st.subheader("1. Mandatory Functional Checklist")
-    st.caption("Indicate your solution's compliance for each requirement.")
+    st.caption("Indicate your solution's compliance for each requirement. Real-time compliance badges indicate eligibility.")
 
     with st.spinner("Loading official checklist..."):
         requirements = get_category_requirements(resolved_url)
@@ -678,14 +719,23 @@ def render_step_2_checklist():
             ans_idx = ans_opts.index(existing_ans) if existing_ans in ans_opts else None
 
             with st.container(border=True):
+                # Header row: Question title on left, compliance badge on right
+                q_col1, q_col2 = st.columns([5.2, 1.8])
+                with q_col1:
+                    st.markdown(f"**Q{question['number']}** — {question['question']}")
+                with q_col2:
+                    render_compliance_badge(existing_ans, compliant_options=["Yes"])
+
                 chosen_q = st.radio(
-                    f"Q{question['number']} — {question['question']}",
+                    f"Select compliance status for Q{question['number']}",
                     ans_opts,
                     index=ans_idx,
-                    key=key
+                    key=key,
+                    label_visibility="collapsed"
                 )
-                if chosen_q is not None:
+                if chosen_q is not None and chosen_q != existing_ans:
                     st.session_state.category_answers[question["number"]] = chosen_q
+                    st.rerun()
 
         if preferred:
             with st.expander(f"View {len(preferred)} Preferred Requirements"):
@@ -710,7 +760,7 @@ def render_step_2_checklist():
 
 def render_step_3_prerequisites():
     st.markdown("### 🏢 Step 3: Baseline Prerequisite Validation")
-    st.caption("Confirm foundational corporate, financial, and deployment prerequisites.")
+    st.caption("Confirm foundational corporate, financial, and deployment prerequisites with real-time feedback.")
 
     if st.session_state.get("selected_category"):
         st.info(f"Target Category: **{st.session_state.selected_category}**")
@@ -722,36 +772,92 @@ def render_step_3_prerequisites():
             with st.container(border=True):
                 current_val = st.session_state.assessment.get(item["key"])
                 idx = item["options"].index(current_val) if current_val in item["options"] else None
-                chosen = st.radio(item["question"], item["options"], index=idx, key=f"vendor_{item['key']}")
-                if chosen is not None:
+
+                b_col1, b_col2 = st.columns([5.2, 1.8])
+                with b_col1:
+                    st.markdown(f"**{item['question']}**")
+                with b_col2:
+                    render_compliance_badge(current_val, item["compliant_values"])
+
+                chosen = st.radio(
+                    f"Radio for {item['key']}",
+                    item["options"],
+                    index=idx,
+                    key=f"vendor_{item['key']}",
+                    label_visibility="collapsed"
+                )
+                if chosen is not None and chosen != current_val:
                     st.session_state.assessment[item["key"]] = chosen
+                    st.rerun()
 
     with t2:
         ind_item = BASELINE_PREREQUISITES_SCHEMA["deployment"][0]
         with st.container(border=True):
             current_ind = st.session_state.assessment.get(ind_item["key"])
             ind_idx = ind_item["options"].index(current_ind) if current_ind in ind_item["options"] else None
-            chosen_ind = st.radio(ind_item["question"], ind_item["options"], index=ind_idx, key=f"vendor_{ind_item['key']}")
-            if chosen_ind is not None:
+
+            bi_col1, bi_col2 = st.columns([5.2, 1.8])
+            with bi_col1:
+                st.markdown(f"**{ind_item['question']}**")
+            with bi_col2:
+                render_compliance_badge(current_ind, ind_item["compliant_values"])
+
+            chosen_ind = st.radio(
+                f"Radio for {ind_item['key']}",
+                ind_item["options"],
+                index=ind_idx,
+                key=f"vendor_{ind_item['key']}",
+                label_visibility="collapsed"
+            )
+            if chosen_ind is not None and chosen_ind != current_ind:
                 st.session_state.assessment[ind_item["key"]] = chosen_ind
+                st.rerun()
 
         if st.session_state.assessment.get("industries") == "One or few industries":
             cust_item = BASELINE_PREREQUISITES_SCHEMA["deployment"][1]
             with st.container(border=True):
                 current_track = st.session_state.assessment.get(cust_item["key"])
                 track_idx = cust_item["options"].index(current_track) if current_track in cust_item["options"] else None
-                chosen_track = st.radio(cust_item["question"], cust_item["options"], index=track_idx, key=f"vendor_{cust_item['key']}")
-                if chosen_track is not None:
+
+                bt_col1, bt_col2 = st.columns([5.2, 1.8])
+                with bt_col1:
+                    st.markdown(f"**{cust_item['question']}**")
+                with bt_col2:
+                    render_compliance_badge(current_track, cust_item["compliant_values"])
+
+                chosen_track = st.radio(
+                    f"Radio for {cust_item['key']}",
+                    cust_item["options"],
+                    index=track_idx,
+                    key=f"vendor_{cust_item['key']}",
+                    label_visibility="collapsed"
+                )
+                if chosen_track is not None and chosen_track != current_track:
                     st.session_state.assessment[cust_item["key"]] = chosen_track
+                    st.rerun()
 
     with t3:
         for item in BASELINE_PREREQUISITES_SCHEMA["solution"]:
             with st.container(border=True):
                 current_val = st.session_state.assessment.get(item["key"])
                 idx = item["options"].index(current_val) if current_val in item["options"] else None
-                chosen_sol = st.radio(item["question"], item["options"], index=idx, key=f"solution_{item['key']}")
-                if chosen_sol is not None:
+
+                bs_col1, bs_col2 = st.columns([5.2, 1.8])
+                with bs_col1:
+                    st.markdown(f"**{item['question']}**")
+                with bs_col2:
+                    render_compliance_badge(current_val, item["compliant_values"])
+
+                chosen_sol = st.radio(
+                    f"Radio for {item['key']}",
+                    item["options"],
+                    index=idx,
+                    key=f"solution_{item['key']}",
+                    label_visibility="collapsed"
+                )
+                if chosen_sol is not None and chosen_sol != current_val:
                     st.session_state.assessment[item["key"]] = chosen_sol
+                    st.rerun()
 
     st.markdown("")
     col_b1, col_b2 = st.columns(2)

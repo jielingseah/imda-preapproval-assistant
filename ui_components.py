@@ -6,7 +6,7 @@ Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.s
 import streamlit as st
 
 def inject_custom_css():
-    """Injects universal Plus Jakarta Sans font, floating copilot widget styles, and SMEs Go Digital branding."""
+    """Injects universal Plus Jakarta Sans font, floating widgets, and SMEs Go Digital branding."""
     st.markdown(
         """
         <style>
@@ -14,9 +14,14 @@ def inject_custom_css():
 
         /* UNIVERSAL FONT SYNC */
         html, body, [class*="css"], [class*="st-"], 
-        h1, h2, h3, h4, h5, h6, p, div, span, label, input, textarea, button {
+        h1, h2, h3, h4, h5, h6, p, div, span, label, input, textarea, button, a {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             letter-spacing: -0.01em;
+        }
+
+        /* Smooth native anchor scrolling */
+        html {
+            scroll-behavior: smooth !important;
         }
 
         /* Hide Streamlit default sidebar and header decorations */
@@ -80,17 +85,45 @@ def inject_custom_css():
             color: #ffffff !important;
         }
 
-        /* Floating Chatbot Launch Trigger Button in Bottom-Right Corner */
+        /* Floating Back to Top Button */
+        div.st-key-floating_top_trigger a {
+            position: fixed !important;
+            bottom: 26px !important;
+            right: 175px !important;
+            z-index: 999999 !important;
+            border-radius: 50px !important;
+            padding: 10px 18px !important;
+            background-color: #ffffff !important;
+            color: #581845 !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            border: 1.5px solid #d0c4d8 !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        div.st-key-floating_top_trigger a:hover {
+            background-color: #f7eaf3 !important;
+            border-color: #7a1d5a !important;
+            color: #7a1d5a !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 18px rgba(88, 24, 69, 0.15) !important;
+        }
+
+        /* Floating Chatbot Launch Trigger Button */
         div.st-key-floating_chat_trigger button {
             position: fixed !important;
             bottom: 26px !important;
             right: 28px !important;
             z-index: 999999 !important;
             border-radius: 50px !important;
-            padding: 12px 22px !important;
+            padding: 11px 22px !important;
             background: linear-gradient(135deg, #581845 0%, #7a1d5a 50%, #d8232a 100%) !important;
             color: #ffffff !important;
-            font-size: 14px !important;
+            font-size: 13.5px !important;
             font-weight: 700 !important;
             border: 2px solid #ffffff !important;
             box-shadow: 0 8px 24px rgba(88, 24, 69, 0.35) !important;

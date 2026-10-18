@@ -1,5 +1,6 @@
 import streamlit as st
 from google import genai
+import pandas as pd
 
 # Centralized constants and RAG engine
 from imda_knowledge import (
@@ -33,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Injected first so the login screen adopts the SMEs Go Digital design system immediately
+# Injected globally so both Member of Public and Admin share the exact same CSS styling
 inject_custom_css()
 
 # Anchor point for instant return to top
@@ -123,7 +124,7 @@ def check_password():
                 unsafe_allow_html=True
             )
 
-            # Role Toggle
+            # Horizontal Role Toggle
             selected_role = st.radio(
                 "Access Role",
                 ["Member of Public", "Admin"],
@@ -246,6 +247,148 @@ def render_floating_chat_modal():
 if st.session_state.show_chat_dialog:
     render_floating_chat_modal()
     st.session_state.show_chat_dialog = False
+
+# =========================================================
+# ROLE ROUTING: ADMIN CONSOLE
+# =========================================================
+
+if st.session_state.get("user_role") == "Admin":
+    render_brand_header(
+        "IMDA Officer Operations & Pipeline Console",
+        subtitle="Manage daily knowledge harvesting automation, category intake governance, and view session submissions.",
+        badge="System Administrator"
+    )
+
+    render_hero_banner(
+        "Automated Knowledge Ingestion & Governance Dashboard",
+        "This console provides reviewing officers with operational visibility into the daily GitHub Actions scraping daemon, cache invalidation controls, and real-time intake telemetry."
+    )
+
+    # Top Utility Bar for Admin
+    admin_bar_col1, admin_bar_col2 = st.columns([5, 1.2])
+    with admin_bar_col1:
+        st.markdown(
+            """
+            <span class="step-badge">
+                <span>🛡️</span> AUTHENTICATED AS: IMDA OFFICER (ADMIN)
+            </span>
+            """,
+            unsafe_allow_html=True
+        )
+    with admin_bar_col2:
+        if st.button("Log Out ↪", key="btn_admin_logout", use_container_width=True):
+            st.session_state.authenticated = False
+            st.rerun()
+
+    st.markdown("<div class='portal-spacer-sm'></div>", unsafe_allow_html=True)
+
+    tab_pipeline, tab_knowledge, tab_submissions = st.tabs([
+        "🕒 Automated Ingestion Scheduler", 
+        "📚 Knowledge Base & Endpoints", 
+        "📋 Submissions & Intake Governance"
+    ])
+
+    # TAB 1: GITHUB ACTIONS SCHEDULER & PIPELINE
+    with tab_pipeline:
+        with st.container(border=True):
+            st.markdown(
+                """
+                <div class="portal-spacer-sm">
+                    <span class="step-badge">
+                        <span>🤖</span> SCHEDULED GITHUB ACTIONS DAEMON
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            st.markdown("<h4 class='portal-card-title'>Daily Headless Ingestion Daemon (<code>daily_refresh.yml</code>)</h4>", unsafe_allow_html=True)
+            st.markdown(
+                """
+                <p class="portal-section-subtext">
+                    Knowledge is automatically crawled from <code>https://preapproval-guide.imda.gov.sg</code> 
+                    via a headless GitHub Actions runner and committed directly to repository version control.
+                </p>
+                """,
+                unsafe_allow_html=True
+            )
+            
+            p_col1, p_col2 = st.columns(2)
+            with p_col1:
+                st.markdown("- **Cron Trigger:** `0 19 * * *` (Daily at 03:00 SGT)")
+                st.markdown("- **Target Serialized Output:** `data/knowledge_index.json`")
+                st.markdown("- **Runner Environment:** `ubuntu-latest` (Python 3.11)")
+            with p_col2:
+                st.markdown("- **Permissions:** `contents: write` (Bot Commits)")
+                st.markdown("- **Execution Script:** `python imda_knowledge.py`")
+                st.markdown("- **Scheduler Health:** `🟢 Active / Scheduled`")
+
+            st.markdown("---")
+            st.markdown("##### 📄 Workflow Pipeline Specification")
+            st.code("""name: Daily IMDA Knowledge Refresh
+
+on:
+  schedule:
+    - cron: "0 19 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install requests streamlit google-genai
+      - name: Refresh knowledge index
+        run: python imda_knowledge.py
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/knowledge_index.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh IMDA knowledge base"
+            git push
+          fi""", language="yaml")
+
+            if st.button("⚡ Force Immediate Manual Cache Invalidation", type="primary"):
+                st.cache_data.clear()
+                st.success("Streamlit knowledge cache cleared! Next user query will read fresh source chunks.")
+
+    # TAB 2: KNOWLEDGE BASE ENDPOINTS
+    with tab_knowledge:
+        with st.container(border=True):
+            st.markdown("<h4 class='portal-card-title'>📚 Grounded Official Document Endpoints</h4>", unsafe_allow_html=True)
+            st.write("Active official endpoints ingested into the RAG knowledge pool:")
+            st.markdown("- **Stage 1 Self-Assessment Guide:** `https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-1-vendor-self-assessment.md`")
+            st.markdown("- **Stage 2 Vendor Application Guide:** `https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-2-vendor-application.md`")
+            st.markdown("- **Pre-Approved Solution Categories Directory:** `https://preapproval-guide.imda.gov.sg/pre-approval-guide/stage-1-vendor-self-assessment/identify-suitable-solution-category.md`")
+            st.info("ℹ️ These files are pre-chunked with XML boundaries (`<context>`, `<applicant_state>`, `<user_query>`) before embedding.")
+
+    # TAB 3: SUBMISSIONS & INTAKE GOVERNANCE
+    with tab_submissions:
+        with st.container(border=True):
+            st.markdown("<h4 class='portal-card-title'>🚪 Category Intake Governance</h4>", unsafe_allow_html=True)
+            st.toggle("Accept New Vendor Stage 1 Self-Assessments", value=True)
+            st.toggle("Permit Expressions of Interest (EOI) for Unlisted Categories", value=True)
+
+        with st.container(border=True):
+            st.markdown("<h4 class='portal-card-title'>📥 Logged Session Submissions</h4>", unsafe_allow_html=True)
+            submissions = st.session_state.get("all_submissions", [])
+            if not submissions:
+                st.info("No vendor assessment submissions recorded in current active session memory.")
+                st.caption("When a vendor finishes Step 4 in the Public view, their company profile, website, and gaps will appear here.")
+            else:
+                df = pd.DataFrame(submissions)
+                st.dataframe(df, use_container_width=True)
+
+    render_footer_disclaimer()
+    st.stop()  # Admin execution halts here, preserving Member of Public below
 
 # =========================================================
 # PAGE 1: HOME PAGE (STRUCTURED STAGE 1 & STAGE 2)

@@ -136,7 +136,6 @@ def render_manual_catalogue_browser(key_prefix: str = "manual"):
         total_items = len(filtered_items)
         if total_items == 0:
             st.warning("No matching categories found for your search criteria.")
-            # Unlisted option in search fallback
             if st.button("Proceed with 'Unlisted / New Category' →", key=f"{key_prefix}_unlisted_fallback", type="primary"):
                 st.session_state.selected_category = UNLISTED_CAT_LABEL
                 st.session_state.selected_category_url = None
@@ -295,7 +294,7 @@ def render_step_1_discovery():
         render_manual_catalogue_browser(key_prefix="manual_tab")
         st.markdown("---")
         with st.container(border=True):
-            st.markdown(f"**Cannot find your product category in the directory?**")
+            st.markdown("**Cannot find your product category in the directory?**")
             if st.button(f"Proceed as '{UNLISTED_CAT_LABEL}' →", key="btn_choose_unlisted_manual", type="primary"):
                 st.session_state.selected_category = UNLISTED_CAT_LABEL
                 st.session_state.selected_category_url = None
@@ -713,12 +712,11 @@ def render_step_4_review_and_submit():
     st.markdown("---")
 
     # STEP 4 FORM: With Target Category and Solution Capabilities Included
-    st.subheader("Vendor Contact Details & Solution Profile")[cite: 8]
+    st.subheader("Vendor Contact Details & Solution Profile")
     with st.container(border=True):
         with st.form("vendor_submission_form"):
-            # Target Category Display & Solution Capabilities
             cat_display_val = selected if selected else "Not Selected"
-            st.text_input("Target Pre-Approval Category", value=cat_display_val, disabled=True)[cite: 8]
+            st.text_input("Target Pre-Approval Category", value=cat_display_val, disabled=True)
 
             prefilled_desc = st.session_state.assessment.get("solution_description", "")
             solution_description_input = st.text_area(
@@ -726,26 +724,26 @@ def render_step_4_review_and_submit():
                 value=prefilled_desc,
                 placeholder="Describe your solution's key capabilities, architecture, intended industry use cases, and SME benefits...",
                 height=100
-            )[cite: 8]
+            )
 
             col_c1, col_c2 = st.columns(2)
             with col_c1:
-                company_name = st.text_input("Company Registered Name *", value=st.session_state.get("sub_company", ""), placeholder="e.g. Acme Tech Solutions Pte Ltd")[cite: 8]
-                contact_person = st.text_input("Contact Person Name *", value=st.session_state.get("sub_person", ""), placeholder="e.g. John Tan")[cite: 8]
+                company_name = st.text_input("Company Registered Name *", value=st.session_state.get("sub_company", ""), placeholder="e.g. Acme Tech Solutions Pte Ltd")
+                contact_person = st.text_input("Contact Person Name *", value=st.session_state.get("sub_person", ""), placeholder="e.g. John Tan")
             with col_c2:
-                contact_email = st.text_input("Corporate Email Address *", value=st.session_state.get("sub_email", ""), placeholder="e.g. john.tan@acme.com")[cite: 8]
-                contact_phone = st.text_input("Contact Number *", value=st.session_state.get("sub_phone", ""), placeholder="e.g. +65 9123 4567")[cite: 8]
+                contact_email = st.text_input("Corporate Email Address *", value=st.session_state.get("sub_email", ""), placeholder="e.g. john.tan@acme.com")
+                contact_phone = st.text_input("Contact Number *", value=st.session_state.get("sub_phone", ""), placeholder="e.g. +65 9123 4567")
 
             vendor_inquiry = st.text_area(
                 "Inquiry / Clarification Notes",
                 value=st.session_state.get("sub_inquiry", ""),
                 placeholder="Optional: Enter any questions regarding timeline or alternative compliance pathways for IMDA officers.",
                 height=80
-            )[cite: 8]
+            )
 
-            submit_button = st.form_submit_button("Submit Assessment & Generate Summary →", type="primary", use_container_width=True)[cite: 8]
+            submit_button = st.form_submit_button("Submit Assessment & Generate Summary →", type="primary", use_container_width=True)
 
-    if submit_button:[cite: 8]
+    if submit_button:
         if not company_name or not contact_person or not contact_email or not solution_description_input.strip():
             st.error("Please fill in all mandatory fields: Solution Capabilities, Company Name, Contact Person, and Email.")
             st.session_state.form_submitted = False

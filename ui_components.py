@@ -313,9 +313,10 @@ def inject_custom_css():
             transform: translateY(-1px) !important;
         }
 
-        /* Global Purple Action Buttons */
+        /* Global Purple Action Buttons (Includes st.form_submit_button) */
         button[kind="primary"],
-        button[data-testid="baseButton-primary"] {
+        button[data-testid="baseButton-primary"],
+        button[data-testid="stFormSubmitButton"] {
             background: linear-gradient(130deg, #581845 0%, #7a1d5a 50%, #9a1f52 100%) !important;
             color: #ffffff !important;
             border: 1px solid #7a1d5a !important;
@@ -326,7 +327,8 @@ def inject_custom_css():
             transition: all 0.2s ease !important;
         }
         button[kind="primary"]:hover,
-        button[data-testid="baseButton-primary"]:hover {
+        button[data-testid="baseButton-primary"]:hover,
+        button[data-testid="stFormSubmitButton"]:hover {
             background: linear-gradient(130deg, #481237 0%, #68174c 50%, #871946 100%) !important;
             color: #ffffff !important;
             transform: translateY(-1px) !important;
@@ -335,7 +337,9 @@ def inject_custom_css():
         button[kind="primary"] p,
         button[kind="primary"] span,
         button[data-testid="baseButton-primary"] p,
-        button[data-testid="baseButton-primary"] span {
+        button[data-testid="baseButton-primary"] span,
+        button[data-testid="stFormSubmitButton"] p,
+        button[data-testid="stFormSubmitButton"] span {
             color: #ffffff !important;
             -webkit-text-fill-color: #ffffff !important;
         }
@@ -497,7 +501,8 @@ def render_hero_banner(heading: str, description: str):
 def render_purple_segmented_stepper(current_step: int):
     """
     Renders the 4-step progress bar and clickable buttons strictly inside the purple banner.
-    High-contrast typography ensures labels are vivid and legible against the dark background.
+    Accurately switches active steps to green when requirements are satisfied, and turns
+    Step 4 green once submitted. Fixes inner-text background highlight artifacts.
     """
     steps = [
         "1. Discovery",
@@ -512,7 +517,7 @@ def render_purple_segmented_stepper(current_step: int):
     cat_answers = st.session_state.get("category_answers", {})
     is_step_2_done = bool(is_step_1_done and len(cat_answers) > 0)
 
-    from assessment_module import BASELINE_PREREQUISITES_SCHEMA
+    from assessment_schemas import BASELINE_PREREQUISITES_SCHEMA
     assessment_data = st.session_state.get("assessment", {})
     all_baseline_keys = [
         item["key"] 
@@ -542,20 +547,21 @@ def render_purple_segmented_stepper(current_step: int):
                 is_active = (idx == current_step)
                 is_done = completion_flags[idx]
 
-                if is_active:
-                    bar_color = "#ff4081"
-                    prefix = "● "
-                    text_color = "#ffffff"
-                    btn_bg = "rgba(255, 64, 129, 0.45)"
-                    font_weight = "800"
-                    border_color = "rgba(255, 64, 129, 0.8)"
-                elif is_done:
+                # Automatic green logic: even if active, if satisfied it turns green
+                if is_done:
                     bar_color = "#00e676"
                     prefix = "✓ "
                     text_color = "#e8f5e9"
-                    btn_bg = "rgba(0, 230, 118, 0.22)"
-                    font_weight = "700"
-                    border_color = "rgba(0, 230, 118, 0.6)"
+                    btn_bg = "rgba(0, 230, 118, 0.28)" if is_active else "rgba(0, 230, 118, 0.16)"
+                    font_weight = "800" if is_active else "700"
+                    border_color = "rgba(0, 230, 118, 0.8)" if is_active else "rgba(0, 230, 118, 0.4)"
+                elif is_active:
+                    bar_color = "#ff4081"
+                    prefix = "● "
+                    text_color = "#ffffff"
+                    btn_bg = "rgba(255, 64, 129, 0.38)"
+                    font_weight = "800"
+                    border_color = "rgba(255, 64, 129, 0.85)"
                 else:
                     bar_color = "rgba(255, 255, 255, 0.22)"
                     prefix = ""
@@ -569,23 +575,29 @@ def render_purple_segmented_stepper(current_step: int):
                     unsafe_allow_html=True
                 )
 
+                # Fix: inner p and span have background: transparent to prevent box highlights
                 st.markdown(
                     f"""
                     <style>
-                    div.st-key-stepper_click_{idx} button,
+                    div.st-key-stepper_click_{idx} button {{
+                        background-color: {btn_bg} !important;
+                        border: 1.5px solid {border_color} !important;
+                    }}
                     div.st-key-stepper_click_{idx} button p,
                     div.st-key-stepper_click_{idx} button span {{
-                        background-color: {btn_bg} !important;
+                        background: transparent !important;
+                        background-color: transparent !important;
                         color: {text_color} !important;
                         font-weight: {font_weight} !important;
-                        border-color: {border_color} !important;
                         -webkit-text-fill-color: {text_color} !important;
                         opacity: 1 !important;
                     }}
-                    div.st-key-stepper_click_{idx} button:hover,
+                    div.st-key-stepper_click_{idx} button:hover {{
+                        background-color: rgba(255, 255, 255, 0.25) !important;
+                        border-color: rgba(255, 255, 255, 0.6) !important;
+                    }}
                     div.st-key-stepper_click_{idx} button:hover p,
                     div.st-key-stepper_click_{idx} button:hover span {{
-                        background-color: rgba(255, 255, 255, 0.3) !important;
                         color: #ffffff !important;
                         -webkit-text-fill-color: #ffffff !important;
                     }}

@@ -300,7 +300,6 @@ def inject_custom_css():
         }
 
         div.st-key-stepper_isolated_container div[class*="st-key-stepper_click_"] button {
-            border: 1px solid rgba(255, 255, 255, 0.18) !important;
             box-shadow: none !important;
             cursor: pointer !important;
             transition: all 0.2s ease !important;
@@ -311,239 +310,46 @@ def inject_custom_css():
             width: 100% !important;
         }
         div.st-key-stepper_isolated_container div[class*="st-key-stepper_click_"] button:hover {
-            background-color: rgba(255, 255, 255, 0.25) !important;
-            border-color: rgba(255, 255, 255, 0.5) !important;
             transform: translateY(-1px) !important;
         }
 
-        .prototype-footer {
-            margin-top: 40px;
-            padding: 18px;
-            background-color: #f8f8fa;
-            border-top: 1px solid #e2e2e8;
-            border-radius: 10px;
-            text-align: center;
-            color: #6c6c7d;
-            font-size: 12px;
+        /* Global Purple Action Buttons */
+        button[kind="primary"],
+        button[data-testid="baseButton-primary"] {
+            background: linear-gradient(130deg, #581845 0%, #7a1d5a 50%, #9a1f52 100%) !important;
+            color: #ffffff !important;
+            border: 1px solid #7a1d5a !important;
+            border-radius: 8px !important;
+            font-weight: 700 !important;
+            font-size: 13.5px !important;
+            box-shadow: 0 4px 12px rgba(88, 24, 69, 0.25) !important;
+            transition: all 0.2s ease !important;
         }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+        button[kind="primary"]:hover,
+        button[data-testid="baseButton-primary"]:hover {
+            background: linear-gradient(130deg, #481237 0%, #68174c 50%, #871946 100%) !important;
+            color: #ffffff !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 16px rgba(88, 24, 69, 0.35) !important;
+        }
+        button[kind="primary"] p,
+        button[kind="primary"] span,
+        button[data-testid="baseButton-primary"] p,
+        button[data-testid="baseButton-primary"] span {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
 
-def render_top_navigation():
-    """Renders the top navigation bar with the expandable official SG banner and clickable logo."""
-    pages = [
-        "Pre-Approval Assessment",
-        "About Us",
-        "Methodology"
-    ]
-
-    current_page = st.session_state.get("page", "Home")
-
-    st.markdown(
-        """
-        <details class="sg-masthead">
-            <summary class="sg-masthead-summary">
-                <span class="sg-masthead-crest">🇸🇬</span> 
-                <span>A Singapore Government Agency Website</span> 
-                <span class="sg-masthead-trigger">How to identify ▾</span>
-            </summary>
-            <div class="sg-masthead-drawer">
-                <div class="sg-masthead-col">
-                    <span class="sg-masthead-icon">🏛️</span>
-                    <div>
-                        <div class="sg-masthead-text-title">Official website links end with .gov.sg</div>
-                        <p class="sg-masthead-text-desc">
-                            Government agencies communicate via .gov.sg websites (e.g. go.gov.sg/open). 
-                            <a href="https://www.gov.sg/trusted-sites#govsites" target="_blank" rel="noopener noreferrer">Trusted websites ↗</a>
-                        </p>
-                    </div>
-                </div>
-                <div class="sg-masthead-col">
-                    <span class="sg-masthead-icon">🔒</span>
-                    <div>
-                        <div class="sg-masthead-text-title">Secure websites use HTTPS</div>
-                        <p class="sg-masthead-text-desc">
-                            Look for a <strong>lock (🔒)</strong> or https:// as an added precaution. Share sensitive information only on official, secure websites.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </details>
-        """,
-        unsafe_allow_html=True
-    )
-
-    cols = st.columns([3.6, 2.5, 1.3, 1.4, 1.0])
-
-    with cols[0]:
-        st.markdown(
-            """
-            <div style="height: 38px; padding-top: 4px; pointer-events: none;">
-                <span style="font-size: 22px; font-weight: 800; color: #581845; letter-spacing: -0.5px;">SMEs</span><span style="font-size: 22px; font-weight: 800; color: #d8232a; letter-spacing: -0.5px;">godigital ↗</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        if st.button(" ", key="nav_logo_overlay_btn"):
-            st.session_state.page = "Home"
-            st.session_state.show_chat_dialog = False
-            st.rerun()
-
-    for idx, page_name in enumerate(pages):
-        with cols[idx + 1]:
-            is_active = (current_page == page_name)
-            btn_type = "primary" if is_active else "secondary"
-            if st.button(page_name, key=f"nav_link_{idx}", type=btn_type, use_container_width=True):
-                st.session_state.page = page_name
-                st.session_state.show_chat_dialog = False
-                st.rerun()
-
-    with cols[4]:
-        if st.button("Log out", key="header_logout_btn", use_container_width=True):
-            st.session_state.authenticated = False
-            st.session_state.show_chat_dialog = False
-            st.rerun()
-
-    st.markdown("<div style='border-bottom: 1px solid #eaeaef; margin-top: 8px; margin-bottom: 22px;'></div>", unsafe_allow_html=True)
-
-def render_brand_header(title: str, subtitle: str = None, badge: str = "Official Prototype"):
-    """Renders the top navigation header and section title."""
-    render_top_navigation()
-    
-    badge_html = f'<span style="background: linear-gradient(135deg, #581845 0%, #d8232a 100%); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; float: right;">{badge}</span>'
-    st.markdown(f"<div>{badge_html}<h1>{title}</h1></div>", unsafe_allow_html=True)
-    
-    if subtitle:
-        st.markdown(f"<p style='color:#636375; font-size:13px; margin-top:2px; margin-bottom:18px;'>{subtitle}</p>", unsafe_allow_html=True)
-
-def render_hero_banner(heading: str, description: str):
-    """Renders the purple-magenta mesh banner."""
-    st.markdown(
-        f"""
-        <div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%); color: #ffffff; padding: 26px 28px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">
-            <div style="font-size: 20px; font-weight: 800; color: #ffffff; margin-bottom: 6px;">{heading}</div>
-            <div style="font-size: 13.5px; color: #f3d7e8; line-height: 1.5; max-width: 88%;">{description}</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-def render_purple_segmented_stepper(current_step: int):
-    """
-    Renders the 4-step progress bar and clickable buttons strictly inside the purple banner.
-    Restricts the purple background strictly to this stepper card.
-    """
-    steps = [
-        "1. Discovery",
-        "2. Checklist",
-        "3. Prerequisites",
-        "4. Review & Summary"
-    ]
-
-    selected_cat = st.session_state.get("selected_category")
-    is_step_1_done = bool(selected_cat and str(selected_cat).strip() != "")
-
-    cat_answers = st.session_state.get("category_answers", {})
-    is_step_2_done = bool(is_step_1_done and len(cat_answers) > 0)
-
-    from assessment_module import BASELINE_PREREQUISITES_SCHEMA
-    assessment_data = st.session_state.get("assessment", {})
-    all_baseline_keys = [
-        item["key"] 
-        for section in BASELINE_PREREQUISITES_SCHEMA.values() 
-        for item in section 
-        if item["key"] != "customer_track"
-    ]
-    is_step_3_done = all(assessment_data.get(k) is not None for k in all_baseline_keys)
-
-    is_step_4_done = bool(st.session_state.get("form_submitted", False))
-
-    completion_flags = [is_step_1_done, is_step_2_done, is_step_3_done, is_step_4_done]
-
-    with st.container(key="stepper_isolated_container"):
-        st.markdown(
-            f"""
-            <div style="color: #f3d7e8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;">
-                Assessment Flow — Step {current_step + 1} of 4: {steps[current_step]}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        cols = st.columns(4)
-        for idx, name in enumerate(steps):
-            with cols[idx]:
-                is_active = (idx == current_step)
-                is_done = completion_flags[idx]
-
-                if is_active:
-                    bar_color = "#ff4081"
-                    prefix = "● "
-                    text_color = "#ffffff"
-                    btn_bg = "rgba(255, 64, 129, 0.35)"
-                    font_weight = "800"
-                elif is_done:
-                    bar_color = "#00e676"
-                    prefix = "✓ "
-                    text_color = "#e8f5e9"
-                    btn_bg = "rgba(0, 230, 118, 0.22)"
-                    font_weight = "700"
-                else:
-                    bar_color = "rgba(255, 255, 255, 0.22)"
-                    prefix = ""
-                    text_color = "rgba(243, 215, 232, 0.65)"
-                    btn_bg = "rgba(255, 255, 255, 0.08)"
-                    font_weight = "500"
-
-                st.markdown(
-                    f'<div style="height: 7px; border-radius: 999px; background-color: {bar_color}; margin-bottom: 8px;"></div>',
-                    unsafe_allow_html=True
-                )
-
-                st.markdown(
-                    f"""
-                    <style>
-                    div.st-key-stepper_click_{idx} button {{
-                        background-color: {btn_bg} !important;
-                        color: {text_color} !important;
-                        font-weight: {font_weight} !important;
-                    }}
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-                if st.button(f"{prefix}{name}", key=f"stepper_click_{idx}", use_container_width=True):
-                    st.session_state.assessment_step = idx
-                    st.session_state.target_focus_key = None
-                    st.rerun()
-
-def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
-    """Renders portal cards with prominent badges and icons."""
-    icon_html = f"<span style='font-size: 20px;'>{icon}</span> " if icon else ""
-    st.markdown(
-        f"""
-        <div class="portal-card">
-            <div>
-                <div class="portal-card-tag">{tag}</div>
-                <div class="portal-card-title">{icon_html}{title}</div>
-                <div class="portal-card-desc">{description}</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-def render_footer_disclaimer():
-    """Renders the prototype disclaimer at the bottom of each page."""
-    st.markdown(
-        """
-        <div class="prototype-footer">
-            <strong>⚠️ IMPORTANT NOTICE — Prototype:</strong> This web application is developed for demonstration purposes only under the IMDA SMEs Go Digital POC. 
-            The information provided here is NOT intended for actual business or regulatory decisions.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        button[kind="secondary"],
+        button[data-testid="baseButton-secondary"] {
+            background-color: #ffffff !important;
+            color: #581845 !important;
+            border: 1.5px solid #d0c4d8 !important;
+            border-radius: 8px !important;
+            font-weight: 700 !important;
+            font-size: 13.5px !important;
+            transition: all 0.2s ease !important;
+        }
+        button[kind="secondary"]:hover,
+        button[data-testid="baseButton-secondary"]:hover {
+            background-color: #f7eaf3 !

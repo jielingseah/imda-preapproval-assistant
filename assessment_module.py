@@ -826,12 +826,15 @@ def render_step_4_review_and_submit():
 
         st.markdown("---")
 
-        # 5. Dual Action Paths
+      # 5. Adaptive Next Steps
         if total_gaps_count > 0:
             with st.container(border=True):
-                st.markdown("### 🤖 Decision Path 1: Address Gaps via AI Copilot")
-                st.write("Your assessment has identified requirement gaps. You can pass these gaps automatically to the AI Copilot for grounded policy recommendations.")
-                if st.button("💬 Launch AI Copilot for Remediation Advice →", type="primary", use_container_width=True):
+                st.markdown("### 🤖 Recommended Next Steps: Address Your Identified Gaps")
+                st.write(
+                    "Your assessment flagged requirement gaps. You can pass these items directly to "
+                    "the AI Copilot to get actionable remediation steps and alternative compliance pathways."
+                )
+                if st.button("💬 Consult AI Copilot for Remediation Advice →", type="primary", use_container_width=True):
                     gap_lines = [f"- Category Requirement Q{uq['number']} ({uq['status']})" for uq in unmet_cat_questions]
                     gap_lines += [f"- Baseline Prerequisite: {fg['item']} ({fg['status']})" for fg in front_gaps]
                     gaps_text = "\n".join(gap_lines)
@@ -859,6 +862,28 @@ def render_step_4_review_and_submit():
 
                     st.session_state.show_chat_dialog = True
                     st.rerun()
+
+        else:
+            with st.container(border=True):
+                st.markdown("### 🚀 Next Steps: Prepare for Stage 2 Application & VMP Submission")
+                st.write(
+                    "Your solution meets all evaluated baseline criteria and category functional requirements! "
+                    "Follow the official **Stage 2: Vendor Application** guide to prepare your solution deck, "
+                    "pricing matrix, and customer proof before submitting through the **Vendor Management Portal (VMP)**."
+                )
+                col_d1, col_d2 = st.columns(2)
+                with col_d1:
+                    st.link_button(
+                        "📖 Read Stage 2 Guide ↗",
+                        STAGE_2_GUIDE_URL,
+                        use_container_width=True
+                    )
+                with col_d2:
+                    st.link_button(
+                        "🏛️ Launch VMP Portal ↗",
+                        VMP_PORTAL_URL,
+                        use_container_width=True
+                    )
 
         else:
             with st.container(border=True):

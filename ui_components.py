@@ -6,18 +6,20 @@ Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.s
 import streamlit as st
 
 def inject_custom_css():
-    """Injects SMEs Go Digital portal header styling, custom action pills, and uniform fonts."""
+    """Injects universal Plus Jakarta Sans font and SMEs Go Digital official portal styles."""
     st.markdown(
         """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
-        html, body, [class*="css"] {
-            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
-            color: #1a1a24;
+        /* UNIVERSAL FONT SYNC */
+        html, body, [class*="css"], [class*="st-"], 
+        h1, h2, h3, h4, h5, h6, p, div, span, label, input, textarea, button {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            letter-spacing: -0.01em;
         }
 
-        /* Hide Streamlit default sidebar and top decoration */
+        /* Hide Streamlit default sidebar and header decorations */
         [data-testid="stSidebar"] {
             display: none !important;
         }

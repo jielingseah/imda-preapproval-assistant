@@ -56,20 +56,6 @@ def inject_custom_css():
             text-decoration: none;
         }
 
-        /* Sleek Lilac Search Pill */
-        button[key="header_search_btn"] {
-            background-color: #f1e6f5 !important;
-            color: #581845 !important;
-            border: none !important;
-            border-radius: 50px !important;
-            font-weight: 700 !important;
-            font-size: 13px !important;
-        }
-        button[key="header_search_btn"]:hover {
-            background-color: #e5d4ec !important;
-            color: #420f34 !important;
-        }
-
         /* Sleek Deep Purple Logout Pill */
         button[key="header_logout_btn"] {
             background-color: #6a1a72 !important;
@@ -184,7 +170,7 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """Renders the streamlined 4-item top navigation header bar."""
+    """Renders the streamlined top navigation header bar (Search removed)."""
     pages = [
         "Home",
         "Pre-Approval Assessment",
@@ -204,8 +190,8 @@ def render_top_navigation():
         unsafe_allow_html=True
     )
 
-    # Clean layout: Logo + 4 Nav items + Search Pill + Logout Pill
-    cols = st.columns([2.5, 1.2, 2.3, 1.2, 1.3, 1.1, 1.0])
+    # Clean layout: Logo (3.0) + 4 Nav Items (1.2, 2.5, 1.2, 1.3) + Logout Pill (1.0)
+    cols = st.columns([3.0, 1.2, 2.5, 1.2, 1.3, 1.0])
 
     with cols[0]:
         st.markdown(
@@ -226,12 +212,6 @@ def render_top_navigation():
                 st.rerun()
 
     with cols[5]:
-        if st.button("Search 🔍", key="header_search_btn", use_container_width=True):
-            st.session_state.page = "Pre-Approval Assessment"
-            st.session_state.assessment_step = 1
-            st.rerun()
-
-    with cols[6]:
         if st.button("Log out", key="header_logout_btn", use_container_width=True):
             st.session_state.authenticated = False
             st.rerun()

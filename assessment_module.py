@@ -81,6 +81,7 @@ def populate_test_sample_data():
     st.session_state.assessment = schema_answers
     st.session_state.assessment["solution_description"] = "Comprehensive cloud platform for pre-school administrative automation, attendance tracking, and fee collection."
     st.session_state.sub_company = "Alpha Digital Singapore Pte Ltd"
+    st.session_state.sub_website = "https://www.alphadigital.sg"
     st.session_state.sub_person = "Alex Tan"
     st.session_state.sub_email = "alex.tan@alphadigital.sg"
     st.session_state.sub_phone = "+65 9123 4567"
@@ -91,6 +92,7 @@ def clear_all_assessment_data():
     st.session_state.assessment = {}
     st.session_state.category_answers = {}
     st.session_state.sub_company = ""
+    st.session_state.sub_website = ""
     st.session_state.sub_person = ""
     st.session_state.sub_email = ""
     st.session_state.sub_phone = ""
@@ -327,7 +329,7 @@ def render_step_2_checklist():
             **Notice on Unlisted Categories:**
             Because your solution does not match an existing pre-approved category, there are **no predefined category functional checklists** to complete.
             
-            Please proceed directly to **Step 3: Baseline Prerequisite Validation** so we can evaluate your corporate track record and readiness parameters. You can describe your full solution capabilities in Step 4.
+            Please proceed directly to **Step 3: Baseline Prerequisite Validation** so we can evaluate your corporate track record and readiness parameters. You will describe your full solution capabilities and website in Step 4.
             """)
         
         st.markdown("")
@@ -672,11 +674,35 @@ def render_step_4_review_and_submit():
 
     total_gaps_count = len(front_gaps) + len(unmet_cat_questions)
 
+    # 1. Clear, Policy-Accurate Review Status Card
     with st.container(border=True):
         if selected == UNLISTED_CAT_LABEL:
-            st.info(f"💡 **Target Category:** {selected} (Pending IMDA Domain Evaluation)")
-        
-        if total_gaps_count > 0:
+            st.warning(
+                "⚠️ **Pre-Approval Ineligible under Current Window (No Matching Pre-Approved Category)**\n\n"
+                "The SMEs Go Digital programme requires all applicants to fit an existing, approved solution category. "
+                "Because your product falls under an **unlisted category**, you **cannot** submit an application on the "
+                "Vendor Management Portal (VMP) at this time."
+            )
+            if len(front_gaps) == 0:
+                st.info(
+                    "ℹ️ **Corporate & Baseline Eligibility Recorded:** "
+                    "Your company meets foundational Singapore incorporation and financial ratios. "
+                    "You may lodge a **New Category Expression of Interest** below to help IMDA evaluate market demand for future categories."
+                )
+            else:
+                st.error(f"🔴 Your company also has **{len(front_gaps)}** baseline corporate eligibility gap(s).")
+                for fg_idx, fg in enumerate(front_gaps):
+                    gap_col1, gap_col2 = st.columns([5.2, 1.3])
+                    with gap_col1:
+                        st.markdown(f"- 🔴 **{fg['item']}** — **[{fg['status']}]**")
+                    with gap_col2:
+                        if st.button("Edit ✏️", key=f"edit_unlisted_gap_{fg_idx}", use_container_width=True):
+                            st.session_state.assessment_step = 2
+                            st.session_state.prereq_tab_idx = fg["tab_idx"]
+                            st.session_state.target_focus_key = f"prereq_{fg['key']}"
+                            st.rerun()
+
+        elif total_gaps_count > 0:
             st.warning(f"⚠️ System detected **{total_gaps_count}** requirement gap(s) across your assessment:")
             
             if unmet_cat_questions:
@@ -704,15 +730,18 @@ def render_step_4_review_and_submit():
                             st.session_state.target_focus_key = f"prereq_{fg['key']}"
                             st.rerun()
         else:
-            if selected == UNLISTED_CAT_LABEL:
-                st.success("✅ **Prerequisites Met:** Your company meets all baseline corporate, financial, and deployment prerequisites!")
-            else:
-                st.success("✅ **Full Compliance:** Your solution meets all evaluated baseline prerequisites and category functional requirements!")
+            st.success("✅ **Full Compliance:** Your solution meets all evaluated baseline prerequisites and category functional requirements!")
 
     st.markdown("---")
 
-    # STEP 4 FORM: With Target Category and Solution Capabilities Included
-    st.subheader("Vendor Contact Details & Solution Profile")
+    # STEP 4 FORM: Includes Target Category, Solution Capabilities, and Website URL
+    form_heading = (
+        "Vendor Profile & Expression of Interest Submission" 
+        if selected == UNLISTED_CAT_LABEL 
+        else "Vendor Contact Details & Solution Profile"
+    )
+    st.subheader(form_heading)
+
     with st.container(border=True):
         with st.form("vendor_submission_form"):
             cat_display_val = selected if selected else "Not Selected"
@@ -734,23 +763,40 @@ def render_step_4_review_and_submit():
                 contact_email = st.text_input("Corporate Email Address *", value=st.session_state.get("sub_email", ""), placeholder="e.g. john.tan@acme.com")
                 contact_phone = st.text_input("Contact Number *", value=st.session_state.get("sub_phone", ""), placeholder="e.g. +65 9123 4567")
 
+            # Website Field
+            company_website_input = st.text_input(
+                "Company / Product Website URL *",
+                value=st.session_state.get("sub_website", ""),
+                placeholder="e.g. https://www.yourcompany.com"
+            )
+
             vendor_inquiry = st.text_area(
                 "Inquiry / Clarification Notes",
                 value=st.session_state.get("sub_inquiry", ""),
-                placeholder="Optional: Enter any questions regarding timeline or alternative compliance pathways for IMDA officers.",
+                placeholder="Optional: Enter any questions regarding timeline, pilot participation, or alternative compliance pathways for IMDA officers.",
                 height=80
             )
 
-            submit_button = st.form_submit_button("Submit Assessment & Generate Summary →", type="primary", use_container_width=True)
+            btn_label = (
+                "Submit New Category Expression of Interest →" 
+                if selected == UNLISTED_CAT_LABEL 
+                else "Submit Assessment & Generate Summary →"
+            )
+            submit_button = st.form_submit_button(btn_label, type="primary", use_container_width=True)
 
     if submit_button:
-        if not company_name or not contact_person or not contact_email or not solution_description_input.strip():
-            st.error("Please fill in all mandatory fields: Solution Capabilities, Company Name, Contact Person, and Email.")
+        clean_website = company_website_input.strip()
+        if clean_website and not (clean_website.startswith("http://") or clean_website.startswith("https://")):
+            clean_website = f"https://{clean_website}"
+
+        if not company_name or not contact_person or not contact_email or not solution_description_input.strip() or not clean_website:
+            st.error("Please fill in all mandatory fields: Solution Capabilities, Company Name, Contact Person, Corporate Email, and Website URL.")
             st.session_state.form_submitted = False
         else:
             st.session_state.form_submitted = True
             st.session_state.assessment["solution_description"] = solution_description_input.strip()
             st.session_state.sub_company = company_name
+            st.session_state.sub_website = clean_website
             st.session_state.sub_person = contact_person
             st.session_state.sub_email = contact_email
             st.session_state.sub_phone = contact_phone
@@ -758,17 +804,30 @@ def render_step_4_review_and_submit():
             st.rerun()
 
     if st.session_state.get("form_submitted", False):
-        st.success("🎉 Assessment Summary Generated Successfully!")
+        if selected == UNLISTED_CAT_LABEL:
+            st.success("🎉 Expression of Interest Logged Successfully!")
+        else:
+            st.success("🎉 Assessment Summary Generated Successfully!")
 
         with st.container(border=True):
             st.markdown("### 📋 Submission Record")
             st.markdown(f"**Target Category:** `{selected}`")
             st.markdown(f"**Company:** {st.session_state.sub_company} | **Contact:** {st.session_state.sub_person} ({st.session_state.sub_email}, {st.session_state.sub_phone})")
+            st.markdown(f"**Website:** [{st.session_state.sub_website}]({st.session_state.sub_website})")
             
             st.markdown("#### Solution Capabilities:")
             st.info(st.session_state.assessment.get("solution_description", "N/A"))
 
-            if total_gaps_count > 0:
+            if selected == UNLISTED_CAT_LABEL:
+                st.markdown("#### Category Status:")
+                st.markdown("⚠️ **Pending Category Creation:** Solution not eligible for current VMP intake cycles.")
+                if len(front_gaps) == 0:
+                    st.markdown("✅ **Baseline Prerequisite Status:** 100% compliant with corporate incorporation & financial ratios.")
+                else:
+                    st.markdown("🔴 **Baseline Prerequisite Gaps:**")
+                    for fg in front_gaps:
+                        st.markdown(f"- {fg['item']} ({fg['status']})")
+            elif total_gaps_count > 0:
                 st.markdown("#### Detected Gaps for Review:")
                 for uq in unmet_cat_questions:
                     st.markdown(f"- Category Requirement Q{uq['number']} ({uq['status']})")
@@ -783,11 +842,11 @@ def render_step_4_review_and_submit():
 
         officer_email = st.secrets.get("OFFICER_REVIEW_EMAIL", "seah_jie_ling@imda.gov.sg")
         st.info(f"📧 **Officer Routing:** Record prepared for dispatch to **`{officer_email}`**.")
-        st.warning("ℹ️ **Prototype Notice:** Live SMTP servers are not configured for this prototype session; emails will not be transmitted externally.")
+        st.warning("ℹ️ **Prototype Notice:** Live SMTP servers are not configured for this prototype session; records are maintained locally in memory.")
 
         st.markdown("---")
 
-        if total_gaps_count > 0:
+        if total_gaps_count > 0 and selected != UNLISTED_CAT_LABEL:
             with st.container(border=True):
                 st.markdown("### 🤖 Recommended Next Steps: Address Your Identified Gaps")
                 st.write(
@@ -848,10 +907,11 @@ def render_step_4_review_and_submit():
                     )
         else:
             with st.container(border=True):
-                st.markdown("### 🏛️ Next Steps: IMDA Officer Review")
+                st.markdown("### 🏛️ Next Steps: IMDA New Category Review Cycle")
                 st.write(
-                    "Because your product falls under an unlisted category, IMDA officers will review your submission record "
-                    "and corporate eligibility. You will be contacted at the provided email address if a new category or pilot track opens."
+                    "Because grant pre-approval is restricted to designated categories, **do not proceed to the Vendor Management Portal (VMP)**. "
+                    "Your solution description, company website, and corporate background have been recorded. IMDA reviewing officers review market inquiries "
+                    "periodically to identify emerging sectors and assess whether new pre-approval tracks should be introduced."
                 )
 
     st.markdown("")

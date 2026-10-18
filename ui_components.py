@@ -1,12 +1,12 @@
 """
 UI/UX Component & Style Library for IMDA Pre-Approval Assistant.
-Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.sg) portal header.
+Faithfully styled according to the official SMEs Go Digital portal header with uniform button dimensions.
 """
 
 import streamlit as st
 
 def inject_custom_css():
-    """Injects SMEs Go Digital official portal header styling and hides default elements."""
+    """Injects SMEs Go Digital official portal header styling and enforces uniform sleek button heights."""
     st.markdown(
         """
         <style>
@@ -44,48 +44,21 @@ def inject_custom_css():
             text-decoration: none;
         }
 
-        /* SMEs Go Digital Brand Logo Header Bar */
-        .portal-header-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 0 14px 0;
-            border-bottom: 1px solid #eaeaef;
-            margin-bottom: 24px;
-            background-color: #ffffff;
-        }
-        .logo-container {
-            display: flex;
-            align-items: baseline;
-            gap: 12px;
-        }
-        .logo-smes {
-            font-size: 24px;
-            font-weight: 800;
-            color: #581845;
-            letter-spacing: -0.5px;
-            line-height: 1;
-        }
-        .logo-godigital {
-            font-size: 24px;
-            font-weight: 800;
-            color: #d8232a;
-            letter-spacing: -0.5px;
-            line-height: 1;
-        }
-        .logo-subtitle {
-            font-size: 12px;
-            font-weight: 600;
-            color: #777788;
-            border-left: 2px solid #d0d0dc;
-            padding-left: 10px;
-        }
-
-        /* Sleek Top Nav Links */
-        .nav-link-row {
-            display: flex;
-            align-items: center;
-            gap: 24px;
+        /* Enforce Uniform Sleek Dimensions for ALL Header Buttons */
+        div[data-testid="column"] button {
+            height: 38px !important;
+            min-height: 38px !important;
+            max-height: 38px !important;
+            padding: 0px 10px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            border-radius: 6px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
         }
 
         /* Portal Cards */
@@ -168,13 +141,13 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """Renders the top navigation header bar matching smesgodigital.gov.sg cleanly without ugly buttons."""
+    """Renders the top navigation header bar with strictly uniform button dimensions."""
     pages = [
         "Home",
         "Self-Assessment",
         "AI Category Finder",
         "Category Requirements",
-        "AI Assistant (RAG Chatbot)",
+        "AI Assistant",
         "About Us",
         "Methodology"
     ]
@@ -191,43 +164,40 @@ def render_top_navigation():
         unsafe_allow_html=True
     )
 
-    # Header Bar layout
-    col_logo, col_nav, col_actions = st.columns([2.2, 5.8, 2])
+    # Header Bar layout: Logo + 7 Nav items + Search + Logout (total 10 columns)
+    cols = st.columns([1.8, 1.1, 1.3, 1.3, 1.3, 1.1, 1.0, 1.0, 0.9, 0.9])
 
-    with col_logo:
+    with cols[0]:
         st.markdown(
             """
-            <div class="logo-container" style="padding-top: 4px;">
-                <span class="logo-smes">SMEs</span><span class="logo-godigital">godigital ↗</span>
+            <div style="padding-top: 6px;">
+                <span style="font-size: 22px; font-weight: 800; color: #581845; letter-spacing: -0.5px;">SMEs</span><span style="font-size: 22px; font-weight: 800; color: #d8232a; letter-spacing: -0.5px;">godigital ↗</span>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-    with col_nav:
-        # Render pages as clean inline link buttons
-        nav_cols = st.columns(len(pages))
-        for idx, page_name in enumerate(pages):
-            with nav_cols[idx]:
-                is_active = (current_page == page_name)
-                # Style active page with bolder color / underline look via button styling
-                btn_type = "primary" if is_active else "secondary"
-                if st.button(page_name, key=f"sleek_nav_{idx}", type=btn_type, use_container_width=True):
-                    st.session_state.page = page_name
-                    st.rerun()
-
-    with col_actions:
-        col_srch, col_log = st.columns([1, 1])
-        with col_srch:
-            if st.button("🔍 Search", key="header_search_btn", use_container_width=True):
-                st.session_state.page = "AI Category Finder"
-                st.rerun()
-        with col_log:
-            if st.button("🔒 Logout", key="header_logout_btn", type="primary", use_container_width=True):
-                st.session_state.authenticated = False
+    # Render each page button in its own column for uniform sizing
+    for idx, page_name in enumerate(pages):
+        with cols[idx + 1]:
+            is_active = (current_page == page_name)
+            btn_type = "primary" if is_active else "secondary"
+            if st.button(page_name, key=f"sleek_nav_{idx}", type=btn_type, use_container_width=True):
+                st.session_state.page = page_name
                 st.rerun()
 
-    st.markdown("<div style='border-bottom: 1px solid #eaeaef; margin-top: 8px; margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+    # Search & Logout action buttons in last columns
+    with cols[8]:
+        if st.button("Search", key="header_search_btn", use_container_width=True):
+            st.session_state.page = "AI Category Finder"
+            st.rerun()
+
+    with cols[9]:
+        if st.button("Logout", key="header_logout_btn", type="primary", use_container_width=True):
+            st.session_state.authenticated = False
+            st.rerun()
+
+    st.markdown("<div style='border-bottom: 1px solid #eaeaef; margin-top: 10px; margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
 def render_brand_header(title: str, subtitle: str = None, badge: str = "Prototype"):
     """Renders the sleek top navigation header bar and page title."""

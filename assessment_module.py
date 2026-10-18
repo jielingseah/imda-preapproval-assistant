@@ -547,6 +547,7 @@ def clear_all_assessment_data():
     st.session_state.form_submitted = False
     st.session_state.assessment_step = 0
     st.session_state.target_focus_key = None
+    st.session_state.prereq_tab_idx = 0
 
 def render_step_1_discovery():
     st.markdown("### 🔍 Step 1: Solution Category Discovery & Feasibility Pre-Check")
@@ -764,7 +765,11 @@ def render_step_3_prerequisites():
         "2. SME Deployment Track Record", 
         "3. Solution Suitability"
     ]
-    current_tab_idx = st.session_state.get("prereq_tab_idx", 0)
+    
+    # Safe retrieval: avoids AttributeError by initializing if absent
+    if "prereq_tab_idx" not in st.session_state:
+        st.session_state.prereq_tab_idx = 0
+    current_tab_idx = st.session_state.prereq_tab_idx
 
     with st.container(key="prereq_subtab_bar"):
         tcols = st.columns(3)
@@ -810,7 +815,8 @@ def render_step_3_prerequisites():
 
     target_focus = st.session_state.get("target_focus_key")
 
-    if st.session_state.prereq_tab_idx == 0:
+    # Safe comparison using current_tab_idx
+    if current_tab_idx == 0:
         for item in BASELINE_PREREQUISITES_SCHEMA["corporate"]:
             k = item["key"]
             is_focused = (target_focus == f"prereq_{k}")
@@ -848,7 +854,7 @@ def render_step_3_prerequisites():
                     st.session_state.target_focus_key = None
                     st.rerun()
 
-    elif st.session_state.prereq_tab_idx == 1:
+    elif current_tab_idx == 1:
         ind_item = BASELINE_PREREQUISITES_SCHEMA["deployment"][0]
         ind_k = ind_item["key"]
         is_ind_focused = (target_focus == f"prereq_{ind_k}")
@@ -924,7 +930,7 @@ def render_step_3_prerequisites():
                     st.session_state.target_focus_key = None
                     st.rerun()
 
-    elif st.session_state.prereq_tab_idx == 2:
+    elif current_tab_idx == 2:
         for item in BASELINE_PREREQUISITES_SCHEMA["solution"]:
             sk = item["key"]
             is_sol_focused = (target_focus == f"prereq_{sk}")

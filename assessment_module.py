@@ -1,6 +1,7 @@
 """
 Assessment Module UI Orchestrator for IMDA Pre-Approval Assistant.
 Focuses strictly on Streamlit presentation and user interaction for Steps 1 through 4.
+Zero CSS styling defined locally — all visual styles are read from ui_components.py.
 """
 
 import streamlit as st
@@ -33,30 +34,20 @@ from assessment_service import (
 PAGE_SIZE = 6
 
 def render_compliance_badge(current_val: str | None, compliant_options: list[str]):
-    """Renders a green tick when compliant or amber warning triangle when non-compliant."""
+    """Renders compliance status using centralized CSS classes from ui_components."""
     if not current_val:
         st.markdown(
-            "<span style='font-size: 11px; color: #888899;'>⚪ <em>Pending response</em></span>",
+            "<span class='compliance-pill-pending'>⚪ <em>Pending response</em></span>",
             unsafe_allow_html=True
         )
     elif current_val in compliant_options:
         st.markdown(
-            """
-            <span style='background-color: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf; 
-            padding: 3px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;'>
-                ✅ Compliant
-            </span>
-            """,
+            "<span class='compliance-pill-compliant'>✅ Compliant</span>",
             unsafe_allow_html=True
         )
     else:
         st.markdown(
-            """
-            <span style='background-color: #fef9e7; color: #b7950b; border: 1px solid #f9e79f; 
-            padding: 3px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;'>
-                ⚠️ Non-compliant / Potential Gap
-            </span>
-            """,
+            "<span class='compliance-pill-gap'>⚠️ Non-compliant / Potential Gap</span>",
             unsafe_allow_html=True
         )
 
@@ -164,9 +155,9 @@ def render_manual_catalogue_browser(key_prefix: str = "manual"):
                 if i < len(page_items):
                     k1, v1 = page_items[i]
                     with st.container(border=True):
-                        st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700;'>{v1['sector']}</span>", unsafe_allow_html=True)
-                        st.markdown(f"<h6 style='font-size: 14px; font-weight: 700; color: #2b0b2e; margin-top: 6px;'>{v1['category']}</h6>", unsafe_allow_html=True)
-                        st.markdown(f"<p style='font-size: 12px; color: #636375; line-height: 1.4;'>{v1['description'] or 'Official IMDA pre-approved solution category.'}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<span class='portal-card-tag'>{v1['sector']}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<h6>{v1['category']}</h6>", unsafe_allow_html=True)
+                        st.markdown(f"<p>{v1['description'] or 'Official IMDA pre-approved solution category.'}</p>", unsafe_allow_html=True)
                         if st.button("Select Category →", key=f"{key_prefix}_btn_{start_idx + i}", use_container_width=True):
                             st.session_state.selected_category = k1
                             st.session_state.selected_category_url = v1["url"]
@@ -177,9 +168,9 @@ def render_manual_catalogue_browser(key_prefix: str = "manual"):
                 if i + 1 < len(page_items):
                     k2, v2 = page_items[i + 1]
                     with st.container(border=True):
-                        st.markdown(f"<span style='background:#f7eaf3; color:#7a1d5a; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700;'>{v2['sector']}</span>", unsafe_allow_html=True)
-                        st.markdown(f"<h6 style='font-size: 14px; font-weight: 700; color: #2b0b2e; margin-top: 6px;'>{v2['category']}</h6>", unsafe_allow_html=True)
-                        st.markdown(f"<p style='font-size: 12px; color: #636375; line-height: 1.4;'>{v2['description'] or 'Official IMDA pre-approved solution category.'}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<span class='portal-card-tag'>{v2['sector']}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<h6>{v2['category']}</h6>", unsafe_allow_html=True)
+                        st.markdown(f"<p>{v2['description'] or 'Official IMDA pre-approved solution category.'}</p>", unsafe_allow_html=True)
                         if st.button("Select Category →", key=f"{key_prefix}_btn_{start_idx + i + 1}", use_container_width=True):
                             st.session_state.selected_category = k2
                             st.session_state.selected_category_url = v2["url"]
@@ -245,24 +236,15 @@ def render_step_1_discovery():
 
         if st.session_state.category_suggestions:
             st.markdown("---")
-            st.markdown(
-                "<h5 style='font-size: 16px; font-weight: 700; color: #581845;'>💡 AI Recommended Matches</h5>",
-                unsafe_allow_html=True
-            )
+            st.markdown("##### 💡 AI Recommended Matches")
             for index, suggestion in enumerate(st.session_state.category_suggestions):
                 category_key = suggestion["category_key"]
                 catalogue = get_category_catalogue()
                 category = catalogue.get(category_key, {"url": CATEGORY_DIRECTORY_URL, "description": ""})
 
                 with st.container(border=True):
-                    st.markdown(
-                        f"<h6 style='font-size: 15px; font-weight: 700; color: #2b0b2e;'>{index + 1}. {category_key}</h6>",
-                        unsafe_allow_html=True
-                    )
-                    st.markdown(
-                        f"<p style='font-size: 12.5px; color: #555566;'>{suggestion['why']}</p>",
-                        unsafe_allow_html=True
-                    )
+                    st.markdown(f"###### {index + 1}. {category_key}")
+                    st.markdown(f"<p>{suggestion['why']}</p>", unsafe_allow_html=True)
                     if st.button(
                         "Confirm & Proceed to Category Functional Checklist →",
                         key=f"select_ai_cat_{index}",
@@ -350,14 +332,7 @@ def render_step_2_checklist():
 
             with st.container(border=True):
                 if is_focused:
-                    st.markdown(
-                        """
-                        <div style='background-color: #fff0f0; border-left: 4px solid #d8232a; padding: 6px 10px; margin-bottom: 8px; border-radius: 4px;'>
-                            <strong style='color: #d8232a; font-size: 12px;'>👉 Focus: Please update this requirement</strong>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    st.info("👉 Focus: Please update this requirement")
 
                 q_col1, q_col2 = st.columns([5.2, 1.8])
                 with q_col1:
@@ -432,47 +407,21 @@ def render_step_3_prerequisites():
         st.session_state.prereq_tab_idx = 0
     current_tab_idx = st.session_state.prereq_tab_idx
 
+    # Container uses centralized styling rules in ui_components.py
     with st.container(key="prereq_subtab_bar"):
         tcols = st.columns(3)
         for t_idx, t_name in enumerate(tab_names):
             with tcols[t_idx]:
                 is_active_tab = (t_idx == current_tab_idx)
+                active_class = "subtab-active" if is_active_tab else "subtab-inactive"
                 
-                if is_active_tab:
-                    tab_bg = "linear-gradient(130deg, #581845 0%, #7a1d5a 50%, #9a1f52 100%)"
-                    tab_text = "#ffffff"
-                    tab_shadow = "0 4px 12px rgba(88, 24, 69, 0.25)"
-                else:
-                    tab_bg = "transparent"
-                    tab_text = "#581845"
-                    tab_shadow = "none"
-
-                st.markdown(
-                    f"""
-                    <style>
-                    div.st-key-subtab_btn_{t_idx} button,
-                    div.st-key-subtab_btn_{t_idx} button p,
-                    div.st-key-subtab_btn_{t_idx} button span {{
-                        background: {tab_bg} !important;
-                        color: {tab_text} !important;
-                        -webkit-text-fill-color: {tab_text} !important;
-                        box-shadow: {tab_shadow} !important;
-                    }}
-                    div.st-key-subtab_btn_{t_idx} button:hover,
-                    div.st-key-subtab_btn_{t_idx} button:hover p,
-                    div.st-key-subtab_btn_{t_idx} button:hover span {{
-                        color: {'#ffffff' if is_active_tab else '#7a1d5a'} !important;
-                        -webkit-text-fill-color: {'#ffffff' if is_active_tab else '#7a1d5a'} !important;
-                    }}
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-                if st.button(t_name, key=f"subtab_btn_{t_idx}", use_container_width=True):
-                    st.session_state.prereq_tab_idx = t_idx
-                    st.session_state.target_focus_key = None
-                    st.rerun()
+                with st.container():
+                    st.markdown(f'<div class="{active_class}">', unsafe_allow_html=True)
+                    if st.button(t_name, key=f"subtab_btn_{t_idx}", use_container_width=True):
+                        st.session_state.prereq_tab_idx = t_idx
+                        st.session_state.target_focus_key = None
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
 
     target_focus = st.session_state.get("target_focus_key")
 
@@ -484,14 +433,7 @@ def render_step_3_prerequisites():
             st.markdown(f'<div id="anchor_prereq_{k}"></div>', unsafe_allow_html=True)
             with st.container(border=True):
                 if is_focused:
-                    st.markdown(
-                        """
-                        <div style='background-color: #fff0f0; border-left: 4px solid #d8232a; padding: 6px 10px; margin-bottom: 8px; border-radius: 4px;'>
-                            <strong style='color: #d8232a; font-size: 12px;'>👉 Focus: Please update this prerequisite</strong>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    st.info("👉 Focus: Please update this prerequisite")
 
                 current_val = st.session_state.assessment.get(k)
                 idx = item["options"].index(current_val) if current_val in item["options"] else None
@@ -522,14 +464,7 @@ def render_step_3_prerequisites():
         st.markdown(f'<div id="anchor_prereq_{ind_k}"></div>', unsafe_allow_html=True)
         with st.container(border=True):
             if is_ind_focused:
-                st.markdown(
-                    """
-                    <div style='background-color: #fff0f0; border-left: 4px solid #d8232a; padding: 6px 10px; margin-bottom: 8px; border-radius: 4px;'>
-                        <strong style='color: #d8232a; font-size: 12px;'>👉 Focus: Please update this prerequisite</strong>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                st.info("👉 Focus: Please update this prerequisite")
 
             current_ind = st.session_state.assessment.get(ind_k)
             ind_idx = ind_item["options"].index(current_ind) if current_ind in ind_item["options"] else None
@@ -560,14 +495,7 @@ def render_step_3_prerequisites():
             st.markdown(f'<div id="anchor_prereq_{cust_k}"></div>', unsafe_allow_html=True)
             with st.container(border=True):
                 if is_cust_focused:
-                    st.markdown(
-                        """
-                        <div style='background-color: #fff0f0; border-left: 4px solid #d8232a; padding: 6px 10px; margin-bottom: 8px; border-radius: 4px;'>
-                            <strong style='color: #d8232a; font-size: 12px;'>👉 Focus: Please update this prerequisite</strong>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    st.info("👉 Focus: Please update this prerequisite")
 
                 current_track = st.session_state.assessment.get(cust_k)
                 track_idx = cust_item["options"].index(current_track) if current_track in cust_item["options"] else None
@@ -598,14 +526,7 @@ def render_step_3_prerequisites():
             st.markdown(f'<div id="anchor_prereq_{sk}"></div>', unsafe_allow_html=True)
             with st.container(border=True):
                 if is_sol_focused:
-                    st.markdown(
-                        """
-                        <div style='background-color: #fff0f0; border-left: 4px solid #d8232a; padding: 6px 10px; margin-bottom: 8px; border-radius: 4px;'>
-                            <strong style='color: #d8232a; font-size: 12px;'>👉 Focus: Please update this prerequisite</strong>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    st.info("👉 Focus: Please update this prerequisite")
 
                 current_val = st.session_state.assessment.get(sk)
                 idx = item["options"].index(current_val) if current_val in item["options"] else None
@@ -713,8 +634,7 @@ def render_step_4_review_and_submit():
                 for uq in unmet_cat_questions:
                     gap_c1, gap_c2 = st.columns([5.2, 1.3])
                     with gap_c1:
-                        status_color = "#b7950b" if "Unanswered" in uq['status'] else "#d8232a"
-                        st.markdown(f"- ⚠️ **Q{uq['number']}**: *{uq.get('heading', 'Requirement')}* — <span style='color:{status_color}; font-weight:700;'>[{uq['status']}]</span>", unsafe_allow_html=True)
+                        st.markdown(f"- ⚠️ **Q{uq['number']}**: *{uq.get('heading', 'Requirement')}* — **[{uq['status']}]**")
                     with gap_c2:
                         if st.button("Edit ✏️", key=f"edit_cat_q_{uq['number']}", use_container_width=True):
                             st.session_state.assessment_step = 1
@@ -726,8 +646,7 @@ def render_step_4_review_and_submit():
                 for fg_idx, fg in enumerate(front_gaps):
                     gap_col1, gap_col2 = st.columns([5.2, 1.3])
                     with gap_col1:
-                        status_color = "#b7950b" if "Unanswered" in fg['status'] else "#d8232a"
-                        st.markdown(f"- 🔴 **{fg['item']}** — <span style='color:{status_color}; font-weight:700;'>[{fg['status']}]</span>", unsafe_allow_html=True)
+                        st.markdown(f"- 🔴 **{fg['item']}** — **[{fg['status']}]**")
                     with gap_col2:
                         if st.button("Edit ✏️", key=f"edit_gap_{fg_idx}", use_container_width=True):
                             st.session_state.assessment_step = 2

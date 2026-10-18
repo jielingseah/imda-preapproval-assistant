@@ -1,12 +1,12 @@
-"""
+ """
 UI/UX Component & Style Library for IMDA Pre-Approval Assistant.
-Faithfully styled according to the official SMEs Go Digital portal header with uniform button dimensions.
+Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.sg) portal.
 """
 
 import streamlit as st
 
 def inject_custom_css():
-    """Injects SMEs Go Digital official portal header styling and enforces uniform sleek button heights."""
+    """Injects SMEs Go Digital portal header styling, custom action pills, and uniform fonts."""
     st.markdown(
         """
         <style>
@@ -17,7 +17,7 @@ def inject_custom_css():
             color: #1a1a24;
         }
 
-        /* Hide Streamlit default sidebar and header decorations */
+        /* Hide Streamlit default sidebar and top decoration */
         [data-testid="stSidebar"] {
             display: none !important;
         }
@@ -44,21 +44,53 @@ def inject_custom_css():
             text-decoration: none;
         }
 
-        /* Enforce Uniform Sleek Dimensions for ALL Header Buttons */
+        /* Uniform Navigation Link Buttons */
         div[data-testid="column"] button {
-            height: 38px !important;
-            min-height: 38px !important;
-            max-height: 38px !important;
-            padding: 0px 10px !important;
+            height: 36px !important;
+            min-height: 36px !important;
+            max-height: 36px !important;
+            padding: 0px 8px !important;
             font-size: 12px !important;
             font-weight: 600 !important;
             border-radius: 6px !important;
+            white-space: nowrap !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
+        }
+
+        /* EXACT STYLING: Sleek Lilac Search Pill */
+        div[data-testid="column"]:has(button[key="header_search_btn"]) button,
+        button[key="header_search_btn"] {
+            background-color: #f1e6f5 !important;
+            color: #581845 !important;
+            border: none !important;
+            border-radius: 50px !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            padding: 0 16px !important;
+        }
+        div[data-testid="column"]:has(button[key="header_search_btn"]) button:hover,
+        button[key="header_search_btn"]:hover {
+            background-color: #e5d4ec !important;
+            color: #420f34 !important;
+        }
+
+        /* EXACT STYLING: Sleek Deep Purple Log in / Logout Pill */
+        div[data-testid="column"]:has(button[key="header_logout_btn"]) button,
+        button[key="header_logout_btn"] {
+            background-color: #6a1a72 !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 50px !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            padding: 0 18px !important;
+        }
+        div[data-testid="column"]:has(button[key="header_logout_btn"]) button:hover,
+        button[key="header_logout_btn"]:hover {
+            background-color: #521358 !important;
+            color: #ffffff !important;
         }
 
         /* Portal Cards */
@@ -103,7 +135,7 @@ def inject_custom_css():
             margin-bottom: 10px;
         }
 
-        /* Readiness Audit Metric Tiles */
+        /* Readiness Metric Tiles */
         .metric-tile {
             background: #faf7f9;
             border: 1px solid #ebdbe5;
@@ -124,7 +156,7 @@ def inject_custom_css():
             letter-spacing: 0.5px;
         }
 
-        /* Footer Prototype Notice Styling */
+        /* Footer Prototype Notice */
         .prototype-footer {
             margin-top: 50px;
             padding: 20px;
@@ -141,7 +173,7 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """Renders the top navigation header bar with strictly uniform button dimensions."""
+    """Renders the top navigation header bar matching the official portal layout."""
     pages = [
         "Home",
         "Self-Assessment",
@@ -154,7 +186,7 @@ def render_top_navigation():
 
     current_page = st.session_state.get("page", "Home")
 
-    # Top Masthead
+    # Government Masthead
     st.markdown(
         """
         <div class="sg-masthead">
@@ -164,43 +196,41 @@ def render_top_navigation():
         unsafe_allow_html=True
     )
 
-    # Header Bar layout: Logo + 7 Nav items + Search + Logout (total 10 columns)
-    cols = st.columns([1.8, 1.1, 1.3, 1.3, 1.3, 1.1, 1.0, 1.0, 0.9, 0.9])
+    # 10-column layout: Logo + 7 Nav Pages + Search Pill + Logout Pill
+    cols = st.columns([1.8, 1.0, 1.3, 1.3, 1.4, 1.1, 0.9, 1.0, 1.0, 0.9])
 
     with cols[0]:
         st.markdown(
             """
-            <div style="padding-top: 6px;">
+            <div style="padding-top: 5px;">
                 <span style="font-size: 22px; font-weight: 800; color: #581845; letter-spacing: -0.5px;">SMEs</span><span style="font-size: 22px; font-weight: 800; color: #d8232a; letter-spacing: -0.5px;">godigital ↗</span>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-    # Render each page button in its own column for uniform sizing
     for idx, page_name in enumerate(pages):
         with cols[idx + 1]:
             is_active = (current_page == page_name)
             btn_type = "primary" if is_active else "secondary"
-            if st.button(page_name, key=f"sleek_nav_{idx}", type=btn_type, use_container_width=True):
+            if st.button(page_name, key=f"nav_link_{idx}", type=btn_type, use_container_width=True):
                 st.session_state.page = page_name
                 st.rerun()
 
-    # Search & Logout action buttons in last columns
     with cols[8]:
-        if st.button("Search", key="header_search_btn", use_container_width=True):
+        if st.button("Search 🔍", key="header_search_btn", use_container_width=True):
             st.session_state.page = "AI Category Finder"
             st.rerun()
 
     with cols[9]:
-        if st.button("Logout", key="header_logout_btn", type="primary", use_container_width=True):
+        if st.button("Log out", key="header_logout_btn", use_container_width=True):
             st.session_state.authenticated = False
             st.rerun()
 
-    st.markdown("<div style='border-bottom: 1px solid #eaeaef; margin-top: 10px; margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='border-bottom: 1px solid #eaeaef; margin-top: 10px; margin-bottom: 22px;'></div>", unsafe_allow_html=True)
 
 def render_brand_header(title: str, subtitle: str = None, badge: str = "Prototype"):
-    """Renders the sleek top navigation header bar and page title."""
+    """Renders the top navigation header and section title."""
     render_top_navigation()
     
     badge_html = f'<span style="background: linear-gradient(135deg, #581845 0%, #d8232a 100%); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; float: right;">{badge}</span>'
@@ -210,10 +240,10 @@ def render_brand_header(title: str, subtitle: str = None, badge: str = "Prototyp
         st.markdown(f"<p style='color:#636375; font-size:13.5px; margin-top:4px; margin-bottom:18px;'>{subtitle}</p>", unsafe_allow_html=True)
 
 def render_hero_banner(heading: str, description: str):
-    """Renders the official purple-magenta mesh banner."""
+    """Renders the purple-magenta mesh banner."""
     st.markdown(
         f"""
-        <div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%); color: #ffffff; padding: 32px 32px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">
+        <div style="background: linear-gradient(130deg, #3d0c3f 0%, #5d1a58 35%, #7a1d5a 70%, #9a1f52 100%); color: #ffffff; padding: 30px 32px; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 10px 24px -6px rgba(61, 12, 63, 0.25);">
             <h2 style="font-size: 24px; font-weight: 800; color: #ffffff !important; margin: 0 0 8px 0;">{heading}</h2>
             <p style="font-size: 14.5px; color: #f3d7e8; margin: 0; max-width: 85%; line-height: 1.5;">{description}</p>
         </div>
@@ -222,7 +252,7 @@ def render_hero_banner(heading: str, description: str):
     )
 
 def render_feature_card(tag: str, title: str, description: str):
-    """Renders sleek portal cards."""
+    """Renders portal cards."""
     st.markdown(
         f"""
         <div class="portal-card">

@@ -9,7 +9,7 @@ from google import genai
 from google.genai import types
 
 # Centralized System Constants
-MODEL_NAME = "gemini-3.8-flash"
+MODEL_NAME = "gemini-2.5-flash"
 BASE_URL = "https://preapproval-guide.imda.gov.sg"
 CATEGORY_DIRECTORY_URL = (
     f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment/identify-suitable-solution-category.md"
@@ -44,7 +44,6 @@ def query_live_guide_rag(
     Executes a grounded multi-turn RAG generation using live guide content
     and strict XML prompt boundaries.
     """
-    # Fetch live Stage 1 & Stage 2 documentation
     stage_1_text = fetch_markdown_document(
         f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment.md"
     )

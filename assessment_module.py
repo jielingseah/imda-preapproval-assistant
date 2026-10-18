@@ -663,7 +663,9 @@ def render_step_3_prerequisites():
 def render_step_4_review_and_submit():
     st.markdown("### 📊 Step 4: Readiness Review, Gap Audit & Submission Summary")
     selected = st.session_state.get("selected_category", "Not selected")
+    stored_url = st.session_state.get("selected_category_url")
 
+    # Baseline Prerequisite Gaps
     front_gaps = []
     for section_name, section_items in BASELINE_PREREQUISITES_SCHEMA.items():
         tab_idx_map = {"corporate": 0, "deployment": 1, "solution": 2}
@@ -675,12 +677,30 @@ def render_step_4_review_and_submit():
             if val and val not in item["compliant_values"]:
                 front_gaps.append({"key": k, "item": item["label"], "status": val, "tab_idx": tab_idx_map[section_name]})
             elif not val:
-                front_gaps.append({"key": k, "item": item["label"], "status": "Unanswered", "tab_idx": tab_idx_map[section_name]})
+                front_gaps.append({"key": k, "item": item["label"], "status": "Unanswered (Blank)", "tab_idx": tab_idx_map[section_name]})
 
+    # Category Checklist Gaps (Includes Unanswered/Blank Questions)
     unmet_cat_questions = []
-    for q_num, ans in st.session_state.category_answers.items():
-        if ans in ["No", "Not sure"]:
-            unmet_cat_questions.append({"number": q_num, "status": ans})
+    if selected and selected != "Not selected":
+        category_meta = resolve_category_info(selected, stored_url)
+        cat_reqs = get_category_requirements(category_meta.get("url") or CATEGORY_DIRECTORY_URL)
+        mandatory_reqs = [q for q in cat_reqs if q["mandatory"]]
+        
+        for q in mandatory_reqs:
+            q_num = str(q["number"])
+            ans = st.session_state.category_answers.get(q_num)
+            if not ans:
+                unmet_cat_questions.append({
+                    "number": q_num, 
+                    "heading": q.get("heading", ""),
+                    "status": "Unanswered (Blank)"
+                })
+            elif ans in ["No", "Not sure"]:
+                unmet_cat_questions.append({
+                    "number": q_num, 
+                    "heading": q.get("heading", ""),
+                    "status": ans
+                })
 
     total_gaps_count = len(front_gaps) + len(unmet_cat_questions)
 
@@ -693,7 +713,8 @@ def render_step_4_review_and_submit():
                 for uq in unmet_cat_questions:
                     gap_c1, gap_c2 = st.columns([5.2, 1.3])
                     with gap_c1:
-                        st.markdown(f"- ⚠️ **Q{uq['number']} ({uq['status']})**")
+                        status_color = "#b7950b" if "Unanswered" in uq['status'] else "#d8232a"
+                        st.markdown(f"- ⚠️ **Q{uq['number']}**: *{uq.get('heading', 'Requirement')}* — <span style='color:{status_color}; font-weight:700;'>[{uq['status']}]</span>", unsafe_allow_html=True)
                     with gap_c2:
                         if st.button("Edit ✏️", key=f"edit_cat_q_{uq['number']}", use_container_width=True):
                             st.session_state.assessment_step = 1
@@ -705,7 +726,8 @@ def render_step_4_review_and_submit():
                 for fg_idx, fg in enumerate(front_gaps):
                     gap_col1, gap_col2 = st.columns([5.2, 1.3])
                     with gap_col1:
-                        st.markdown(f"- 🔴 **{fg['item']}** (Status: *{fg['status']}*)")
+                        status_color = "#b7950b" if "Unanswered" in fg['status'] else "#d8232a"
+                        st.markdown(f"- 🔴 **{fg['item']}** — <span style='color:{status_color}; font-weight:700;'>[{fg['status']}]</span>", unsafe_allow_html=True)
                     with gap_col2:
                         if st.button("Edit ✏️", key=f"edit_gap_{fg_idx}", use_container_width=True):
                             st.session_state.assessment_step = 2
@@ -748,6 +770,7 @@ def render_step_4_review_and_submit():
             st.session_state.sub_email = contact_email
             st.session_state.sub_phone = contact_phone
             st.session_state.sub_inquiry = vendor_inquiry
+            st.rerun()
 
     if st.session_state.get("form_submitted", False):
         st.success("🎉 Assessment Summary Generated Successfully!")

@@ -678,33 +678,33 @@ elif st.session_state.page == "Methodology":
     with col_m1:
         with st.container(border=True):
             st.markdown("#### `app.py`")
-            st.caption("Main Orchestration Engine (~200 lines)")
-            st.markdown("Controls authentication gating, session state initialization, routing across primary pages (Home, Assessment, About, Methodology), and the persistent floating Copilot modal.")
+            st.caption("Main Orchestration Engine")
+            st.markdown("Controls authentication gating, session state initialization, routing across primary views (Home, Assessment, About, Methodology), Admin console logic, and the persistent floating Copilot modal.")
         
         with st.container(border=True):
             st.markdown("#### `assessment_module.py`")
-            st.caption("UI View Controller (~320 lines)")
-            st.markdown("Encapsulates the presentation layer for all 4 assessment steps (Discovery, Functional Checklist, Prerequisite Tabs, and Review & Submission Summary) with interactive deep-linking.")
+            st.caption("Self-Assessment View Controller")
+            st.markdown("Encapsulates the presentation layer for all 4 assessment steps (Discovery, Functional Checklist, Prerequisite Tabs, and Review & Submission Summary) with interactive deep-linking and unlisted category EOI routing.")
 
         with st.container(border=True):
             st.markdown("#### `assessment_schemas.py`")
-            st.caption("Single Source of Truth Policy Schema (~110 lines)")
-            st.markdown("Centralizes baseline criteria (Singapore incorporation, 18-month operation, positive net equity, current ratio $\\ge 1$, InvoiceNow status, and SME deployment benchmarks).")
+            st.caption("Single Source of Truth Policy Schema")
+            st.markdown("Centralizes baseline criteria (Singapore incorporation, 18-month operational history, positive net equity, Current Ratio $\\ge 1$, InvoiceNow status, and SME deployment benchmarks).")
 
     with col_m2:
         with st.container(border=True):
             st.markdown("#### `assessment_service.py`")
-            st.caption("Scraping, Security & AI Matcher (~190 lines)")
-            st.markdown("Handles remote markdown scraping from `preapproval-guide.imda.gov.sg`, question extraction regex, prompt injection sanitization, and Gemini-powered category recommendations.")
+            st.caption("Scraping, Security & AI Matcher")
+            st.markdown("Handles remote markdown scraping from `preapproval-guide.imda.gov.sg`, requirement regex extraction, adversarial input sanitization, and Gemini-powered category recommendations.")
 
         with st.container(border=True):
             st.markdown("#### `ui_components.py`")
-            st.caption("Design System & Brand Styling (~240 lines)")
-            st.markdown("Implements the official SMEs Go Digital visual language (deep purple/magenta gradients, Singapore Government `.gov.sg` masthead drawer, scoped purple segmented stepper, and high-contrast button styling).")
+            st.caption("Design System & Brand Styling")
+            st.markdown("Implements the official SMEs Go Digital visual language: purple/magenta gradient lockups, Singapore Government `.gov.sg` masthead drawer, purple segmented stepper, card tokens, and expandable governance disclaimer.")
 
         with st.container(border=True):
             st.markdown("#### `imda_knowledge.py`")
-            st.caption("Grounded Knowledge Engine (~120 lines)")
+            st.caption("Grounded Knowledge Engine")
             st.markdown("Manages portal constants, system prompt definitions, XML formatting for live RAG retrieval, and execution calls to the Gemini API client.")
 
     st.markdown("### 4. Stage 1 to Stage 2 Handover Workflow")

@@ -6,7 +6,7 @@ Faithfully styled according to the official SMEs Go Digital (smesgodigital.gov.s
 import streamlit as st
 
 def inject_custom_css():
-    """Injects universal font, trims top whitespace, and fixes floating elements."""
+    """Centralized stylesheet containing ALL application typography, layouts, and component themes."""
     st.markdown(
         """
         <style>
@@ -328,9 +328,44 @@ def inject_custom_css():
             transform: translateY(-1px) !important;
         }
 
-        /* =========================================================
-           GLOBAL PURPLE ACTION & FORM SUBMIT BUTTONS
-           ========================================================= */
+        /* Stepper State Modifiers: Default, Done, and Active */
+        div[class*="stepper-btn-state-done"] button {
+            background-color: rgba(0, 230, 118, 0.2) !important;
+            border: 1.5px solid rgba(0, 230, 118, 0.6) !important;
+        }
+        div[class*="stepper-btn-state-done"] button p,
+        div[class*="stepper-btn-state-done"] button span {
+            color: #e8f5e9 !important;
+            -webkit-text-fill-color: #e8f5e9 !important;
+            font-weight: 700 !important;
+            background: transparent !important;
+        }
+
+        div[class*="stepper-btn-state-active"] button {
+            background-color: rgba(255, 64, 129, 0.38) !important;
+            border: 1.5px solid rgba(255, 64, 129, 0.85) !important;
+        }
+        div[class*="stepper-btn-state-active"] button p,
+        div[class*="stepper-btn-state-active"] button span {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            font-weight: 800 !important;
+            background: transparent !important;
+        }
+
+        div[class*="stepper-btn-state-pending"] button {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
+        }
+        div[class*="stepper-btn-state-pending"] button p,
+        div[class*="stepper-btn-state-pending"] button span {
+            color: rgba(255, 255, 255, 0.65) !important;
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.65) !important;
+            font-weight: 600 !important;
+            background: transparent !important;
+        }
+
+        /* Global Purple Action & Form Submit Buttons */
         button[kind="primary"],
         button[data-testid="baseButton-primary"],
         div[data-testid="stFormSubmitButton"] button,
@@ -409,7 +444,49 @@ def inject_custom_css():
             padding: 8px 12px !important;
             font-size: 13px !important;
             font-weight: 700 !important;
+            background: transparent !important;
+            color: #581845 !important;
             transition: all 0.2s ease !important;
+        }
+        div.st-key-prereq_subtab_bar div[class*="subtab-active"] button {
+            background: linear-gradient(130deg, #581845 0%, #7a1d5a 50%, #9a1f52 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(88, 24, 69, 0.25) !important;
+        }
+        div.st-key-prereq_subtab_bar div[class*="subtab-active"] button p,
+        div.st-key-prereq_subtab_bar div[class*="subtab-active"] button span {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        /* Centralized Compliance Badges */
+        .compliance-pill-compliant {
+            background-color: #eafaf1;
+            color: #1e8449;
+            border: 1px solid #a9dfbf;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .compliance-pill-gap {
+            background-color: #fef9e7;
+            color: #b7950b;
+            border: 1px solid #f9e79f;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .compliance-pill-pending {
+            font-size: 11px;
+            color: #888899;
         }
 
         .prototype-footer {
@@ -428,10 +505,7 @@ def inject_custom_css():
     )
 
 def render_top_navigation():
-    """
-    Renders top navigation with Singapore Government masthead and combined
-    SMEs Go Digital + IMDA Pre-Approval Assistant logo linking directly to Home.
-    """
+    """Renders top navigation with Singapore Government masthead and combined logo."""
     pages = [
         "Pre-Approval Assessment",
         "About Us",
@@ -440,7 +514,6 @@ def render_top_navigation():
 
     current_page = st.session_state.get("page", "Home")
 
-    # Singapore Government Expandable Masthead
     st.markdown(
         """
         <details class="sg-masthead">
@@ -475,11 +548,9 @@ def render_top_navigation():
         unsafe_allow_html=True
     )
 
-    # Navigation Layout: Expanded brand column + page links + logout
     cols = st.columns([4.2, 2.3, 1.2, 1.3, 1.0])
 
     with cols[0]:
-        # Visual combined logo lockup
         st.markdown(
             """
             <div style="height: 44px; display: flex; align-items: center; gap: 10px; pointer-events: none; user-select: none;">
@@ -495,7 +566,6 @@ def render_top_navigation():
             """,
             unsafe_allow_html=True
         )
-        # Transparent click overlay covering the entire combined unit
         if st.button(" ", key="nav_logo_overlay_btn", use_container_width=False):
             st.session_state.page = "Home"
             st.session_state.show_chat_dialog = False
@@ -541,11 +611,7 @@ def render_hero_banner(heading: str, description: str):
     )
 
 def render_purple_segmented_stepper(current_step: int):
-    """
-    Renders the 4-step progress bar and clickable buttons strictly inside the purple banner.
-    Accurately switches active steps to green when requirements are satisfied, and turns
-    Step 4 green once submitted. Fixes inner-text background highlight artifacts.
-    """
+    """Renders the 4-step progress bar and buttons without inline styles."""
     steps = [
         "1. Discovery",
         "2. Checklist",
@@ -568,7 +634,6 @@ def render_purple_segmented_stepper(current_step: int):
         if item["key"] != "customer_track"
     ]
     is_step_3_done = all(assessment_data.get(k) is not None for k in all_baseline_keys)
-
     is_step_4_done = bool(st.session_state.get("form_submitted", False))
 
     completion_flags = [is_step_1_done, is_step_2_done, is_step_3_done, is_step_4_done]
@@ -592,64 +657,29 @@ def render_purple_segmented_stepper(current_step: int):
                 if is_done:
                     bar_color = "#00e676"
                     prefix = "✓ "
-                    text_color = "#e8f5e9"
-                    btn_bg = "rgba(0, 230, 118, 0.28)" if is_active else "rgba(0, 230, 118, 0.16)"
-                    font_weight = "800" if is_active else "700"
-                    border_color = "rgba(0, 230, 118, 0.8)" if is_active else "rgba(0, 230, 118, 0.4)"
+                    state_class = "stepper-btn-state-done"
                 elif is_active:
                     bar_color = "#ff4081"
                     prefix = "● "
-                    text_color = "#ffffff"
-                    btn_bg = "rgba(255, 64, 129, 0.38)"
-                    font_weight = "800"
-                    border_color = "rgba(255, 64, 129, 0.85)"
+                    state_class = "stepper-btn-state-active"
                 else:
                     bar_color = "rgba(255, 255, 255, 0.22)"
                     prefix = ""
-                    text_color = "rgba(255, 255, 255, 0.65)"
-                    btn_bg = "rgba(255, 255, 255, 0.08)"
-                    font_weight = "600"
-                    border_color = "rgba(255, 255, 255, 0.18)"
+                    state_class = "stepper-btn-state-pending"
 
                 st.markdown(
                     f'<div style="height: 7px; border-radius: 999px; background-color: {bar_color}; margin-bottom: 8px;"></div>',
                     unsafe_allow_html=True
                 )
 
-                st.markdown(
-                    f"""
-                    <style>
-                    div.st-key-stepper_click_{idx} button {{
-                        background-color: {btn_bg} !important;
-                        border: 1.5px solid {border_color} !important;
-                    }}
-                    div.st-key-stepper_click_{idx} button p,
-                    div.st-key-stepper_click_{idx} button span {{
-                        background: transparent !important;
-                        background-color: transparent !important;
-                        color: {text_color} !important;
-                        font-weight: {font_weight} !important;
-                        -webkit-text-fill-color: {text_color} !important;
-                        opacity: 1 !important;
-                    }}
-                    div.st-key-stepper_click_{idx} button:hover {{
-                        background-color: rgba(255, 255, 255, 0.25) !important;
-                        border-color: rgba(255, 255, 255, 0.6) !important;
-                    }}
-                    div.st-key-stepper_click_{idx} button:hover p,
-                    div.st-key-stepper_click_{idx} button:hover span {{
-                        color: #ffffff !important;
-                        -webkit-text-fill-color: #ffffff !important;
-                    }}
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-                if st.button(f"{prefix}{name}", key=f"stepper_click_{idx}", use_container_width=True):
-                    st.session_state.assessment_step = idx
-                    st.session_state.target_focus_key = None
-                    st.rerun()
+                # Class wraps the button; styled cleanly in inject_custom_css()
+                with st.container():
+                    st.markdown(f'<div class="{state_class}">', unsafe_allow_html=True)
+                    if st.button(f"{prefix}{name}", key=f"stepper_click_{idx}", use_container_width=True):
+                        st.session_state.assessment_step = idx
+                        st.session_state.target_focus_key = None
+                        st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
 
 def render_feature_card(tag: str, title: str, description: str, icon: str = ""):
     """Renders portal cards with prominent badges and icons."""

@@ -26,6 +26,9 @@ from imda_knowledge import (
     query_live_guide_rag
 )
 
+# Import purple stepper from ui_components
+from ui_components import render_purple_segmented_stepper
+
 PAGE_SIZE = 6
 
 def format_web_url(url: str) -> str:
@@ -719,7 +722,6 @@ def render_step_2_checklist():
             ans_idx = ans_opts.index(existing_ans) if existing_ans in ans_opts else None
 
             with st.container(border=True):
-                # Header row: Question title on left, compliance badge on right
                 q_col1, q_col2 = st.columns([5.2, 1.8])
                 with q_col1:
                     st.markdown(f"**Q{question['number']}** — {question['question']}")
@@ -875,7 +877,7 @@ def render_step_3_prerequisites():
 # =========================================================
 
 def render_step_4_review_and_submit():
-    st.markdown("### 📊 Step 4: Readiness Review, Gap Audit & Submission Dossier")
+    st.markdown("### 📊 Step 4: Readiness Review, Gap Audit & Submission Summary")
     selected = st.session_state.get("selected_category", "Not selected")
 
     # 1. Evaluate Baseline Gaps strictly using the unified schema
@@ -949,7 +951,7 @@ def render_step_4_review_and_submit():
                 height=90
             )
 
-            submit_button = st.form_submit_button("Submit Assessment & Generate Dossier →", type="primary", use_container_width=True)
+            submit_button = st.form_submit_button("Submit Assessment & Generate Summary →", type="primary", use_container_width=True)
 
     if submit_button:
         if not company_name or not contact_person or not contact_email:
@@ -965,10 +967,10 @@ def render_step_4_review_and_submit():
 
     # 4. Post-Submission Actions
     if st.session_state.get("form_submitted", False):
-        st.success("🎉 Assessment Dossier Generated Successfully!")
+        st.success("🎉 Assessment Summary Generated Successfully!")
 
         with st.container(border=True):
-            st.markdown("### 📋 Submission Summary Dossier")
+            st.markdown("### 📋 Submission Summary")
             st.markdown(f"**Target Category:** {selected}")
             st.markdown(f"**Company:** {st.session_state.sub_company} | **Contact:** {st.session_state.sub_person} ({st.session_state.sub_email}, {st.session_state.sub_phone})")
 
@@ -1060,7 +1062,7 @@ def render_step_4_review_and_submit():
 # =========================================================
 
 def render_pre_approval_assessment():
-    """Renders the master 4-step assessment funnel."""
+    """Renders the master 4-step assessment funnel with purple segmented stepper."""
     with st.container():
         ctrl_col1, ctrl_col2, _ = st.columns([2.2, 1.8, 3.5])
         with ctrl_col1:
@@ -1076,24 +1078,8 @@ def render_pre_approval_assessment():
 
     st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
-    steps = [
-        "Step 1: Category Discovery",
-        "Step 2: Category Checklist",
-        "Step 3: Prerequisite Validation",
-        "Step 4: Review, Gaps & Submission"
-    ]
-    progress_vals = [0.25, 0.50, 0.75, 1.0]
-    st.progress(progress_vals[st.session_state.assessment_step], text=f"Assessment Flow — {steps[st.session_state.assessment_step]}")
-
-    selected_step_name = st.radio(
-        "Assessment Step",
-        steps,
-        index=st.session_state.assessment_step,
-        horizontal=True,
-        key="master_assessment_radio_step"
-    )
-    st.session_state.assessment_step = steps.index(selected_step_name)
-    st.markdown("---")
+    # Render the purple segmented stepper (replaces default st.progress and st.radio)
+    render_purple_segmented_stepper(st.session_state.assessment_step)
 
     if st.session_state.assessment_step == 0:
         render_step_1_discovery()

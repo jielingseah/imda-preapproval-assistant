@@ -715,7 +715,7 @@ elif st.session_state.page == "Methodology":
     with st.container(border=True):
         st.markdown("### 2. Multi-Turn RAG Pipeline & Prompt Engineering")
         st.markdown("""
-        The conversational copilot uses **Google GenAI (`gemini-2.5-flash`)** orchestrated through a grounded Retrieval-Augmented Generation (RAG) architecture:
+        The conversational copilot uses **Google GenAI (`gemini-3.8-flash`)** orchestrated through a grounded Retrieval-Augmented Generation (RAG) architecture:
         - **Live Document Ingestion & Caching:** Pulls and caches markdown pages directly from the official portal (`https://preapproval-guide.imda.gov.sg/`) with TTL cache expiration to ensure compliance with the latest policy updates.
         - **XML Boundary Delimitation:** Untrusted vendor inputs and authoritative knowledge snippets are encapsulated within strict `<user_query>`, `<conversation_history>`, `<applicant_state>`, and `<context>` XML boundaries to prevent context bleeding.
         - **Conversational Memory:** Preserves multi-turn state across interactions, allowing vendors to ask follow-up questions regarding specific checklist items or financial ratios without losing state.

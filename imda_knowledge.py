@@ -9,7 +9,7 @@ from google import genai
 from google.genai import types
 
 # Centralized System Constants
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3.8-flash"
 BASE_URL = "https://preapproval-guide.imda.gov.sg"
 CATEGORY_DIRECTORY_URL = (
     f"{BASE_URL}/pre-approval-guide/stage-1-vendor-self-assessment/identify-suitable-solution-category.md"
